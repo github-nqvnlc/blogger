@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
+import axios, { AxiosInstance, InternalAxiosRequestConfig } from "axios";
 
 let _apiClient: AxiosInstance | null = null;
 
@@ -6,16 +6,16 @@ let _apiClient: AxiosInstance | null = null;
  * Lấy CSRF token từ cookie (Frappe gửi trong cookie "csrf_token")
  */
 function getCsrfToken(): string {
-  if (typeof document === 'undefined') return '';
+  if (typeof document === "undefined") return "";
   const match = document.cookie.match(/csrf_token=([^;]+)/);
-  return match ? decodeURIComponent(match[1]) : '';
+  return match ? decodeURIComponent(match[1]) : "";
 }
 
 export function createApiClient() {
   _apiClient = axios.create({
     // Không set baseURL — hook gọi /api/... trực tiếp, Next.js rewrite forward sang Frappe
     timeout: 15_000,
-    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
     // Bắt buộc để gửi cookie session cùng request
     withCredentials: true,
   });
@@ -23,10 +23,10 @@ export function createApiClient() {
   // ── Request Interceptor: CSRF token cho mutation ─────────────────
   _apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
     const method = config.method?.toUpperCase();
-    if (method && method !== 'GET' && method !== 'HEAD') {
+    if (method && method !== "GET" && method !== "HEAD") {
       const csrf = getCsrfToken();
       if (csrf) {
-        config.headers['X-Frappe-CSRF-Token'] = csrf;
+        config.headers["X-Frappe-CSRF-Token"] = csrf;
       }
     }
     return config;
@@ -42,7 +42,7 @@ export function createApiClient() {
         error.response?.data?.exception ??
         error.response?.data?._error_message ??
         error.message ??
-        'Unknown error';
+        "Unknown error";
       return Promise.reject(new Error(message));
     },
   );
@@ -54,7 +54,7 @@ export function createApiClient() {
 export function getApiClient(): AxiosInstance {
   if (!_apiClient) {
     throw new Error(
-      'ApiClient chưa được khởi tạo. Hãy wrap ứng dụng bằng <ApiProvider>.',
+      "ApiClient chưa được khởi tạo. Hãy wrap ứng dụng bằng <ApiProvider>.",
     );
   }
   return _apiClient;

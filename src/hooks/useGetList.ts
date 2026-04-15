@@ -1,15 +1,18 @@
-'use client';
+"use client";
 
-import { useQuery, UseQueryOptions } from '@tanstack/react-query';
-import { getApiClient } from '@/lib/apiClient';
-import { Filter, GetListArgs } from '@/types/hooks';
+import { useQuery, UseQueryOptions } from "@tanstack/react-query";
+import { getApiClient } from "@/lib/apiClient";
+import { Filter, GetListArgs } from "@/types/hooks";
 
 /** Chuyển filters array thành query string JSON */
 function serializeFilters(filters: Filter[]): string {
   return JSON.stringify(filters);
 }
 
-type UseGetListOptions<T> = Omit<UseQueryOptions<T[], Error>, 'queryKey' | 'queryFn'>;
+type UseGetListOptions<T> = Omit<
+  UseQueryOptions<T[], Error>,
+  "queryKey" | "queryFn"
+>;
 
 export function useGetList<T = Record<string, unknown>>(
   /** Tên resource (Doctype), vd: 'Task', 'Project' */
@@ -21,7 +24,7 @@ export function useGetList<T = Record<string, unknown>>(
 ) {
   const apiClient = getApiClient();
 
-  const queryKey = [resource, 'list', args];
+  const queryKey = [resource, "list", args];
 
   const query = useQuery<T[], Error>({
     queryKey,
@@ -52,7 +55,9 @@ export function useGetList<T = Record<string, unknown>>(
         params.as_dict = 1;
       }
 
-      const res = await apiClient.get<T[]>(`/api/resource/${resource}`, { params });
+      const res = await apiClient.get<T[]>(`/api/resource/${resource}`, {
+        params,
+      });
 
       // Frappe bọc response trong { data: [...] }
       return (res.data as { data?: T[] }).data ?? res.data;

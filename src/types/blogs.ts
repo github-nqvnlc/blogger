@@ -46,7 +46,9 @@ export type PostVisibility = "Public" | "Internal";
 export interface Post {
   name: string;
   title: string;
-  department: string | Pick<BlogDepartment, "name" | "department_name" | "department_code">;
+  department:
+    | string
+    | Pick<BlogDepartment, "name" | "department_name" | "department_code">;
   category: string | Pick<Category, "name" | "category" | "slug">;
   slug: string;
   author: string;
@@ -88,7 +90,10 @@ export interface Comment {
 // ─── Assembled Data (sau khi FE assemble) ─────────────────
 
 export interface AssembledPost extends Post {
-  department: Pick<BlogDepartment, "name" | "department_name" | "department_code">;
+  department: Pick<
+    BlogDepartment,
+    "name" | "department_name" | "department_code"
+  >;
   category: Pick<Category, "name" | "category" | "slug">;
   topics: Pick<Topic, "name" | "topic" | "slug">[];
   tags: Pick<Tag, "name" | "tag_name" | "slug">[];
@@ -101,12 +106,17 @@ export interface AssembledComment extends Comment {
 
 // ─── Department Filter & Sort Types ────────────────────────
 
-export type DepartmentSortField = 'name' | 'department_name' | 'department_code' | 'sort_order' | 'creation';
-export type DepartmentSortOrder = 'asc' | 'desc';
+export type DepartmentSortField =
+  | "name"
+  | "department_name"
+  | "department_code"
+  | "sort_order"
+  | "creation";
+export type DepartmentSortOrder = "asc" | "desc";
 
 export interface DepartmentFilterState {
   search?: string;
-  is_active?: 'all' | 'active' | 'inactive';
+  is_active?: "all" | "active" | "inactive";
   sort_by?: DepartmentSortField;
   sort_order?: DepartmentSortOrder;
 }

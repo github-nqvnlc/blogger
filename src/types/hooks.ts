@@ -1,16 +1,16 @@
 export type FilterOperator =
-  | '='
-  | '!='
-  | '<'
-  | '>'
-  | '<='
-  | '>='
-  | 'like'
-  | 'not like'
-  | 'in'
-  | 'not in'
-  | 'is'
-  | 'between';
+  | "="
+  | "!="
+  | "<"
+  | ">"
+  | "<="
+  | ">="
+  | "like"
+  | "not like"
+  | "in"
+  | "not in"
+  | "is"
+  | "between";
 
 /** [field, operator, value] */
 export type Filter = [string, FilterOperator, unknown];
@@ -27,7 +27,7 @@ export interface GetListArgs<T = Record<string, unknown>> {
   /** Số bản ghi mỗi trang. Mặc định: 20 */
   limit?: number;
   /** Sắp xếp */
-  orderBy?: { field: string; order: 'asc' | 'desc' };
+  orderBy?: { field: string; order: "asc" | "desc" };
   /** Trả về key-value dict thay vì array */
   asDict?: boolean;
 }
@@ -37,7 +37,7 @@ export interface TokenParams {
   /** Token string hoặc hàm trả về token */
   token: string | (() => string);
   /** Prefix trong Authorization header */
-  type: 'Bearer' | 'token';
+  type: "Bearer" | "token";
 }
 
 export interface UploadArgs {

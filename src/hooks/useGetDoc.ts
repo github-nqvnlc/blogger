@@ -1,9 +1,12 @@
-'use client';
+"use client";
 
-import { useQuery, UseQueryOptions } from '@tanstack/react-query';
-import { getApiClient } from '@/lib/apiClient';
+import { useQuery, UseQueryOptions } from "@tanstack/react-query";
+import { getApiClient } from "@/lib/apiClient";
 
-type UseGetDocOptions<T> = Omit<UseQueryOptions<T, Error>, 'queryKey' | 'queryFn'>;
+type UseGetDocOptions<T> = Omit<
+  UseQueryOptions<T, Error>,
+  "queryKey" | "queryFn"
+>;
 
 export function useGetDoc<T = Record<string, unknown>>(
   /** Tên resource, vd: 'tasks', 'users', 'boards' */

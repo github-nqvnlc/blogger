@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useRef } from 'react';
-import { useGetList } from './useGetList';
-import { Filter, GetListArgs } from '@/types/hooks';
+import { useState, useEffect, useRef } from "react";
+import { useGetList } from "./useGetList";
+import { Filter, GetListArgs } from "@/types/hooks";
 
-interface UseDocSearchArgs<T> extends Omit<GetListArgs<T>, 'filters'> {
+interface UseDocSearchArgs<T> extends Omit<GetListArgs<T>, "filters"> {
   filters?: Filter[];
   /** Thời gian debounce (ms). Mặc định: 300 */
   debounceMs?: number;
@@ -34,7 +34,7 @@ export function useDocSearch<T = Record<string, unknown>>(
 
   // Frappe search thường dùng filter "like" trên field "name" hoặc tên cụ thể
   const searchFilter: Filter[] = debouncedText.trim()
-    ? [['name', 'like', `%${debouncedText.trim()}%`]]
+    ? [["name", "like", `%${debouncedText.trim()}%`]]
     : [];
 
   const combinedFilters: Filter[] = [

@@ -18,7 +18,7 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
-        source: '/api/:path*',
+        source: "/api/:path*",
         destination: `${FRAPPE_URL}/api/:path*`,
       },
     ];

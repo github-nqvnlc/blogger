@@ -1,0 +1,10 @@
+.next
+node_modules
+coverage
+dist
+build
+tsconfig.tsbuildinfo
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+

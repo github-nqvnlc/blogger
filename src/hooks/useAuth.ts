@@ -1,37 +1,39 @@
-'use client';
+"use client";
 
-import { useCallback } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { getApiClient } from '@/lib/apiClient';
-
-// ── Types ─────────────────────────────────────────────────────────────
+import { useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { getApiClient } from "@/lib/apiClient";
+import {
+  buildLocalePath,
+  extractLocaleFromPathname,
+  normalizeLocale,
+} from "@/i18n";
 
 export interface FrappeUser {
-  name: string;        // username / email, vd: "Administrator"
-  full_name: string;   // Tên đầy đủ
-  user_image?: string; // Avatar URL
+  name: string;
+  full_name: string;
+  user_image?: string;
   email?: string;
   roles?: string[];
 }
 
-
 interface FrappeLoginResponse {
-  message: string;      // "Logged In"
-  home_page: string;    // "/"
-  full_name: string;    // "Administrator"
+  message: string;
+  home_page: string;
+  full_name: string;
 }
 
-const AUTH_QUERY_KEY = ['auth', 'currentUser'];
-
-// ── Hook ──────────────────────────────────────────────────────────────
+const AUTH_QUERY_KEY = ["auth", "currentUser"];
 
 export function useAuth() {
   const queryClient = useQueryClient();
   const apiClient = getApiClient();
 
-  // ── Fetch current user ─────────────────────────────────────────────
-  // Frappe endpoint: GET /api/method/frappe.auth.get_logged_user
-  // Trả về: "Administrator" (string) — không phải object
+  const getCurrentLocale = useCallback(() => {
+    if (typeof window === "undefined") return normalizeLocale(null);
+    return normalizeLocale(extractLocaleFromPathname(window.location.pathname));
+  }, []);
+
   const {
     data: currentUser,
     isLoading,
@@ -43,67 +45,64 @@ export function useAuth() {
     queryFn: async () => {
       try {
         const res = await apiClient.get<{ message: string }>(
-          '/api/method/frappe.auth.get_logged_user',
+          "/api/method/frappe.auth.get_logged_user",
         );
         const user = res.data?.message;
-        return user && user !== 'Guest' ? user : null;
+        return user && user !== "Guest" ? user : null;
       } catch (err: unknown) {
-        const status = (err as { response?: { status?: number } }).response?.status;
-        // Session hết hạn — redirect sang /login nhưng chỉ khi không đang ở /login
-        if ((status === 401 || status === 403) && typeof window !== 'undefined') {
-          if (!window.location.pathname.startsWith('/login')) {
-            window.location.href = '/login';
+        const status = (err as { response?: { status?: number } }).response
+          ?.status;
+        if (
+          (status === 401 || status === 403) &&
+          typeof window !== "undefined"
+        ) {
+          const locale = getCurrentLocale();
+          const loginPath = buildLocalePath(locale, "/login");
+          if (!window.location.pathname.startsWith(loginPath)) {
+            window.location.href = loginPath;
           }
         }
         return null;
       }
     },
-    staleTime: 1000 * 60 * 5, // cache 5 phút
+    staleTime: 1000 * 60 * 5,
     retry: false,
   });
 
-  // ── Login ──────────────────────────────────────────────────────────
-  // POST /api/method/login với { usr, pwd }
   const login = useCallback(
     async (usr: string, pwd: string): Promise<FrappeLoginResponse> => {
       const res = await apiClient.post<FrappeLoginResponse>(
-        '/api/method/login',
+        "/api/method/login",
         { usr, pwd },
       );
-      // Sau login thành công, Frappe tự set cookie "sid"
-      // Refetch để lấy thông tin user hiện tại
       await queryClient.invalidateQueries({ queryKey: AUTH_QUERY_KEY });
       return res.data;
     },
     [apiClient, queryClient],
   );
 
-  // ── Logout ─────────────────────────────────────────────────────────
-  // POST /api/method/logout — Frappe tự xóa cookie "sid"
   const logout = useCallback(async () => {
     try {
-      await apiClient.post('/api/method/logout');
+      await apiClient.post("/api/method/logout");
     } finally {
       queryClient.setQueryData(AUTH_QUERY_KEY, null);
       queryClient.clear();
-      if (typeof window !== 'undefined') {
-        window.location.href = '/login';
+      if (typeof window !== "undefined") {
+        const locale = getCurrentLocale();
+        window.location.href = buildLocalePath(locale, "/login");
       }
     }
-  }, [apiClient, queryClient]);
+  }, [apiClient, getCurrentLocale, queryClient]);
 
-  // ── Update current user (refetch) ─────────────────────────────────
   const updateCurrentUser = useCallback(() => {
     refetch();
   }, [refetch]);
 
-  // ── getUserCookie — reset auth state khi gặp 403 ──────────────────
   const getUserCookie = useCallback(() => {
     queryClient.setQueryData(AUTH_QUERY_KEY, null);
   }, [queryClient]);
 
   return {
-    /** Email/username của user đang đăng nhập. null nếu chưa login. */
     currentUser: currentUser ?? null,
     isLoading,
     isValidating,

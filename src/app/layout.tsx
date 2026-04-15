@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { ApiProvider } from "@/lib/ApiProvider";
+import { normalizeLocale } from "@/i18n";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,24 +15,24 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Next.js + Frappe Boilerplate",
-  description: "Boilerplate Next.js + Frappe",
+  title: "Windify Blog CMS",
+  description: "Windify blog administration powered by Next.js and Frappe.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const headerStore = await headers();
+  const locale = normalizeLocale(headerStore.get("x-locale"));
+
   return (
-    <html lang="vi">
+    <html lang={locale} suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {/* ApiProvider khởi tạo axios + QueryClient — Frappe dùng cookie session */}
-        <ApiProvider>
-          {children}
-        </ApiProvider>
+        {children}
       </body>
     </html>
   );

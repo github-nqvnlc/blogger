@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useState, useCallback } from 'react';
-import { getApiClient } from '@/lib/apiClient';
+import { useState, useCallback } from "react";
+import { getApiClient } from "@/lib/apiClient";
 
-function makeMutationHook(method: 'post' | 'put' | 'delete') {
+function makeMutationHook(method: "post" | "put" | "delete") {
   return function useCall<T = Record<string, unknown>>(
     /** Endpoint bất kỳ, vd: '/api/method/login' */
     endpoint: string,
@@ -27,9 +27,10 @@ function makeMutationHook(method: 'post' | 'put' | 'delete') {
         setError(null);
         try {
           const apiClient = getApiClient();
-          const res = method === 'delete'
-            ? await apiClient.delete<T>(endpoint, { data: params })
-            : await apiClient[method]<T>(endpoint, params);
+          const res =
+            method === "delete"
+              ? await apiClient.delete<T>(endpoint, { data: params })
+              : await apiClient[method]<T>(endpoint, params);
 
           const data: T =
             (res.data as { message?: T }).message ??
@@ -53,6 +54,6 @@ function makeMutationHook(method: 'post' | 'put' | 'delete') {
   };
 }
 
-export const usePostCall = makeMutationHook('post');
-export const usePutCall = makeMutationHook('put');
-export const useDeleteCall = makeMutationHook('delete');
+export const usePostCall = makeMutationHook("post");
+export const usePutCall = makeMutationHook("put");
+export const useDeleteCall = makeMutationHook("delete");
