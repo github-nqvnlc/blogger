@@ -81,6 +81,9 @@ export const DepartmentColumns: ColumnDef<BlogDepartment, unknown>[] = [
     cell: ({ row }) => (
       <Badge
         variant={row.original.is_active === 1 ? 'default' : 'secondary'}
+        className={cn(
+          row.original.is_active === 1 ? 'bg-green-500 text-white' : 'bg-gray-500 text-white',
+        )}
       >
         {row.original.is_active === 1 ? 'Hoạt động' : 'Không hoạt động'}
       </Badge>

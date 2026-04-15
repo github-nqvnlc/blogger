@@ -113,6 +113,7 @@ export function DepartmentForm({ department, onSuccess, onCancel }: DepartmentFo
 
   /** Generate department_code from department_name */
   const generateCode = () => {
+    // eslint-disable-next-line react-hooks/incompatible-library
     const name = watch('department_name');
     if (!name) return;
     const code = name
