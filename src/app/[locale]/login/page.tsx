@@ -1,35 +1,30 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/hooks';
-import { useLanguage } from '@/hooks/useLanguage';
-import { buildLocalePath } from '@/i18n';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks";
+import { useLanguage } from "@/hooks/useLanguage";
+import { buildLocalePath } from "@/i18n";
 
 export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
   const { locale, t } = useLanguage();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
-    setError('');
+    setError("");
 
     const form = new FormData(e.currentTarget);
 
     try {
-      await login(
-        form.get('usr') as string,
-        form.get('pwd') as string,
-      );
-      router.push(buildLocalePath(locale, '/'));
+      await login(form.get("usr") as string, form.get("pwd") as string);
+      router.push(buildLocalePath(locale, "/"));
     } catch (err: unknown) {
-      setError(
-        err instanceof Error ? err.message : t.login.invalidCredentials,
-      );
+      setError(err instanceof Error ? err.message : t.login.invalidCredentials);
     } finally {
       setLoading(false);
     }
@@ -43,7 +38,7 @@ export default function LoginPage() {
             {t.login.title}
           </h1>
           <p className="mt-1 text-sm text-zinc-500">
-            {t.login.connectTo}{' '}
+            {t.login.connectTo}{" "}
             <span className="font-mono text-xs text-zinc-600 dark:text-zinc-400">
               {process.env.NEXT_PUBLIC_API_BASE_URL}
             </span>

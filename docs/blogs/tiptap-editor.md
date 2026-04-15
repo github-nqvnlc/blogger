@@ -153,24 +153,28 @@ Custom block node cho media nhúng:
 Dialog modal cho việc nhập URL media:
 
 **Link Dialog:**
+
 - Tiêu đề: "Chèn liên kết"
 - Input URL
 - Validation: phải là URL http(s) hoặc đường dẫn nội bộ
 - Preview: không có
 
 **Image Dialog:**
+
 - Tiêu đề: "Chèn ảnh từ URL"
 - Input Image URL
 - Preview: hiển thị ảnh với `max-h-60`, `object-cover`
 - Validation: URL ảnh hợp lệ
 
 **Video Dialog:**
+
 - Tiêu đề: "Chèn video từ URL"
 - Input Video URL
 - Preview: iframe (embed) hoặc video element (file)
 - Validation: chỉ hỗ trợ YouTube, Vimeo, mp4, webm, ogg
 
 **Dialog Features:**
+
 - Auto-focus input
 - Error alerts với variant "destructive"
 - Cancel/Submit buttons
@@ -200,9 +204,9 @@ Dialog modal cho việc nhập URL media:
 
 ```typescript
 type BlogEditorProps = {
-  value: string;              // HTML content
-  onChange: (value: string) => void;  // Callback khi content thay đổi
-  disabled?: boolean;        // Optional: disable editor
+  value: string; // HTML content
+  onChange: (value: string) => void; // Callback khi content thay đổi
+  disabled?: boolean; // Optional: disable editor
 };
 ```
 
@@ -223,7 +227,7 @@ type EditorState = {
   isCodeBlock: boolean;
   canUndo: boolean;
   canRedo: boolean;
-  textAlign: 'left' | 'center' | 'right' | 'justify';
+  textAlign: "left" | "center" | "right" | "justify";
   fontSize: string;
   textColor: string;
   highlightColor: string;

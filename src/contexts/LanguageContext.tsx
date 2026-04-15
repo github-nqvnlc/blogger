@@ -1,12 +1,7 @@
-'use client';
+"use client";
 
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useMemo,
-} from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { createContext, useCallback, useContext, useMemo } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import {
   buildLocalePath,
   Dictionary,
@@ -14,7 +9,7 @@ import {
   LOCALE_COOKIE_KEY,
   SUPPORTED_LANGUAGES,
   isValidLocale,
-} from '@/i18n';
+} from "@/i18n";
 
 interface LanguageContextValue {
   language: Locale;
@@ -38,20 +33,26 @@ export function LanguageProvider({
   const router = useRouter();
   const pathname = usePathname();
 
-  const setLanguage = useCallback((lang: Locale) => {
-    if (!isValidLocale(lang)) return;
-    const nextPath = buildLocalePath(lang, pathname || '/');
-    document.cookie = `${LOCALE_COOKIE_KEY}=${lang}; path=/; max-age=31536000; samesite=lax`;
-    router.push(nextPath);
-  }, [pathname, router]);
+  const setLanguage = useCallback(
+    (lang: Locale) => {
+      if (!isValidLocale(lang)) return;
+      const nextPath = buildLocalePath(lang, pathname || "/");
+      document.cookie = `${LOCALE_COOKIE_KEY}=${lang}; path=/; max-age=31536000; samesite=lax`;
+      router.push(nextPath);
+    },
+    [pathname, router],
+  );
 
-  const value = useMemo<LanguageContextValue>(() => ({
-    language: locale,
-    locale,
-    setLanguage,
-    t: dictionary,
-    supportedLanguages: SUPPORTED_LANGUAGES,
-  }), [dictionary, locale, setLanguage]);
+  const value = useMemo<LanguageContextValue>(
+    () => ({
+      language: locale,
+      locale,
+      setLanguage,
+      t: dictionary,
+      supportedLanguages: SUPPORTED_LANGUAGES,
+    }),
+    [dictionary, locale, setLanguage],
+  );
 
   return (
     <LanguageContext.Provider value={value}>
@@ -63,7 +64,7 @@ export function LanguageProvider({
 export function useLanguageContext() {
   const ctx = useContext(LanguageContext);
   if (!ctx) {
-    throw new Error('useLanguageContext must be used inside LanguageProvider');
+    throw new Error("useLanguageContext must be used inside LanguageProvider");
   }
   return ctx;
 }

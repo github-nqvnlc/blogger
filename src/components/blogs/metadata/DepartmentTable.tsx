@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import * as React from 'react';
+import * as React from "react";
 import {
   ColumnDef,
   OnChangeFn,
@@ -10,7 +10,7 @@ import {
   getCoreRowModel,
   getSortedRowModel,
   useReactTable,
-} from '@tanstack/react-table';
+} from "@tanstack/react-table";
 import {
   Table as TableComponent,
   TableBody,
@@ -18,9 +18,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { DataTablePagination } from '@/components/ui/data-table-pagination';
-import { useLanguage } from '@/hooks/useLanguage';
+} from "@/components/ui/table";
+import { DataTablePagination } from "@/components/ui/data-table-pagination";
+import { useLanguage } from "@/hooks/useLanguage";
 
 interface DepartmentTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -53,7 +53,10 @@ export function DepartmentTable<TData, TValue>({
   const table = useReactTable({
     data,
     columns,
-    pageCount: totalCount !== undefined ? Math.ceil(totalCount / pagination.pageSize) : -1,
+    pageCount:
+      totalCount !== undefined
+        ? Math.ceil(totalCount / pagination.pageSize)
+        : -1,
     state: {
       pagination,
       sorting,
@@ -72,9 +75,9 @@ export function DepartmentTable<TData, TValue>({
       <div className="overflow-hidden rounded-md border">
         <TableComponent>
           <TableHeader>
-            {table.getHeaderGroups().map(headerGroup => (
+            {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map(header => (
+                {headerGroup.headers.map((header) => (
                   <TableHead key={header.id}>
                     {header.isPlaceholder
                       ? null
@@ -91,7 +94,7 @@ export function DepartmentTable<TData, TValue>({
             {isLoading ? (
               Array.from({ length: 5 }).map((_, i) => (
                 <TableRow key={i}>
-                  {table.getAllColumns().map(column => (
+                  {table.getAllColumns().map((column) => (
                     <TableCell key={column.id}>
                       <div className="h-4 w-full animate-pulse rounded bg-muted" />
                     </TableCell>
@@ -99,12 +102,12 @@ export function DepartmentTable<TData, TValue>({
                 </TableRow>
               ))
             ) : table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map(row => (
+              table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  data-state={row.getIsSelected() && 'selected'}
+                  data-state={row.getIsSelected() && "selected"}
                 >
-                  {row.getVisibleCells().map(cell => (
+                  {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
                       {flexRender(
                         cell.column.columnDef.cell,

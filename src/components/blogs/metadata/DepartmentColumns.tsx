@@ -1,20 +1,26 @@
-'use client';
+"use client";
 
-import { ColumnDef } from '@tanstack/react-table';
-import { MoreHorizontal, Pencil, Trash2, ToggleLeft, ToggleRight } from 'lucide-react';
-import { BlogDepartment } from '@/types/blogs';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { ColumnDef } from "@tanstack/react-table";
+import {
+  MoreHorizontal,
+  Pencil,
+  Trash2,
+  ToggleLeft,
+  ToggleRight,
+} from "lucide-react";
+import { BlogDepartment } from "@/types/blogs";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { DataTableColumnHeader } from '@/components/ui/data-table-column-header';
-import { cn } from '@/lib/utils';
-import type { Dictionary } from '@/i18n';
+} from "@/components/ui/dropdown-menu";
+import { DataTableColumnHeader } from "@/components/ui/data-table-column-header";
+import { cn } from "@/lib/utils";
+import type { Dictionary } from "@/i18n";
 
 export interface DepartmentColumnMeta {
   onEdit: (dept: BlogDepartment) => void;
@@ -27,19 +33,27 @@ export function getDepartmentColumns(
 ): ColumnDef<BlogDepartment, unknown>[] {
   return [
     {
-      accessorKey: 'sort_order',
+      accessorKey: "sort_order",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t.blogDepartments.table.sortOrder} />
+        <DataTableColumnHeader
+          column={column}
+          title={t.blogDepartments.table.sortOrder}
+        />
       ),
       cell: ({ row }) => (
-        <span className="text-center block">{row.original.sort_order ?? 0}</span>
+        <span className="text-center block">
+          {row.original.sort_order ?? 0}
+        </span>
       ),
       enableSorting: true,
     },
     {
-      accessorKey: 'name',
+      accessorKey: "name",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t.blogDepartments.table.id} />
+        <DataTableColumnHeader
+          column={column}
+          title={t.blogDepartments.table.id}
+        />
       ),
       cell: ({ row }) => (
         <span className="font-mono text-sm">{row.original.name}</span>
@@ -47,9 +61,12 @@ export function getDepartmentColumns(
       enableSorting: true,
     },
     {
-      accessorKey: 'department_name',
+      accessorKey: "department_name",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t.blogDepartments.table.name} />
+        <DataTableColumnHeader
+          column={column}
+          title={t.blogDepartments.table.name}
+        />
       ),
       cell: ({ row }) => (
         <span className="font-medium">{row.original.department_name}</span>
@@ -57,9 +74,12 @@ export function getDepartmentColumns(
       enableSorting: true,
     },
     {
-      accessorKey: 'department_code',
+      accessorKey: "department_code",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t.blogDepartments.table.codeShort} />
+        <DataTableColumnHeader
+          column={column}
+          title={t.blogDepartments.table.codeShort}
+        />
       ),
       cell: ({ row }) => (
         <Badge variant="outline">{row.original.department_code}</Badge>
@@ -67,7 +87,7 @@ export function getDepartmentColumns(
       enableSorting: true,
     },
     {
-      accessorKey: 'description',
+      accessorKey: "description",
       header: t.blogDepartments.table.description,
       cell: ({ row }) =>
         row.original.description ? (
@@ -75,27 +95,33 @@ export function getDepartmentColumns(
             {row.original.description}
           </span>
         ) : (
-          <span className="italic text-muted-foreground">{t.blogDepartments.table.noDescription}</span>
+          <span className="italic text-muted-foreground">
+            {t.blogDepartments.table.noDescription}
+          </span>
         ),
       enableSorting: false,
     },
     {
-      accessorKey: 'is_active',
+      accessorKey: "is_active",
       header: t.blogDepartments.table.status,
       cell: ({ row }) => (
         <Badge
-          variant={row.original.is_active === 1 ? 'default' : 'secondary'}
+          variant={row.original.is_active === 1 ? "default" : "secondary"}
           className={cn(
-            row.original.is_active === 1 ? 'bg-green-500 text-white' : 'bg-gray-500 text-white',
+            row.original.is_active === 1
+              ? "bg-green-500 text-white"
+              : "bg-gray-500 text-white",
           )}
         >
-          {row.original.is_active === 1 ? t.blogDepartments.table.active : t.blogDepartments.table.inactive}
+          {row.original.is_active === 1
+            ? t.blogDepartments.table.active
+            : t.blogDepartments.table.inactive}
         </Badge>
       ),
       enableSorting: false,
     },
     {
-      id: 'actions',
+      id: "actions",
       cell: ({ row, table }) => {
         const meta = table.options.meta as DepartmentColumnMeta;
         const dept = row.original;
@@ -115,7 +141,7 @@ export function getDepartmentColumns(
               <DropdownMenuItem
                 onClick={() => meta.onToggle(dept)}
                 className={cn(
-                  dept.is_active === 1 ? 'text-amber-600' : 'text-green-600',
+                  dept.is_active === 1 ? "text-amber-600" : "text-green-600",
                 )}
               >
                 {dept.is_active === 1 ? (

@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import {
   ArrowLeft,
   LayoutDashboard,
   Search,
   MessageSquare,
-} from 'lucide-react';
-import { useLanguage } from '@/hooks/useLanguage';
-import { buildLocalePath } from '@/i18n';
+} from "lucide-react";
+import { useLanguage } from "@/hooks/useLanguage";
+import { buildLocalePath } from "@/i18n";
 
 export default function AdminNotFoundPage() {
   const { locale, t } = useLanguage();
@@ -20,10 +20,14 @@ export default function AdminNotFoundPage() {
         <div className="space-y-3">
           <div className="flex justify-center">
             <div className="inline-flex items-center justify-center size-20 rounded-full bg-muted">
-              <span className="text-4xl font-bold text-muted-foreground">404</span>
+              <span className="text-4xl font-bold text-muted-foreground">
+                404
+              </span>
             </div>
           </div>
-          <h1 className="text-3xl font-bold tracking-tight">{t.errors.notFoundTitle}</h1>
+          <h1 className="text-3xl font-bold tracking-tight">
+            {t.errors.notFoundTitle}
+          </h1>
           <p className="text-muted-foreground text-base">
             {t.errors.adminNotFoundDescription}
           </p>
@@ -31,13 +35,13 @@ export default function AdminNotFoundPage() {
 
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Button asChild>
-            <Link href={buildLocalePath(locale, '/admin')}>
+            <Link href={buildLocalePath(locale, "/admin")}>
               <LayoutDashboard className="size-4 mr-2" />
               {t.common.backDashboard}
             </Link>
           </Button>
           <Button variant="outline" asChild>
-            <Link href={buildLocalePath(locale, '/')}>
+            <Link href={buildLocalePath(locale, "/")}>
               <ArrowLeft className="size-4 mr-2" />
               {t.common.backHome}
             </Link>

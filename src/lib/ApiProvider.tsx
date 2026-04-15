@@ -1,17 +1,17 @@
-'use client';
+"use client";
 
-import React, { createContext, useContext, useMemo } from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ThemeProvider as NextThemesProvider } from 'next-themes';
-import { createApiClient } from './apiClient';
-import { LanguageProvider } from '@/contexts/LanguageContext';
-import { Dictionary, Locale } from '@/i18n';
+import React, { createContext, useContext, useMemo } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ThemeProvider as NextThemesProvider } from "next-themes";
+import { createApiClient } from "./apiClient";
+import { LanguageProvider } from "@/contexts/LanguageContext";
+import { Dictionary, Locale } from "@/i18n";
 
 interface ApiContextValue {
   url: string;
 }
 
-const url = process.env.NEXT_PUBLIC_FRAPPE_URL ?? '';
+const url = process.env.NEXT_PUBLIC_FRAPPE_URL ?? "";
 
 const ApiContext = createContext<ApiContextValue | null>(null);
 
@@ -31,7 +31,11 @@ interface ApiProviderProps {
   dictionary: Dictionary;
 }
 
-export function ApiProvider({ children, locale, dictionary }: ApiProviderProps) {
+export function ApiProvider({
+  children,
+  locale,
+  dictionary,
+}: ApiProviderProps) {
   useMemo(() => {
     createApiClient();
   }, []);
@@ -52,7 +56,7 @@ export function ApiProvider({ children, locale, dictionary }: ApiProviderProps) 
 export function useApiContext(): ApiContextValue {
   const ctx = useContext(ApiContext);
   if (!ctx) {
-    throw new Error('useApiContext must be used inside <ApiProvider>.');
+    throw new Error("useApiContext must be used inside <ApiProvider>.");
   }
   return ctx;
 }

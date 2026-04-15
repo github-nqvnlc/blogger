@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState, useCallback } from 'react';
-import { getApiClient } from '@/lib/apiClient';
+import { useState, useCallback } from "react";
+import { getApiClient } from "@/lib/apiClient";
 
 export function useDeleteDoc(
   /** Tên resource (Doctype) */
@@ -29,7 +29,7 @@ export function useDeleteDoc(
         );
         const data = (res.data as { message?: string }).message
           ? (res.data as { message: string })
-          : { message: 'ok' };
+          : { message: "ok" };
         setIsCompleted(true);
         return data;
       } catch (err) {

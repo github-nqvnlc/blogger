@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState, useCallback } from 'react';
-import { getApiClient } from '@/lib/apiClient';
+import { useState, useCallback } from "react";
+import { getApiClient } from "@/lib/apiClient";
 
 export function useUpdateDoc<T = Record<string, unknown>>(
   /** Tên resource (Doctype) */
@@ -27,7 +27,10 @@ export function useUpdateDoc<T = Record<string, unknown>>(
       try {
         const apiClient = getApiClient();
         // Frappe Resource API dùng PUT để update
-        const res = await apiClient.put<T>(`/api/resource/${resource}/${id}`, data);
+        const res = await apiClient.put<T>(
+          `/api/resource/${resource}/${id}`,
+          data,
+        );
         const updated = ((res.data as { data?: T }).data ?? res.data) as T;
         setResult(updated);
         setIsCompleted(true);

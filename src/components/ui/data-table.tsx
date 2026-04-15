@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { type Table } from '@tanstack/react-table';
+import { type Table } from "@tanstack/react-table";
 import {
   Table as TableComponent,
   TableBody,
@@ -8,9 +8,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { flexRender } from '@tanstack/react-table';
-import { useLanguage } from '@/hooks/useLanguage';
+} from "@/components/ui/table";
+import { flexRender } from "@tanstack/react-table";
+import { useLanguage } from "@/hooks/useLanguage";
 
 interface DataTableViewProps<TData> {
   table: Table<TData>;
@@ -31,9 +31,9 @@ export function DataTableView<TData>({
     <div className="overflow-hidden rounded-md border">
       <TableComponent>
         <TableHeader>
-          {table.getHeaderGroups().map(headerGroup => (
+          {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
-              {headerGroup.headers.map(header => (
+              {headerGroup.headers.map((header) => (
                 <TableHead key={header.id}>
                   {header.isPlaceholder
                     ? null
@@ -50,7 +50,7 @@ export function DataTableView<TData>({
           {isLoading ? (
             Array.from({ length: loadingRows }).map((_, i) => (
               <TableRow key={i}>
-                {table.getAllColumns().map(column => (
+                {table.getAllColumns().map((column) => (
                   <TableCell key={column.id}>
                     <div className="h-4 w-full animate-pulse rounded bg-muted" />
                   </TableCell>
@@ -58,17 +58,14 @@ export function DataTableView<TData>({
               </TableRow>
             ))
           ) : table.getRowModel().rows?.length ? (
-            table.getRowModel().rows.map(row => (
+            table.getRowModel().rows.map((row) => (
               <TableRow
                 key={row.id}
-                data-state={row.getIsSelected() && 'selected'}
+                data-state={row.getIsSelected() && "selected"}
               >
-                {row.getVisibleCells().map(cell => (
+                {row.getVisibleCells().map((cell) => (
                   <TableCell key={cell.id}>
-                    {flexRender(
-                      cell.column.columnDef.cell,
-                      cell.getContext(),
-                    )}
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>
                 ))}
               </TableRow>

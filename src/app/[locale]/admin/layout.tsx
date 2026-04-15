@@ -1,9 +1,12 @@
-import type { Metadata } from 'next';
-import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
-import { TooltipProvider } from '@/components/ui/tooltip';
-import { AdminSidebar, AdminSidebarInset } from '@/components/layout/admin-sidebar';
-import { AdminBreadcrumb } from '@/components/layout/admin-breadcrumb';
-import { getDictionary, isValidLocale, localizeMetadataPath } from '@/i18n';
+import type { Metadata } from "next";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import {
+  AdminSidebar,
+  AdminSidebarInset,
+} from "@/components/layout/admin-sidebar";
+import { AdminBreadcrumb } from "@/components/layout/admin-breadcrumb";
+import { getDictionary, isValidLocale, localizeMetadataPath } from "@/i18n";
 
 export async function generateMetadata({
   params,
@@ -19,7 +22,7 @@ export async function generateMetadata({
     title: t.metadata.adminTitle,
     description: t.metadata.adminDescription,
     alternates: {
-      languages: localizeMetadataPath('/admin'),
+      languages: localizeMetadataPath("/admin"),
     },
   };
 }

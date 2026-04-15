@@ -1,14 +1,10 @@
-import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
-import { ApiProvider } from '@/lib/ApiProvider';
-import {
-  getDictionary,
-  isValidLocale,
-  localizeMetadataPath,
-} from '@/i18n';
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { ApiProvider } from "@/lib/ApiProvider";
+import { getDictionary, isValidLocale, localizeMetadataPath } from "@/i18n";
 
 export function generateStaticParams() {
-  return [{ locale: 'vi' }, { locale: 'en' }];
+  return [{ locale: "vi" }, { locale: "en" }];
 }
 
 export async function generateMetadata({
@@ -31,7 +27,7 @@ export async function generateMetadata({
     },
     description: t.metadata.siteDescription,
     alternates: {
-      languages: localizeMetadataPath('/'),
+      languages: localizeMetadataPath("/"),
     },
   };
 }

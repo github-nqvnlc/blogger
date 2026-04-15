@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useLanguageContext } from '@/contexts/LanguageContext';
-import { Locale } from '@/i18n';
+import { useLanguageContext } from "@/contexts/LanguageContext";
+import { Locale } from "@/i18n";
 
 export function useLanguage() {
   const ctx = useLanguageContext();

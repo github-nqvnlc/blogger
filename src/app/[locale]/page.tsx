@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useAuth } from '@/hooks';
-import { useApiContext } from '@/lib/ApiProvider';
-import { useLanguage } from '@/hooks/useLanguage';
-import { buildLocalePath } from '@/i18n';
+import Link from "next/link";
+import { useAuth } from "@/hooks";
+import { useApiContext } from "@/lib/ApiProvider";
+import { useLanguage } from "@/hooks/useLanguage";
+import { buildLocalePath } from "@/i18n";
 
 export default function Home() {
   const { url } = useApiContext();
@@ -52,16 +52,19 @@ export default function Home() {
             ) : (
               <div className="flex items-center gap-2">
                 <span className="h-2 w-2 rounded-full bg-zinc-300" />
-                <span className="text-sm text-zinc-400">{t.home.unauthenticated}</span>
+                <span className="text-sm text-zinc-400">
+                  {t.home.unauthenticated}
+                </span>
               </div>
             )}
           </div>
 
           <div
-            className={`rounded-lg px-4 py-3 text-sm font-medium ${currentUser
-              ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400'
-              : 'bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400'
-              }`}
+            className={`rounded-lg px-4 py-3 text-sm font-medium ${
+              currentUser
+                ? "bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400"
+                : "bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400"
+            }`}
           >
             {currentUser
               ? `${t.home.authenticatedPrefix} — ${currentUser}`
@@ -70,7 +73,7 @@ export default function Home() {
 
           {!currentUser && !isLoading && (
             <Link
-              href={buildLocalePath(locale, '/login')}
+              href={buildLocalePath(locale, "/login")}
               className="block w-full rounded-lg bg-zinc-900 px-4 py-2.5 text-center text-sm font-medium text-white transition-colors hover:bg-zinc-700 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
             >
               {t.home.goToLogin} →
@@ -83,12 +86,12 @@ export default function Home() {
             </p>
             <div className="flex flex-col gap-1">
               <Link
-                href={buildLocalePath(locale, '/dev/doc')}
+                href={buildLocalePath(locale, "/dev/doc")}
                 className="flex items-center justify-between rounded-md px-2 py-1.5 text-sm text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-700 dark:hover:text-zinc-100"
               >
                 <span>{t.home.hooksTester}</span>
                 <span className="font-mono text-xs text-zinc-400">
-                  {buildLocalePath(locale, '/dev/doc')}
+                  {buildLocalePath(locale, "/dev/doc")}
                 </span>
               </Link>
             </div>

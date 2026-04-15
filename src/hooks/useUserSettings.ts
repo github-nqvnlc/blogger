@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getApiClient } from '@/lib/apiClient';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getApiClient } from "@/lib/apiClient";
 
 interface UserSettings {
   name: string;
@@ -17,7 +17,7 @@ interface UpdateSettingsPayload {
   desk_theme?: string;
 }
 
-const QUERY_KEY = ['user-settings'];
+const QUERY_KEY = ["user-settings"];
 
 export function useUserSettings(currentUser: string | null) {
   const queryClient = useQueryClient();
@@ -35,11 +35,7 @@ export function useUserSettings(currentUser: string | null) {
     staleTime: 1000 * 60 * 5,
   });
 
-  const mutation = useMutation<
-    UserSettings,
-    Error,
-    UpdateSettingsPayload
-  >({
+  const mutation = useMutation<UserSettings, Error, UpdateSettingsPayload>({
     mutationFn: async (payload) => {
       const res = await apiClient.put<UserSettings>(
         `/api/resource/User/${currentUser}`,

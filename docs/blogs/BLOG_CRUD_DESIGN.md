@@ -19,21 +19,21 @@ Module `Blogs` quản lý toàn bộ nội dung bài viết trong hệ thống, 
 
 ### 1.2. Phân biệt Category / Topic / Tag
 
-| Khái niệm   | Phạm vi           | Số lượng / bài viết | Ràng buộc Department |
-| ----------- | ------------------ | ------------------- | --------------------- |
-| `Category`  | Toàn hệ thống     | 1 bài = 1 category  | Có                    |
-| `Topic`     | Nội bộ department  | 1 bài = nhiều topic | Có (bắt buộc cùng dept) |
-| `Tag`       | Global             | 1 bài = nhiều tag   | Không                 |
+| Khái niệm  | Phạm vi           | Số lượng / bài viết | Ràng buộc Department    |
+| ---------- | ----------------- | ------------------- | ----------------------- |
+| `Category` | Toàn hệ thống     | 1 bài = 1 category  | Có                      |
+| `Topic`    | Nội bộ department | 1 bài = nhiều topic | Có (bắt buộc cùng dept) |
+| `Tag`      | Global            | 1 bài = nhiều tag   | Không                   |
 
 ### 1.3. Trạng thái bài viết
 
-| Field      | Giá trị              | Ý nghĩa                              |
-| ---------- | -------------------- | ------------------------------------ |
-| `status`   | `Draft`              | Bài nháp, chưa publish               |
-| `status`   | `Published`          | Đã xuất bản                         |
-| `status`   | `Archived`           | Đã lưu trữ                          |
-| `visibility` | `Public`           | Hiển thị công khai                  |
-| `visibility` | `Internal`         | Chỉ nội bộ                          |
+| Field        | Giá trị     | Ý nghĩa                |
+| ------------ | ----------- | ---------------------- |
+| `status`     | `Draft`     | Bài nháp, chưa publish |
+| `status`     | `Published` | Đã xuất bản            |
+| `status`     | `Archived`  | Đã lưu trữ             |
+| `visibility` | `Public`    | Hiển thị công khai     |
+| `visibility` | `Internal`  | Chỉ nội bộ             |
 
 ---
 
@@ -129,7 +129,10 @@ export interface Comment {
 // ─── Assembled Data (sau khi FE assemble) ─────────────────
 
 export interface AssembledPost extends Post {
-  department: Pick<BlogDepartment, "name" | "department_name" | "department_code">;
+  department: Pick<
+    BlogDepartment,
+    "name" | "department_name" | "department_code"
+  >;
   category: Pick<Category, "name" | "category" | "slug">;
   topics: Pick<Topic, "name" | "topic" | "slug">[];
   tags: Pick<Tag, "name" | "tag_name" | "slug">[];
@@ -153,40 +156,40 @@ NEXT_PUBLIC_API_BASE_URL → Frappe backend (quản lý cookie `sid`)
 
 ### 3.2. Endpoints Map
 
-| CRUD       | Method | Endpoint                        | Body / Params               | Response        |
-| ---------- | ------ | ------------------------------- | ---------------------------- | --------------- |
-| List       | GET    | `/api/resource/posts`           | filters, fields, limit...   | `Post[]`        |
-| Get one    | GET    | `/api/resource/posts/{name}`    | —                            | `Post`         |
-| Create     | POST   | `/api/resource/posts`           | `Post` (partial)             | `Post`         |
-| Update     | PUT    | `/api/resource/posts/{name}`    | `Partial<Post>`              | `Post`         |
-| Delete     | DELETE | `/api/resource/posts/{name}`    | —                            | `{ message }`  |
+| CRUD    | Method | Endpoint                     | Body / Params             | Response      |
+| ------- | ------ | ---------------------------- | ------------------------- | ------------- |
+| List    | GET    | `/api/resource/posts`        | filters, fields, limit... | `Post[]`      |
+| Get one | GET    | `/api/resource/posts/{name}` | —                         | `Post`        |
+| Create  | POST   | `/api/resource/posts`        | `Post` (partial)          | `Post`        |
+| Update  | PUT    | `/api/resource/posts/{name}` | `Partial<Post>`           | `Post`        |
+| Delete  | DELETE | `/api/resource/posts/{name}` | —                         | `{ message }` |
 
 ### 3.3. Metadata Endpoints
 
-| Mục đích           | Method | Endpoint                        | Filters                       |
-| ------------------ | ------ | ------------------------------- | ----------------------------- |
-| Danh sách dept     | GET    | `/api/resource/blog_departments`| `is_active = 1`               |
-| Danh sách category | GET    | `/api/resource/categories`      | `is_active = 1`, dept filter  |
-| Danh sách topic    | GET    | `/api/resource/topics`          | `is_active = 1`, dept filter  |
-| Danh sách tag      | GET    | `/api/resource/tags`            | `is_active = 1`               |
-| Post topics        | GET    | `/api/resource/post_topics`     | `post = {name}`               |
-| Post tags          | GET    | `/api/resource/post_tags`       | `post = {name}`               |
-| Post comments      | GET    | `/api/resource/comments`        | `post = {name}`               |
+| Mục đích           | Method | Endpoint                         | Filters                      |
+| ------------------ | ------ | -------------------------------- | ---------------------------- |
+| Danh sách dept     | GET    | `/api/resource/blog_departments` | `is_active = 1`              |
+| Danh sách category | GET    | `/api/resource/categories`       | `is_active = 1`, dept filter |
+| Danh sách topic    | GET    | `/api/resource/topics`           | `is_active = 1`, dept filter |
+| Danh sách tag      | GET    | `/api/resource/tags`             | `is_active = 1`              |
+| Post topics        | GET    | `/api/resource/post_topics`      | `post = {name}`              |
+| Post tags          | GET    | `/api/resource/post_tags`        | `post = {name}`              |
+| Post comments      | GET    | `/api/resource/comments`         | `post = {name}`              |
 
 ### 3.4. Create / Update Topics & Tags
 
-| Thao tác          | Method | Endpoint                        | Body                          |
-| ----------------- | ------ | ------------------------------- | ----------------------------- |
-| Thêm topic vào post | POST | `/api/resource/post_topics`   | `{ post, topic }`             |
-| Xóa topic khỏi post| DELETE| `/api/resource/post_topics/{name}` | —                       |
-| Thêm tag vào post   | POST | `/api/resource/post_tags`      | `{ post, tag }`               |
-| Xóa tag khỏi post   | DELETE| `/api/resource/post_tags/{name}` | —                          |
+| Thao tác            | Method | Endpoint                           | Body              |
+| ------------------- | ------ | ---------------------------------- | ----------------- |
+| Thêm topic vào post | POST   | `/api/resource/post_topics`        | `{ post, topic }` |
+| Xóa topic khỏi post | DELETE | `/api/resource/post_topics/{name}` | —                 |
+| Thêm tag vào post   | POST   | `/api/resource/post_tags`          | `{ post, tag }`   |
+| Xóa tag khỏi post   | DELETE | `/api/resource/post_tags/{name}`   | —                 |
 
 ### 3.5. Upload Thumbnail
 
-| Thao tác  | Method | Endpoint    | Body                  | Response           |
-| --------- | ------ | ----------- | --------------------- | ------------------ |
-| Upload ảnh | POST  | `/api/method/upload_file` | `multipart/form-data` | `{ file_url }` |
+| Thao tác   | Method | Endpoint                  | Body                  | Response       |
+| ---------- | ------ | ------------------------- | --------------------- | -------------- |
+| Upload ảnh | POST   | `/api/method/upload_file` | `multipart/form-data` | `{ file_url }` |
 
 ---
 
@@ -245,11 +248,29 @@ import { EmbeddedMedia } from "./extensions/EmbeddedMedia";
 
 // Icons
 import {
-  Bold, Italic, UnderlineIcon, Strikethrough, Code,
-  Heading2, Heading3, List, ListOrdered, Quote,
-  CodeSquare, Link2, ImageIcon, Video, Undo, Redo,
-  AlignLeft, AlignCenter, AlignRight, AlignJustify,
-  Minus, Plus, ChevronDown,
+  Bold,
+  Italic,
+  UnderlineIcon,
+  Strikethrough,
+  Code,
+  Heading2,
+  Heading3,
+  List,
+  ListOrdered,
+  Quote,
+  CodeSquare,
+  Link2,
+  ImageIcon,
+  Video,
+  Undo,
+  Redo,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  AlignJustify,
+  Minus,
+  Plus,
+  ChevronDown,
 } from "lucide-react";
 ```
 
@@ -274,16 +295,19 @@ import {
 ### 4.3. Custom Extensions Implementation
 
 **FontSize** (`src/components/blogs/editor/extensions/FontSize.ts`):
+
 - Global attribute `fontSize` trên `textStyle`
 - Commands: `setFontSize`, `unsetFontSize`
 - Render inline style `font-size`
 
 **Indent** (`src/components/blogs/editor/extensions/Indent.ts`):
+
 - Attribute `data-indent` trên block nodes
 - Commands: `setIndent`, `indent`, `outdent`
 - Clamp level 0–5, render CSS `margin-left: ${level * 2}rem`
 
 **EmbeddedMedia** (`src/components/blogs/editor/extensions/EmbeddedMedia.ts`):
+
 - Custom block node: `group: 'block'`, `atom: true`, `draggable: true`
 - Attributes: `src`, `provider`, `kind`, `title`
 - Render iframe (YouTube/Vimeo) hoặc `<video>` element
@@ -300,6 +324,7 @@ import {
 **Chức năng**: Hiển thị danh sách bài viết dạng bảng với phân trang, filter, và bulk actions.
 
 **UI Components sử dụng**:
+
 - `Table`, `TableHeader`, `TableBody`, `TableRow`, `TableHead`, `TableCell`
 - `Card`, `CardHeader`, `CardContent`
 - `Button` (variants: `default`, `outline`, `destructive`)
@@ -333,14 +358,28 @@ const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
 ```tsx
 const { data: posts, isLoading } = useGetList<Post>("posts", {
-  fields: ["name", "title", "slug", "thumb", "excerpt", "published_at", "status", "visibility", "view_count", "category", "department"],
+  fields: [
+    "name",
+    "title",
+    "slug",
+    "thumb",
+    "excerpt",
+    "published_at",
+    "status",
+    "visibility",
+    "view_count",
+    "category",
+    "department",
+  ],
   filters: [
     // filter theo department nếu có
     filters.department ? ["department", "=", filters.department] : null,
     // filter theo category nếu có
     filters.category ? ["category", "=", filters.category] : null,
     // filter theo status
-    filters.status && filters.status !== "all" ? ["status", "=", filters.status] : null,
+    filters.status && filters.status !== "all"
+      ? ["status", "=", filters.status]
+      : null,
   ].filter(Boolean) as Filter[],
   limit_start: page * PAGE_SIZE,
   limit: PAGE_SIZE,
@@ -349,11 +388,13 @@ const { data: posts, isLoading } = useGetList<Post>("posts", {
 ```
 
 **Bulk actions**:
+
 - Xóa nhiều bài viết cùng lúc
 - Đổi trạng thái (Draft / Published / Archived)
 - Chỉ hiển thị khi có item được chọn
 
 **Action buttons**:
+
 - `+ Tạo bài viết` → mở `PostForm` trong `Dialog`
 - Edit → mở `PostForm` pre-filled
 - Delete → `AlertDialog` xác nhận
@@ -366,6 +407,7 @@ const { data: posts, isLoading } = useGetList<Post>("posts", {
 **Chức năng**: Hiển thị một bài viết dạng card (dùng cho grid view hoặc public listing).
 
 **UI Components sử dụng**:
+
 - `Card`, `CardHeader`, `CardContent`, `CardFooter`
 - `Badge`
 - `Button` (variant: `ghost`, size: `icon-sm`)
@@ -407,20 +449,20 @@ interface PostCardProps {
 
 **Fields**:
 
-| Field          | Component           | Required | Validation                  |
-| -------------- | ------------------- | -------- | --------------------------- |
-| Title          | `Input`             | ✓        | 3–200 ký tự                 |
-| Department     | `Select`            | ✓        | Bắt buộc chọn trước category |
-| Category       | `Select` (phụ thuộc dept) | ✓   | Phải cùng department         |
-| Topics         | `TopicSelector`     | ✗        | Nhiều lựa chọn, cùng dept    |
-| Tags           | `TagSelector`       | ✗        | Global, nhiều lựa chọn       |
-| Slug           | `Input`             | ✗        | Auto-generate từ title nếu rỗng |
-| Excerpt        | `Textarea`          | ✗        | Max 500 ký tự               |
-| Thumbnail      | `Input[type=file]`  | ✗        | Image only, max 5MB         |
-| Content        | `TiptapEditor`       | ✓        | HTML content                 |
-| Status         | `Select`            | ✓        | Default: `Draft`             |
-| Visibility     | `Select`            | ✓        | Default: `Public`            |
-| Published At   | `Input[type=datetime-local]` | ✗   | Auto-set khi publish        |
+| Field        | Component                    | Required | Validation                      |
+| ------------ | ---------------------------- | -------- | ------------------------------- |
+| Title        | `Input`                      | ✓        | 3–200 ký tự                     |
+| Department   | `Select`                     | ✓        | Bắt buộc chọn trước category    |
+| Category     | `Select` (phụ thuộc dept)    | ✓        | Phải cùng department            |
+| Topics       | `TopicSelector`              | ✗        | Nhiều lựa chọn, cùng dept       |
+| Tags         | `TagSelector`                | ✗        | Global, nhiều lựa chọn          |
+| Slug         | `Input`                      | ✗        | Auto-generate từ title nếu rỗng |
+| Excerpt      | `Textarea`                   | ✗        | Max 500 ký tự                   |
+| Thumbnail    | `Input[type=file]`           | ✗        | Image only, max 5MB             |
+| Content      | `TiptapEditor`               | ✓        | HTML content                    |
+| Status       | `Select`                     | ✓        | Default: `Draft`                |
+| Visibility   | `Select`                     | ✓        | Default: `Public`               |
+| Published At | `Input[type=datetime-local]` | ✗        | Auto-set khi publish            |
 
 **Logic quan trọng**:
 
@@ -456,6 +498,7 @@ async function handleSubmit(values: PostFormValues) {
 **Chức năng**: Collapsible filter bar trên trang danh sách.
 
 **UI Components sử dụng**:
+
 - `Card`, `CardContent`
 - `Select` / `SelectTrigger` / `SelectContent` / `SelectItem`
 - `Input`
@@ -464,13 +507,13 @@ async function handleSubmit(values: PostFormValues) {
 
 **Filters**:
 
-| Filter      | Component     | Options                        |
-| ---------- | ------------- | ------------------------------ |
-| Department | `Select`      | Danh sách departments (active)  |
-| Category   | `Select`      | Theo department (phụ thuộc)    |
-| Status     | `Select`      | Tất cả / Draft / Published / Archived |
-| Visibility | `Select`      | Tất cả / Public / Internal     |
-| Search     | `Input`       | Tìm trong title, excerpt        |
+| Filter     | Component | Options                               |
+| ---------- | --------- | ------------------------------------- |
+| Department | `Select`  | Danh sách departments (active)        |
+| Category   | `Select`  | Theo department (phụ thuộc)           |
+| Status     | `Select`  | Tất cả / Draft / Published / Archived |
+| Visibility | `Select`  | Tất cả / Public / Internal            |
+| Search     | `Input`   | Tìm trong title, excerpt              |
 
 **Active filter badges**: Hiển thị các filter đang active với nút × để remove.
 
@@ -499,6 +542,7 @@ const { data: categories } = useGetList<Category>("categories", {
 **Chức năng**: Multi-select topics. Chỉ hiển thị topics cùng department với post.
 
 **UI Components**: Có thể dùng:
+
 - `Checkbox` trong `ScrollArea` (đơn giản)
 - `Command` / `CommandList` / `CommandItem` (combobox-style)
 - Hoặc `MultiSelect` custom
@@ -537,16 +581,17 @@ const { data: rawComments } = useGetList<Comment>("comments", {
 
 // Assemble tree
 const assembled = useMemo(() => {
-  const roots = rawComments?.filter(c => !c.comment_answer) ?? [];
-  const replies = rawComments?.filter(c => c.comment_answer) ?? [];
-  return roots.map(root => ({
+  const roots = rawComments?.filter((c) => !c.comment_answer) ?? [];
+  const replies = rawComments?.filter((c) => c.comment_answer) ?? [];
+  return roots.map((root) => ({
     ...root,
-    replies: replies.filter(r => r.comment_answer === root.name),
+    replies: replies.filter((r) => r.comment_answer === root.name),
   }));
 }, [rawComments]);
 ```
 
 **UI Components**:
+
 - `Card`, `CardContent`
 - `Avatar`
 - `Button` (reply action)
@@ -559,7 +604,7 @@ function CommentItem({ comment }: { comment: AssembledComment }) {
   return (
     <div className="pl-4 border-l-2">
       <CommentContent comment={comment} />
-      {comment.replies?.map(reply => (
+      {comment.replies?.map((reply) => (
         <CommentItem key={reply.name} comment={reply} />
       ))}
     </div>
@@ -596,9 +641,9 @@ interface CommentFormProps {
 
 ```tsx
 type BlogEditorProps = {
-  value: string;              // HTML content
-  onChange: (value: string) => void;  // Callback khi content thay đổi
-  disabled?: boolean;        // Optional: disable editor
+  value: string; // HTML content
+  onChange: (value: string) => void; // Callback khi content thay đổi
+  disabled?: boolean; // Optional: disable editor
 };
 ```
 
@@ -617,7 +662,7 @@ type EditorState = {
   isCodeBlock: boolean;
   canUndo: boolean;
   canRedo: boolean;
-  textAlign: 'left' | 'center' | 'right' | 'justify';
+  textAlign: "left" | "center" | "right" | "justify";
   fontSize: string;
   textColor: string;
   highlightColor: string;
@@ -646,31 +691,32 @@ import Color from "@tiptap/extension-color";
 **Indent Extension**: Attribute `data-indent` trên các block nodes. Commands: `setIndent`, `indent`, `outdent`. Clamp indent level từ 0–5. Render CSS `margin-left: ${level * 2}rem`.
 
 **EmbeddedMedia Node**: Custom block node cho media nhúng (`group: 'block'`, `atom: true`, `draggable: true`, `selectable: true`). Attributes: `src`, `provider`, `kind`, `title`. Render:
+
 - Nếu `kind === 'embed'`: iframe với aspect ratio (YouTube/Vimeo)
 - Nếu là file: `<video>` element với controls
 
 #### Toolbar Features
 
-| Feature          | Extension             | Chi tiết                             |
-| --------------- | -------------------- | ----------------------------------- |
-| Bold            | StarterKit            | `<strong>`                          |
-| Italic          | StarterKit            | `<em>`                              |
-| Underline       | Underline             | `<u>`                               |
-| Strikethrough   | StarterKit            | `<s>`                               |
-| Heading 2/3     | StarterKit            | `<h2>`, `<h3>`                     |
-| Bullet list     | StarterKit            | `<ul>`                              |
-| Ordered list    | StarterKit            | `<ol>`                              |
-| Blockquote      | StarterKit            | `<blockquote>` với border trái       |
-| Code block      | StarterKit            | Syntax highlighting, nền `bg-muted` |
-| Link            | Link                  | URL validation, `target="_blank"`    |
-| Image           | Image                 | URL hoặc upload qua `useFileUpload` |
-| Video           | EmbeddedMedia         | YouTube, Vimeo, mp4/webm/ogg       |
-| Text align      | TextAlign             | left/center/right/justify          |
-| Font size       | Custom FontSize       | 12/14/16/18/24/32 px              |
-| Text color      | Color + TextStyle     | Color picker, mặc định `#111827`   |
-| Highlight       | Highlight             | Color picker, mặc định `#fef08a`  |
-| Indent/Outdent  | Custom Indent         | 0–5 levels                         |
-| Undo/Redo       | StarterKit            | Chỉ active khi `canUndo/canRedo`   |
+| Feature        | Extension         | Chi tiết                            |
+| -------------- | ----------------- | ----------------------------------- |
+| Bold           | StarterKit        | `<strong>`                          |
+| Italic         | StarterKit        | `<em>`                              |
+| Underline      | Underline         | `<u>`                               |
+| Strikethrough  | StarterKit        | `<s>`                               |
+| Heading 2/3    | StarterKit        | `<h2>`, `<h3>`                      |
+| Bullet list    | StarterKit        | `<ul>`                              |
+| Ordered list   | StarterKit        | `<ol>`                              |
+| Blockquote     | StarterKit        | `<blockquote>` với border trái      |
+| Code block     | StarterKit        | Syntax highlighting, nền `bg-muted` |
+| Link           | Link              | URL validation, `target="_blank"`   |
+| Image          | Image             | URL hoặc upload qua `useFileUpload` |
+| Video          | EmbeddedMedia     | YouTube, Vimeo, mp4/webm/ogg        |
+| Text align     | TextAlign         | left/center/right/justify           |
+| Font size      | Custom FontSize   | 12/14/16/18/24/32 px                |
+| Text color     | Color + TextStyle | Color picker, mặc định `#111827`    |
+| Highlight      | Highlight         | Color picker, mặc định `#fef08a`    |
+| Indent/Outdent | Custom Indent     | 0–5 levels                          |
+| Undo/Redo      | StarterKit        | Chỉ active khi `canUndo/canRedo`    |
 
 #### Image Upload
 
@@ -700,11 +746,11 @@ async function handleImageUpload(file: File) {
 
 #### Dialogs
 
-| Dialog     | Tiêu đề               | Preview | Validation                        |
-| --------- | --------------------- | ------- | -------------------------------- |
-| Link      | Chèn liên kết         | Không   | URL http(s) hoặc đường dẫn nội bộ |
-| Image     | Chèn ảnh từ URL       | Có      | URL ảnh hợp lệ (`isSupportedImageUrl`) |
-| Video     | Chèn video từ URL     | Có      | YouTube, Vimeo, mp4, webm, ogg    |
+| Dialog | Tiêu đề           | Preview | Validation                             |
+| ------ | ----------------- | ------- | -------------------------------------- |
+| Link   | Chèn liên kết     | Không   | URL http(s) hoặc đường dẫn nội bộ      |
+| Image  | Chèn ảnh từ URL   | Có      | URL ảnh hợp lệ (`isSupportedImageUrl`) |
+| Video  | Chèn video từ URL | Có      | YouTube, Vimeo, mp4, webm, ogg         |
 
 **Dialog Features**: Auto-focus input, error alerts destructive, Cancel/Submit buttons, preview real-time.
 
@@ -715,6 +761,7 @@ async function handleImageUpload(file: File) {
 **Editor content**: `min-h-72 px-4 py-3`
 
 **ProseMirror styles**:
+
 - Selected node: `ring-2 ring-primary`
 - Links: `cursor-pointer text-primary underline`
 - Blockquote: `border-l pl-4 italic`
@@ -942,14 +989,14 @@ const { updateDoc } = useUpdateDoc<Comment>("comments");
 
 ### 8.1. Frontend Validation
 
-| Field       | Rule                                           | Error message              |
-| ---------- | ---------------------------------------------- | -------------------------- |
-| Title       | Required, 3–200 chars                          | Tiêu đề phải từ 3–200 ký tự |
-| Department  | Required                                       | Vui lòng chọn bộ phận      |
-| Category    | Required, must belong to selected department   | Danh mục không hợp lệ      |
-| Topic       | Must belong to selected department             | Chủ đề không thuộc bộ phận này |
-| Content     | Required (TiptapEditor không empty)            | Vui lòng nhập nội dung     |
-| Thumbnail   | Image only (jpg/png/webp), max 5MB            | File phải là ảnh, tối đa 5MB |
+| Field      | Rule                                         | Error message                  |
+| ---------- | -------------------------------------------- | ------------------------------ |
+| Title      | Required, 3–200 chars                        | Tiêu đề phải từ 3–200 ký tự    |
+| Department | Required                                     | Vui lòng chọn bộ phận          |
+| Category   | Required, must belong to selected department | Danh mục không hợp lệ          |
+| Topic      | Must belong to selected department           | Chủ đề không thuộc bộ phận này |
+| Content    | Required (TiptapEditor không empty)          | Vui lòng nhập nội dung         |
+| Thumbnail  | Image only (jpg/png/webp), max 5MB           | File phải là ảnh, tối đa 5MB   |
 
 ### 8.2. Error Display
 
@@ -972,11 +1019,11 @@ toast.warning("Bài viết chưa được publish");
 
 ## 9. Responsive Design
 
-| Breakpoint  | Layout                                |
-| ---------- | ------------------------------------- |
-| Mobile (< 768px) | Full-width, stacked layout     |
-| Tablet (768–1024px) | 2-column where appropriate  |
-| Desktop (> 1024px)  | Full layout with sidebar     |
+| Breakpoint          | Layout                     |
+| ------------------- | -------------------------- |
+| Mobile (< 768px)    | Full-width, stacked layout |
+| Tablet (768–1024px) | 2-column where appropriate |
+| Desktop (> 1024px)  | Full layout with sidebar   |
 
 **Table**: Chuyển thành card view trên mobile.
 

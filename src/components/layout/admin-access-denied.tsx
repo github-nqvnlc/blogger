@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { ArrowLeft, LayoutDashboard, ShieldAlert } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useLanguage } from '@/hooks/useLanguage';
-import { buildLocalePath } from '@/i18n';
+import Link from "next/link";
+import { ArrowLeft, LayoutDashboard, ShieldAlert } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/hooks/useLanguage";
+import { buildLocalePath } from "@/i18n";
 
 interface AdminAccessDeniedProps {
   description: string;
@@ -34,13 +34,13 @@ export function AdminAccessDenied({
 
         <div className="flex flex-col justify-center gap-3 sm:flex-row">
           <Button asChild>
-            <Link href={buildLocalePath(locale, '/admin')}>
+            <Link href={buildLocalePath(locale, "/admin")}>
               <LayoutDashboard className="mr-2 size-4" />
               {t.common.backDashboard}
             </Link>
           </Button>
           <Button variant="outline" asChild>
-            <Link href={buildLocalePath(locale, '/')}>
+            <Link href={buildLocalePath(locale, "/")}>
               <ArrowLeft className="mr-2 size-4" />
               {t.common.backHome}
             </Link>

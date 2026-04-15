@@ -1,19 +1,19 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
-import { useCreateDoc, useUpdateDoc } from '@/hooks';
-import { BlogDepartment, DepartmentFormValues } from '@/types/blogs';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { Spinner } from '@/components/ui/spinner';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle } from 'lucide-react';
-import { useLanguage } from '@/hooks/useLanguage';
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { useCreateDoc, useUpdateDoc } from "@/hooks";
+import { BlogDepartment, DepartmentFormValues } from "@/types/blogs";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Spinner } from "@/components/ui/spinner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
+import { useLanguage } from "@/hooks/useLanguage";
 
 interface DepartmentFormProps {
   department: BlogDepartment | null;
@@ -21,7 +21,11 @@ interface DepartmentFormProps {
   onCancel?: () => void;
 }
 
-export function DepartmentForm({ department, onSuccess, onCancel }: DepartmentFormProps) {
+export function DepartmentForm({
+  department,
+  onSuccess,
+  onCancel,
+}: DepartmentFormProps) {
   const isEditing = !!department;
   const { t } = useLanguage();
   const copy = t.blogDepartments.form;
@@ -35,34 +39,36 @@ export function DepartmentForm({ department, onSuccess, onCancel }: DepartmentFo
     formState: { errors },
   } = useForm<DepartmentFormValues>({
     defaultValues: {
-      department_name: '',
-      department_code: '',
-      description: '',
+      department_name: "",
+      department_code: "",
+      description: "",
       is_active: true,
       sort_order: 0,
     },
   });
 
-  const watchIsActive = watch('is_active');
+  const watchIsActive = watch("is_active");
 
-  const { createDoc, loading: isCreating } = useCreateDoc<BlogDepartment>('blog_departments');
-  const { updateDoc, loading: isUpdating } = useUpdateDoc<BlogDepartment>('blog_departments');
+  const { createDoc, loading: isCreating } =
+    useCreateDoc<BlogDepartment>("blog_departments");
+  const { updateDoc, loading: isUpdating } =
+    useUpdateDoc<BlogDepartment>("blog_departments");
   const isLoading = isCreating || isUpdating;
 
   useEffect(() => {
     if (department) {
       reset({
-        department_name: department.department_name ?? '',
-        department_code: department.department_code ?? '',
-        description: department.description ?? '',
+        department_name: department.department_name ?? "",
+        department_code: department.department_code ?? "",
+        description: department.description ?? "",
         is_active: department.is_active === 1,
         sort_order: department.sort_order ?? 0,
       });
     } else {
       reset({
-        department_name: '',
-        department_code: '',
-        description: '',
+        department_name: "",
+        department_code: "",
+        description: "",
         is_active: true,
         sort_order: 0,
       });
@@ -102,17 +108,17 @@ export function DepartmentForm({ department, onSuccess, onCancel }: DepartmentFo
 
   const generateCode = () => {
     // eslint-disable-next-line react-hooks/incompatible-library
-    const name = watch('department_name');
+    const name = watch("department_name");
     if (!name) return;
     const code = name
       .trim()
       .toUpperCase()
-      .replace(/[^\w\s\u00C0-\u024F]/g, '')
+      .replace(/[^\w\s\u00C0-\u024F]/g, "")
       .split(/\s+/)
-      .map(word => word.charAt(0))
-      .join('')
+      .map((word) => word.charAt(0))
+      .join("")
       .slice(0, 10);
-    setValue('department_code', code);
+    setValue("department_code", code);
   };
 
   return (
@@ -127,7 +133,7 @@ export function DepartmentForm({ department, onSuccess, onCancel }: DepartmentFo
             variant="ghost"
             size="sm"
             onClick={generateCode}
-            disabled={!watch('department_name')}
+            disabled={!watch("department_name")}
             className="h-7 text-xs"
           >
             {copy.generateCode}
@@ -136,7 +142,7 @@ export function DepartmentForm({ department, onSuccess, onCancel }: DepartmentFo
         <Input
           id="department_name"
           placeholder={copy.namePlaceholder}
-          {...register('department_name', {
+          {...register("department_name", {
             required: copy.nameRequired,
             minLength: {
               value: 2,
@@ -149,7 +155,9 @@ export function DepartmentForm({ department, onSuccess, onCancel }: DepartmentFo
           })}
         />
         {errors.department_name && (
-          <p className="text-sm text-destructive">{errors.department_name.message}</p>
+          <p className="text-sm text-destructive">
+            {errors.department_name.message}
+          </p>
         )}
       </div>
 
@@ -162,7 +170,7 @@ export function DepartmentForm({ department, onSuccess, onCancel }: DepartmentFo
           placeholder={copy.codePlaceholder}
           className="uppercase"
           maxLength={10}
-          {...register('department_code', {
+          {...register("department_code", {
             required: copy.codeRequired,
             minLength: {
               value: 2,
@@ -176,15 +184,15 @@ export function DepartmentForm({ department, onSuccess, onCancel }: DepartmentFo
               value: /^[A-Z0-9_]+$/,
               message: copy.codePattern,
             },
-            setValueAs: v => v?.toUpperCase(),
+            setValueAs: (v) => v?.toUpperCase(),
           })}
         />
         {errors.department_code && (
-          <p className="text-sm text-destructive">{errors.department_code.message}</p>
+          <p className="text-sm text-destructive">
+            {errors.department_code.message}
+          </p>
         )}
-        <p className="text-xs text-muted-foreground">
-          {copy.codeHelp}
-        </p>
+        <p className="text-xs text-muted-foreground">{copy.codeHelp}</p>
       </div>
 
       <div className="space-y-2">
@@ -193,7 +201,7 @@ export function DepartmentForm({ department, onSuccess, onCancel }: DepartmentFo
           id="description"
           placeholder={copy.descriptionPlaceholder}
           rows={3}
-          {...register('description', {
+          {...register("description", {
             maxLength: {
               value: 500,
               message: copy.descriptionMax,
@@ -201,10 +209,12 @@ export function DepartmentForm({ department, onSuccess, onCancel }: DepartmentFo
           })}
         />
         {errors.description && (
-          <p className="text-sm text-destructive">{errors.description.message}</p>
+          <p className="text-sm text-destructive">
+            {errors.description.message}
+          </p>
         )}
         <p className="text-xs text-muted-foreground text-right">
-          {(watch('description') ?? '').length}/500
+          {(watch("description") ?? "").length}/500
         </p>
       </div>
 
@@ -215,7 +225,7 @@ export function DepartmentForm({ department, onSuccess, onCancel }: DepartmentFo
           type="number"
           min={0}
           max={9999}
-          {...register('sort_order', {
+          {...register("sort_order", {
             valueAsNumber: true,
             min: {
               value: 0,
@@ -228,11 +238,11 @@ export function DepartmentForm({ department, onSuccess, onCancel }: DepartmentFo
           })}
         />
         {errors.sort_order && (
-          <p className="text-sm text-destructive">{errors.sort_order.message}</p>
+          <p className="text-sm text-destructive">
+            {errors.sort_order.message}
+          </p>
         )}
-        <p className="text-xs text-muted-foreground">
-          {copy.sortOrderHelp}
-        </p>
+        <p className="text-xs text-muted-foreground">{copy.sortOrderHelp}</p>
       </div>
 
       <div className="flex items-center justify-between rounded-lg border p-4">
@@ -241,29 +251,30 @@ export function DepartmentForm({ department, onSuccess, onCancel }: DepartmentFo
             {copy.activeStatus}
           </Label>
           <p className="text-sm text-muted-foreground">
-            {watchIsActive
-              ? copy.activeDescription
-              : copy.inactiveDescription}
+            {watchIsActive ? copy.activeDescription : copy.inactiveDescription}
           </p>
         </div>
         <Switch
           id="is_active"
           checked={watchIsActive}
-          onCheckedChange={checked => setValue('is_active', checked)}
+          onCheckedChange={(checked) => setValue("is_active", checked)}
         />
       </div>
 
       {!watchIsActive && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            {copy.inactiveWarning}
-          </AlertDescription>
+          <AlertDescription>{copy.inactiveWarning}</AlertDescription>
         </Alert>
       )}
 
       <div className="flex items-center justify-end gap-3 pt-2 border-t">
-        <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onCancel}
+          disabled={isLoading}
+        >
           {copy.cancel}
         </Button>
         <Button type="submit" disabled={isLoading}>

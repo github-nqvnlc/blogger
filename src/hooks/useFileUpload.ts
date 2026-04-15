@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState, useCallback } from 'react';
-import { getApiClient } from '@/lib/apiClient';
-import { UploadArgs } from '@/types/hooks';
+import { useState, useCallback } from "react";
+import { getApiClient } from "@/lib/apiClient";
+import { UploadArgs } from "@/types/hooks";
 
 export interface FileUploadResponse {
   name: string;
@@ -42,19 +42,19 @@ export function useFileUpload() {
       try {
         const apiClient = getApiClient();
         const formData = new FormData();
-        formData.append('file', file, file.name);
-        formData.append('is_private', args?.isPrivate ? '1' : '0');
-        if (args?.folder) formData.append('folder', args.folder);
-        if (args?.file_url) formData.append('file_url', args.file_url);
-        if (args?.doctype) formData.append('doctype', args.doctype);
-        if (args?.docname) formData.append('docname', args.docname);
-        if (args?.fieldname) formData.append('fieldname', args.fieldname);
+        formData.append("file", file, file.name);
+        formData.append("is_private", args?.isPrivate ? "1" : "0");
+        if (args?.folder) formData.append("folder", args.folder);
+        if (args?.file_url) formData.append("file_url", args.file_url);
+        if (args?.doctype) formData.append("doctype", args.doctype);
+        if (args?.docname) formData.append("docname", args.docname);
+        if (args?.fieldname) formData.append("fieldname", args.fieldname);
 
         const res = await apiClient.post<FileUploadResponse>(
-          '/api/method/upload_file',
+          "/api/method/upload_file",
           formData,
           {
-            headers: { 'Content-Type': 'multipart/form-data' },
+            headers: { "Content-Type": "multipart/form-data" },
             onUploadProgress: (event) => {
               if (event.total) {
                 const pct = Math.round((event.loaded / event.total) * 100);

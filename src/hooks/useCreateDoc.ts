@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState, useCallback } from 'react';
-import { getApiClient } from '@/lib/apiClient';
+import { useState, useCallback } from "react";
+import { getApiClient } from "@/lib/apiClient";
 
 export function useCreateDoc<T = Record<string, unknown>>(
   /** Tên resource (Doctype) */

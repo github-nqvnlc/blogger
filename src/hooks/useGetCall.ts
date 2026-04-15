@@ -1,9 +1,12 @@
-'use client';
+"use client";
 
-import { useQuery, UseQueryOptions } from '@tanstack/react-query';
-import { getApiClient } from '@/lib/apiClient';
+import { useQuery, UseQueryOptions } from "@tanstack/react-query";
+import { getApiClient } from "@/lib/apiClient";
 
-type UseGetCallOptions<T> = Omit<UseQueryOptions<T, Error>, 'queryKey' | 'queryFn'>;
+type UseGetCallOptions<T> = Omit<
+  UseQueryOptions<T, Error>,
+  "queryKey" | "queryFn"
+>;
 
 export function useGetCall<T = Record<string, unknown>>(
   /** Endpoint bất kỳ, vd: '/api/method/frappe.client.get_value' */

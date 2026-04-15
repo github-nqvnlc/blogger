@@ -1,34 +1,40 @@
-'use client';
+"use client";
 
-import { useLanguage } from '@/hooks/useLanguage';
-import { useUserSettings } from '@/hooks/useUserSettings';
-import { useAuth } from '@/hooks/useAuth';
-import { useMounted } from '@/hooks/useMounted';
-import { SUPPORTED_LANGUAGES } from '@/i18n';
-import { useTheme } from 'next-themes';
-import { useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useLanguage } from "@/hooks/useLanguage";
+import { useUserSettings } from "@/hooks/useUserSettings";
+import { useAuth } from "@/hooks/useAuth";
+import { useMounted } from "@/hooks/useMounted";
+import { SUPPORTED_LANGUAGES } from "@/i18n";
+import { useTheme } from "next-themes";
+import { useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Loader2 } from 'lucide-react';
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Loader2 } from "lucide-react";
 
 const THEME_MAP_TO_SERVER: Record<string, string> = {
-  light: 'Light',
-  dark: 'Dark',
-  system: 'Automatic',
+  light: "Light",
+  dark: "Dark",
+  system: "Automatic",
 };
 
 const THEME_MAP_FROM_SERVER: Record<string, string> = {
-  Light: 'light',
-  Dark: 'dark',
+  Light: "light",
+  Dark: "dark",
 };
 
 function LanguageSetting() {
@@ -37,7 +43,7 @@ function LanguageSetting() {
   const { updateSettings, isSaving } = useUserSettings(currentUser);
 
   const handleChange = (value: string) => {
-    setLanguage(value as 'vi' | 'en');
+    setLanguage(value as "vi" | "en");
     updateSettings({ language: value });
   };
 
@@ -50,7 +56,9 @@ function LanguageSetting() {
         </p>
       </div>
       <div className="flex items-center gap-2">
-        {isSaving && <Loader2 className="size-4 animate-spin text-muted-foreground" />}
+        {isSaving && (
+          <Loader2 className="size-4 animate-spin text-muted-foreground" />
+        )}
         <Select value={locale} onValueChange={handleChange}>
           <SelectTrigger className="w-40">
             <SelectValue />
@@ -72,17 +80,21 @@ function ThemeSetting() {
   const { t, setLanguage } = useLanguage();
   const { theme, setTheme } = useTheme();
   const { currentUser } = useAuth();
-  const { data: settings, updateSettings, isSaving } = useUserSettings(currentUser);
+  const {
+    data: settings,
+    updateSettings,
+    isSaving,
+  } = useUserSettings(currentUser);
   const mounted = useMounted();
 
   useEffect(() => {
     if (!settings) return;
     if (settings.desk_theme) {
-      const mapped = THEME_MAP_FROM_SERVER[settings.desk_theme] ?? 'light';
+      const mapped = THEME_MAP_FROM_SERVER[settings.desk_theme] ?? "light";
       setTheme(mapped);
     }
     if (settings.language) {
-      setLanguage(settings.language as 'vi' | 'en');
+      setLanguage(settings.language as "vi" | "en");
     }
   }, [settings, setTheme, setLanguage]);
 
@@ -114,7 +126,9 @@ function ThemeSetting() {
         </p>
       </div>
       <div className="flex items-center gap-2">
-        {isSaving && <Loader2 className="size-4 animate-spin text-muted-foreground" />}
+        {isSaving && (
+          <Loader2 className="size-4 animate-spin text-muted-foreground" />
+        )}
         <Select value={theme} onValueChange={handleChange}>
           <SelectTrigger className="w-40">
             <SelectValue />
@@ -136,10 +150,10 @@ export default function SettingsPage() {
   return (
     <div className="space-y-8 p-2">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">{t.settings.title}</h1>
-        <p className="text-muted-foreground mt-1">
-          {t.settings.description}
-        </p>
+        <h1 className="text-3xl font-bold tracking-tight">
+          {t.settings.title}
+        </h1>
+        <p className="text-muted-foreground mt-1">{t.settings.description}</p>
       </div>
 
       <Card>
