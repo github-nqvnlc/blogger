@@ -1,10 +1,28 @@
-'use client';
-
+import type { Metadata } from 'next';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { AdminSidebar, AdminSidebarInset } from '@/components/layout/admin-sidebar';
 import { AdminBreadcrumb } from '@/components/layout/admin-breadcrumb';
-import { Separator } from '@/components/ui/separator';
+import { getDictionary, isValidLocale, localizeMetadataPath } from '@/i18n';
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  if (!isValidLocale(locale)) return {};
+
+  const t = getDictionary(locale);
+
+  return {
+    title: t.metadata.adminTitle,
+    description: t.metadata.adminDescription,
+    alternates: {
+      languages: localizeMetadataPath('/admin'),
+    },
+  };
+}
 
 export default function AdminLayout({
   children,

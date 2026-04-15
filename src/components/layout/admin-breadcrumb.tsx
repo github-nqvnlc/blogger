@@ -11,21 +11,11 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { Slash } from 'lucide-react';
+import { useLanguage } from '@/hooks/useLanguage';
+import { buildLocalePath, stripLocaleFromPathname } from '@/i18n';
 
-const BREADCRUMB_MAP: Record<string, string> = {
-  admin: 'Dashboard',
-  'blog-departments': 'Bộ phận nội dung',
-  categories: 'Danh mục',
-  topics: 'Chủ đề',
-  tags: 'Nhãn',
-  posts: 'Bài viết',
-  comments: 'Bình luận',
-  users: 'Người dùng',
-  settings: 'Cài đặt',
-};
-
-function formatLabel(slug: string): string {
-  if (BREADCRUMB_MAP[slug]) return BREADCRUMB_MAP[slug];
+function formatLabel(slug: string, map: Record<string, string>): string {
+  if (map[slug]) return map[slug];
   return slug
     .split('-')
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
@@ -34,8 +24,10 @@ function formatLabel(slug: string): string {
 
 export function AdminBreadcrumb() {
   const pathname = usePathname();
-
-  const segments = pathname.split('/').filter(Boolean);
+  const { locale, t } = useLanguage();
+  const normalizedPath = stripLocaleFromPathname(pathname);
+  const segments = normalizedPath.split('/').filter(Boolean);
+  const breadcrumbMap = t.admin.breadcrumbs as Record<string, string>;
 
   if (segments.length === 0) return null;
 
@@ -44,7 +36,9 @@ export function AdminBreadcrumb() {
       <BreadcrumbList>
         <BreadcrumbItem>
           <BreadcrumbLink asChild>
-            <Link href="/admin">Admin</Link>
+            <Link href={buildLocalePath(locale, '/admin')}>
+              {t.admin.breadcrumbHome}
+            </Link>
           </BreadcrumbLink>
         </BreadcrumbItem>
 
@@ -58,10 +52,12 @@ export function AdminBreadcrumb() {
                 <Slash className="h-3 w-3" />
               </BreadcrumbSeparator>
               {isLast ? (
-                <BreadcrumbPage>{formatLabel(segment)}</BreadcrumbPage>
+                <BreadcrumbPage>{formatLabel(segment, breadcrumbMap)}</BreadcrumbPage>
               ) : (
                 <BreadcrumbLink asChild>
-                  <Link href={href}>{formatLabel(segment)}</Link>
+                  <Link href={buildLocalePath(locale, href)}>
+                    {formatLabel(segment, breadcrumbMap)}
+                  </Link>
                 </BreadcrumbLink>
               )}
             </BreadcrumbItem>

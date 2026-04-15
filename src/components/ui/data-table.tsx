@@ -10,6 +10,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { flexRender } from '@tanstack/react-table';
+import { useLanguage } from '@/hooks/useLanguage';
 
 interface DataTableViewProps<TData> {
   table: Table<TData>;
@@ -24,6 +25,8 @@ export function DataTableView<TData>({
   loadingRows = 5,
   emptyMessage,
 }: DataTableViewProps<TData>) {
+  const { t } = useLanguage();
+
   return (
     <div className="overflow-hidden rounded-md border">
       <TableComponent>
@@ -78,7 +81,7 @@ export function DataTableView<TData>({
               >
                 {emptyMessage ?? (
                   <span className="text-muted-foreground">
-                    Không có dữ liệu
+                    {t.table.noData}
                   </span>
                 )}
               </TableCell>

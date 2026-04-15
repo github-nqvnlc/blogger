@@ -20,6 +20,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { DataTablePagination } from '@/components/ui/data-table-pagination';
+import { useLanguage } from '@/hooks/useLanguage';
 
 interface DepartmentTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -46,6 +47,8 @@ export function DepartmentTable<TData, TValue>({
   emptyMessage,
   meta,
 }: DepartmentTableProps<TData, TValue>) {
+  const { t } = useLanguage();
+
   // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data,
@@ -119,7 +122,7 @@ export function DepartmentTable<TData, TValue>({
                 >
                   {emptyMessage ?? (
                     <span className="text-muted-foreground">
-                      Không có dữ liệu
+                      {t.table.noData}
                     </span>
                   )}
                 </TableCell>

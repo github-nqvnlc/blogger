@@ -23,3 +23,6 @@ export { usePostCall, usePutCall, useDeleteCall } from './useMutationCall';
 export { useFileUpload } from './useFileUpload';
 export { useDocSearch } from './useDocSearch';
 export type { FileUploadResponse } from './useFileUpload';
+
+// ── Language ──────────────────────────────────────────────────────────────────
+export { useLanguage } from './useLanguage';

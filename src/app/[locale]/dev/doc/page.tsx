@@ -12,6 +12,8 @@ import { useGetCall } from '@/hooks/useGetCall';
 import { usePostCall, usePutCall, useDeleteCall } from '@/hooks/useMutationCall';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { useDocSearch } from '@/hooks/useDocSearch';
+import { useLanguage } from '@/hooks/useLanguage';
+import { buildLocalePath } from '@/i18n';
 import type { Filter } from '@/types/hooks';
 
 // ── Shared styles ─────────────────────────────────────────────────────────────
@@ -26,6 +28,7 @@ type JsonValue = Record<string, unknown> | unknown[] | string | number | boolean
 // ── Copy Button ──────────────────────────────────────────────────────────────
 function CopyButton({ data }: { data: JsonValue }) {
   const [copied, setCopied] = useState(false);
+  const { t } = useLanguage();
 
   function handleCopy() {
     const text = JSON.stringify(data as Parameters<typeof JSON.stringify>[0], null, 2);
@@ -38,7 +41,7 @@ function CopyButton({ data }: { data: JsonValue }) {
   return (
     <button onClick={handleCopy}
       className={`flex items-center gap-1.5 text-xs transition ${copied ? 'text-green-500' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'}`}>
-      {copied ? '✓ Đã copy!' : '⎘ Copy JSON'}
+      {copied ? `✓ ${t.devDoc.copied}` : `⎘ ${t.devDoc.copyJson}`}
     </button>
   );
 }
@@ -68,6 +71,7 @@ function buildCurl(opts: {
 
 function CopyCurlButton({ cmd }: { cmd: string }) {
   const [copied, setCopied] = useState(false);
+  const { t } = useLanguage();
   function handleCopy() {
     navigator.clipboard.writeText(cmd).then(() => {
       setCopied(true);
@@ -77,7 +81,7 @@ function CopyCurlButton({ cmd }: { cmd: string }) {
   return (
     <button onClick={handleCopy}
       className={`flex items-center gap-1.5 text-xs transition ${copied ? 'text-green-500' : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200'}`}>
-      {copied ? '✓ Copied!' : '▶ Copy cURL'}
+      {copied ? `✓ ${t.devDoc.copiedCurl}` : `▶ ${t.devDoc.copyCurl}`}
     </button>
   );
 }
@@ -105,11 +109,12 @@ type ResponseState = {
 };
 
 function ResponsePanel({ state }: { state: ResponseState | null }) {
+  const { t } = useLanguage();
   if (!state) {
     return (
       <div className="flex h-full min-h-[320px] flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-zinc-200 p-10 text-center dark:border-zinc-700">
         <span className="text-3xl">📭</span>
-        <p className="text-sm text-zinc-400">Chọn hook bên trái<br />và nhấn <strong className="text-zinc-500">Fetch / Execute</strong> để xem response</p>
+        <p className="text-sm text-zinc-400">{t.devDoc.emptyState}</p>
       </div>
     );
   }
@@ -125,7 +130,7 @@ function ResponsePanel({ state }: { state: ResponseState | null }) {
                 <button onClick={onRefetch} disabled={isLoading || !!isValidating}
                   className="cursor-pointer flex items-center gap-1.5 text-xs text-zinc-500 transition hover:text-zinc-700 disabled:opacity-50 dark:hover:text-zinc-300">
                   {isValidating ? <span className="h-3 w-3 animate-spin rounded-full border border-zinc-400 border-t-transparent" /> : <span>↻</span>}
-                  Refetch
+                  {t.devDoc.refetch}
                 </button>
               )}
               {data != null && <CopyButton data={data} />}
@@ -148,7 +153,7 @@ function ResponsePanel({ state }: { state: ResponseState | null }) {
         {isLoading && (
           <div className="flex items-center gap-3 rounded-lg bg-blue-50 px-4 py-3 dark:bg-blue-900/20">
             <span className="h-4 w-4 animate-spin rounded-full border-2 border-blue-400 border-t-transparent" />
-            <span className="text-sm text-blue-600 dark:text-blue-300">Đang xử lý…</span>
+            <span className="text-sm text-blue-600 dark:text-blue-300">{t.devDoc.processing}</span>
           </div>
         )}
         {!isLoading && error && (
@@ -163,7 +168,7 @@ function ResponsePanel({ state }: { state: ResponseState | null }) {
           </pre>
         )}
         {!isLoading && !error && data == null && (
-          <p className="text-sm text-zinc-400">Không có data.</p>
+          <p className="text-sm text-zinc-400">{t.devDoc.noData}</p>
         )}
       </div>
     </div>
@@ -202,6 +207,7 @@ function FilterBuilder({ value, onChange }: {
   value: FilterRowState[];
   onChange: (v: FilterRowState[]) => void;
 }) {
+  const { t } = useLanguage();
   function update(id: number, patch: Partial<FilterRowState>) {
     onChange(value.map((r) => (r.id === id ? { ...r, ...patch } : r)));
   }
@@ -224,7 +230,7 @@ function FilterBuilder({ value, onChange }: {
       ))}
       <button type="button" onClick={() => onChange([...value, newFilterRow()])}
         className="flex items-center gap-1 text-xs text-zinc-400 transition hover:text-zinc-600 dark:hover:text-zinc-300">
-        <span className="font-bold">+</span> Add Filter
+        <span className="font-bold">+</span> {t.devDoc.addFilter}
       </button>
     </div>
   );
@@ -235,6 +241,7 @@ function JsonTextarea({ label, value, onChange, rows = 4 }: {
   label: string; value: string; onChange: (v: string) => void; rows?: number;
 }) {
   const [formatError, setFormatError] = useState(false);
+  const { t } = useLanguage();
 
   function handleFormat() {
     try {
@@ -253,7 +260,7 @@ function JsonTextarea({ label, value, onChange, rows = 4 }: {
         <label className="text-xs font-medium text-zinc-500">{label}</label>
         <button type="button" onClick={handleFormat}
           className={`text-xs transition ${formatError ? 'text-red-500' : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200'}`}>
-          {formatError ? '✕ Invalid JSON' : '{ } Format'}
+          {formatError ? `✕ ${t.devDoc.invalidJson}` : `{ } ${t.devDoc.formatJson}`}
         </button>
       </div>
       <textarea
@@ -271,6 +278,7 @@ function JsonTextarea({ label, value, onChange, rows = 4 }: {
 type HookId = 'getDoc' | 'getList' | 'getCount' | 'createDoc' | 'updateDoc' | 'deleteDoc' | 'getCall' | 'postCall' | 'fileUpload' | 'docSearch';
 
 export default function DocHookDevPage() {
+  const { locale, t } = useLanguage();
   const [active, setActive] = useState<HookId | null>(null);
 
   // ── useGetDoc ──
@@ -470,9 +478,9 @@ export default function DocHookDevPage() {
       <div className="mb-6 sticky top-0 z-10 bg-zinc-50 shadow-xl p-4">
         <div className="mb-1 flex items-center gap-2">
           {/* <span className="rounded-md bg-zinc-200 px-2 py-0.5 font-mono text-xs text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">/dev/doc</span> */}
-          <span className="text-xs text-zinc-400"><Link href="/" className="hover:underline">← Quay về Home</Link></span>
+          <span className="text-xs text-zinc-400"><Link href={buildLocalePath(locale, '/')} className="hover:underline">← {t.devDoc.backHome}</Link></span>
         </div>
-        <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-50">Hooks Tester</h1>
+        <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-50">{t.devDoc.title}</h1>
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[40vw_1fr] px-4">
@@ -482,29 +490,29 @@ export default function DocHookDevPage() {
           {/* useGetDoc */}
           <HookCard id="getDoc" active={active === 'getDoc'} title="useGetDoc<T>" subtitle="GET /api/resource/{Doctype}/{id}" onSelect={(id) => setActive(id as HookId)}>
             <div className="grid grid-cols-2 gap-2">
-              <div><label className={labelCls}>Doctype</label><input value={gdResource} onChange={(e) => setGdResource(e.target.value)} placeholder="Task" className={inputCls} /></div>
-              <div><label className={labelCls}>Name / ID</label><input value={gdId} onChange={(e) => setGdId(e.target.value)} placeholder="TASK-0001" className={inputCls} /></div>
+              <div><label className={labelCls}>{t.devDoc.doctype}</label><input value={gdResource} onChange={(e) => setGdResource(e.target.value)} placeholder="Task" className={inputCls} /></div>
+              <div><label className={labelCls}>{t.devDoc.nameOrId}</label><input value={gdId} onChange={(e) => setGdId(e.target.value)} placeholder="TASK-0001" className={inputCls} /></div>
             </div>
             <div className="flex gap-2">
               <button className={btnPrimary} disabled={!gdResource.trim() || !gdId.trim()} onClick={() => {
                 setActive('getDoc');
                 setGdSubmit({ resource: gdResource.trim(), id: gdId.trim() });
-              }}>Fetch</button>
-              {gdSubmit && <button className={btnSecondary} onClick={() => setGdSubmit(null)}>Reset</button>}
+              }}>{t.common.fetch}</button>
+              {gdSubmit && <button className={btnSecondary} onClick={() => setGdSubmit(null)}>{t.common.reset}</button>}
             </div>
           </HookCard>
 
           {/* useGetList */}
           <HookCard id="getList" active={active === 'getList'} title="useGetList<T>" subtitle="GET /api/resource/{Doctype}?fields=…&filters=…" onSelect={(id) => setActive(id as HookId)}>
             <div className="grid grid-cols-2 gap-2">
-              <div><label className={labelCls}>Doctype *</label><input value={glResource} onChange={(e) => setGlResource(e.target.value)} placeholder="Task" className={inputCls} /></div>
-              <div><label className={labelCls}>Limit</label><input type="number" value={glLimit} onChange={(e) => setGlLimit(e.target.value)} className={inputCls} /></div>
+              <div><label className={labelCls}>{t.devDoc.doctype} *</label><input value={glResource} onChange={(e) => setGlResource(e.target.value)} placeholder="Task" className={inputCls} /></div>
+              <div><label className={labelCls}>{t.devDoc.limit}</label><input type="number" value={glLimit} onChange={(e) => setGlLimit(e.target.value)} className={inputCls} /></div>
             </div>
-            <div><label className={labelCls}>Fields <span className="font-normal text-zinc-400">(phẩy)</span></label><input value={glFields} onChange={(e) => setGlFields(e.target.value)} placeholder="name, subject, status" className={inputCls} /></div>
-            <div><label className={labelCls}>Filters</label><FilterBuilder value={glFilterRows} onChange={setGlFilterRows} /></div>
+            <div><label className={labelCls}>{t.devDoc.fields} <span className="font-normal text-zinc-400">(phẩy)</span></label><input value={glFields} onChange={(e) => setGlFields(e.target.value)} placeholder="name, subject, status" className={inputCls} /></div>
+            <div><label className={labelCls}>{t.devDoc.filters}</label><FilterBuilder value={glFilterRows} onChange={setGlFilterRows} /></div>
             <div className="grid grid-cols-2 gap-2">
-              <div><label className={labelCls}>Order by</label><input value={glOrder} onChange={(e) => setGlOrder(e.target.value)} placeholder="creation" className={inputCls} /></div>
-              <div><label className={labelCls}>Dir</label><select value={glDir} onChange={(e) => setGlDir(e.target.value as 'asc' | 'desc')} className={inputCls}><option value="desc">desc</option><option value="asc">asc</option></select></div>
+              <div><label className={labelCls}>{t.devDoc.orderBy}</label><input value={glOrder} onChange={(e) => setGlOrder(e.target.value)} placeholder="creation" className={inputCls} /></div>
+              <div><label className={labelCls}>{t.devDoc.direction}</label><select value={glDir} onChange={(e) => setGlDir(e.target.value as 'asc' | 'desc')} className={inputCls}><option value="desc">desc</option><option value="asc">asc</option></select></div>
             </div>
             <div className="flex gap-2">
               <button className={btnPrimary} disabled={!glResource.trim()} onClick={() => {
@@ -513,84 +521,84 @@ export default function DocHookDevPage() {
                 const orderBy = glOrder.trim() ? { field: glOrder.trim(), order: glDir } : undefined;
                 setGlSubmit({ fields, filters: filters.length ? filters : undefined, limit: Number(glLimit) || 20, orderBy });
                 setActive('getList');
-              }}>Fetch List</button>
-              {glSubmit !== undefined && <button className={btnSecondary} onClick={() => setGlSubmit(undefined)}>Reset</button>}
+              }}>{t.devDoc.fetchList}</button>
+              {glSubmit !== undefined && <button className={btnSecondary} onClick={() => setGlSubmit(undefined)}>{t.common.reset}</button>}
             </div>
           </HookCard>
 
           {/* useGetCount */}
           <HookCard id="getCount" active={active === 'getCount'} title="useGetCount" subtitle="GET /api/resource/{Doctype} → count" onSelect={(id) => setActive(id as HookId)}>
-            <div><label className={labelCls}>Doctype *</label><input value={gcResource} onChange={(e) => setGcResource(e.target.value)} placeholder="Task" className={inputCls} /></div>
-            <div><label className={labelCls}>Filters <span className="font-normal text-zinc-400">(tuỳ chọn)</span></label><FilterBuilder value={gcFilterRows} onChange={setGcFilterRows} /></div>
+            <div><label className={labelCls}>{t.devDoc.doctype} *</label><input value={gcResource} onChange={(e) => setGcResource(e.target.value)} placeholder="Task" className={inputCls} /></div>
+            <div><label className={labelCls}>{t.devDoc.filters} <span className="font-normal text-zinc-400">(tuỳ chọn)</span></label><FilterBuilder value={gcFilterRows} onChange={setGcFilterRows} /></div>
             <div className="flex gap-2">
               <button className={btnPrimary} disabled={!gcResource.trim()} onClick={() => {
                 const filters: Filter[] = gcFilterRows.filter(r => r.field.trim() && r.val.trim()).map(r => [r.field.trim(), r.op as Filter[1], r.val.trim()]);
                 setGcFilters(filters.length ? filters : []);
                 setGcEnabled(true);
                 setActive('getCount');
-              }}>Count</button>
-              {gcEnabled && <button className={btnSecondary} onClick={() => { setGcEnabled(false); setGcFilters(undefined); }}>Reset</button>}
+              }}>{t.devDoc.count}</button>
+              {gcEnabled && <button className={btnSecondary} onClick={() => { setGcEnabled(false); setGcFilters(undefined); }}>{t.common.reset}</button>}
             </div>
           </HookCard>
 
           {/* useCreateDoc */}
           <HookCard id="createDoc" active={active === 'createDoc'} title="useCreateDoc<T>" subtitle="POST /api/resource/{Doctype}" onSelect={(id) => setActive(id as HookId)}>
-            <div><label className={labelCls}>Doctype *</label><input value={cdResource} onChange={(e) => setCdResource(e.target.value)} placeholder="Task" className={inputCls} /></div>
-            <JsonTextarea label="Body (JSON)" value={cdBody} onChange={setCdBody} />
+            <div><label className={labelCls}>{t.devDoc.doctype} *</label><input value={cdResource} onChange={(e) => setCdResource(e.target.value)} placeholder="Task" className={inputCls} /></div>
+            <JsonTextarea label={t.devDoc.bodyJson} value={cdBody} onChange={setCdBody} />
             <div className="flex gap-2">
               <button className={btnPrimary} disabled={!cdResource.trim() || createDoc.loading} onClick={async () => {
                 setActive('createDoc');
                 createDoc.reset();
                 try { await createDoc.createDoc(parseJson(cdBody)); } catch { /* error shown via hook state */ }
-              }}>{createDoc.loading ? 'Creating…' : 'Create'}</button>
-              {(createDoc.isCompleted || createDoc.error) && <button className={btnSecondary} onClick={createDoc.reset}>Reset</button>}
+              }}>{createDoc.loading ? t.common.creating : t.common.create}</button>
+              {(createDoc.isCompleted || createDoc.error) && <button className={btnSecondary} onClick={createDoc.reset}>{t.common.reset}</button>}
             </div>
           </HookCard>
 
           {/* useUpdateDoc */}
           <HookCard id="updateDoc" active={active === 'updateDoc'} title="useUpdateDoc<T>" subtitle="PUT /api/resource/{Doctype}/{id}" onSelect={(id) => setActive(id as HookId)}>
             <div className="grid grid-cols-2 gap-2">
-              <div><label className={labelCls}>Doctype *</label><input value={udResource} onChange={(e) => setUdResource(e.target.value)} placeholder="Task" className={inputCls} /></div>
-              <div><label className={labelCls}>Name / ID *</label><input value={udId} onChange={(e) => setUdId(e.target.value)} placeholder="TASK-0001" className={inputCls} /></div>
+              <div><label className={labelCls}>{t.devDoc.doctype} *</label><input value={udResource} onChange={(e) => setUdResource(e.target.value)} placeholder="Task" className={inputCls} /></div>
+              <div><label className={labelCls}>{t.devDoc.nameOrId} *</label><input value={udId} onChange={(e) => setUdId(e.target.value)} placeholder="TASK-0001" className={inputCls} /></div>
             </div>
-            <JsonTextarea label="Body (JSON)" value={udBody} onChange={setUdBody} />
+            <JsonTextarea label={t.devDoc.bodyJson} value={udBody} onChange={setUdBody} />
             <div className="flex gap-2">
               <button className={btnPrimary} disabled={!udResource.trim() || !udId.trim() || updateDoc.loading} onClick={async () => {
                 setActive('updateDoc');
                 updateDoc.reset();
                 try { await updateDoc.updateDoc(udId.trim(), parseJson(udBody)); } catch { /* error shown via hook state */ }
-              }}>{updateDoc.loading ? 'Updating…' : 'Update'}</button>
-              {(updateDoc.isCompleted || updateDoc.error) && <button className={btnSecondary} onClick={updateDoc.reset}>Reset</button>}
+              }}>{updateDoc.loading ? t.common.updating : t.common.update}</button>
+              {(updateDoc.isCompleted || updateDoc.error) && <button className={btnSecondary} onClick={updateDoc.reset}>{t.common.reset}</button>}
             </div>
           </HookCard>
 
           {/* useDeleteDoc */}
           <HookCard id="deleteDoc" active={active === 'deleteDoc'} title="useDeleteDoc" subtitle="DELETE /api/resource/{Doctype}/{id}" onSelect={(id) => setActive(id as HookId)}>
             <div className="grid grid-cols-2 gap-2">
-              <div><label className={labelCls}>Doctype *</label><input value={ddResource} onChange={(e) => setDdResource(e.target.value)} placeholder="Task" className={inputCls} /></div>
-              <div><label className={labelCls}>Name / ID *</label><input value={ddId} onChange={(e) => setDdId(e.target.value)} placeholder="TASK-0001" className={inputCls} /></div>
+              <div><label className={labelCls}>{t.devDoc.doctype} *</label><input value={ddResource} onChange={(e) => setDdResource(e.target.value)} placeholder="Task" className={inputCls} /></div>
+              <div><label className={labelCls}>{t.devDoc.nameOrId} *</label><input value={ddId} onChange={(e) => setDdId(e.target.value)} placeholder="TASK-0001" className={inputCls} /></div>
             </div>
             <div className="flex gap-2">
               <button className={btnDanger} disabled={!ddResource.trim() || !ddId.trim() || deleteDoc.loading} onClick={async () => {
                 setActive('deleteDoc');
                 deleteDoc.reset();
                 try { await deleteDoc.deleteDoc(ddId.trim()); } catch { /* error shown via hook state */ }
-              }}>{deleteDoc.loading ? 'Deleting…' : '🗑 Delete'}</button>
-              {(deleteDoc.isCompleted || deleteDoc.error) && <button className={btnSecondary} onClick={deleteDoc.reset}>Reset</button>}
+              }}>{deleteDoc.loading ? t.common.deleting : `🗑 ${t.common.delete}`}</button>
+              {(deleteDoc.isCompleted || deleteDoc.error) && <button className={btnSecondary} onClick={deleteDoc.reset}>{t.common.reset}</button>}
             </div>
           </HookCard>
 
           {/* useGetCall */}
           <HookCard id="getCall" active={active === 'getCall'} title="useGetCall<T>" subtitle="GET {endpoint}?params…" onSelect={(id) => setActive(id as HookId)}>
-            <div><label className={labelCls}>Endpoint *</label><input value={gcEndpoint} onChange={(e) => setGcEndpoint(e.target.value)} placeholder="/api/method/frappe.auth.get_logged_user" className={inputCls} /></div>
-            <JsonTextarea label="Params (JSON)" value={gcParams} onChange={setGcParams} rows={2} />
+            <div><label className={labelCls}>{t.devDoc.endpoint} *</label><input value={gcEndpoint} onChange={(e) => setGcEndpoint(e.target.value)} placeholder="/api/method/frappe.auth.get_logged_user" className={inputCls} /></div>
+            <JsonTextarea label={t.devDoc.paramsJson} value={gcParams} onChange={setGcParams} rows={2} />
             <div className="flex gap-2">
               <button className={btnPrimary} disabled={!gcEndpoint.trim()} onClick={() => {
                 const params = gcParams.trim() ? parseJson(gcParams) : undefined;
                 setGcCallSubmit({ endpoint: gcEndpoint.trim(), params });
                 setActive('getCall');
-              }}>Fetch</button>
-              {gcCallSubmit && <button className={btnSecondary} onClick={() => setGcCallSubmit(null)}>Reset</button>}
+              }}>{t.common.fetch}</button>
+              {gcCallSubmit && <button className={btnSecondary} onClick={() => setGcCallSubmit(null)}>{t.common.reset}</button>}
             </div>
           </HookCard>
 
@@ -607,15 +615,15 @@ export default function DocHookDevPage() {
                 </button>
               ))}
             </div>
-            <div><label className={labelCls}>Endpoint *</label><input value={pcEndpoint} onChange={(e) => setPcEndpoint(e.target.value)} placeholder="/api/method/…" className={inputCls} /></div>
-            <JsonTextarea label="Body (JSON)" value={pcBody} onChange={setPcBody} />
+            <div><label className={labelCls}>{t.devDoc.endpoint} *</label><input value={pcEndpoint} onChange={(e) => setPcEndpoint(e.target.value)} placeholder="/api/method/…" className={inputCls} /></div>
+            <JsonTextarea label={t.devDoc.bodyJson} value={pcBody} onChange={setPcBody} />
             <div className="flex gap-2">
               <button className={btnPrimary} disabled={!pcEndpoint.trim() || currentCall.loading} onClick={async () => {
                 setActive('postCall');
                 currentCall.reset();
                 try { await currentCall.call(parseJson(pcBody)); } catch { /* error shown via hook state */ }
-              }}>{currentCall.loading ? 'Sending…' : 'Send'}</button>
-              {(currentCall.isCompleted || currentCall.error) && <button className={btnSecondary} onClick={currentCall.reset}>Reset</button>}
+              }}>{currentCall.loading ? t.common.sending : t.common.send}</button>
+              {(currentCall.isCompleted || currentCall.error) && <button className={btnSecondary} onClick={currentCall.reset}>{t.common.reset}</button>}
             </div>
           </HookCard>
 
@@ -623,29 +631,29 @@ export default function DocHookDevPage() {
           <HookCard id="fileUpload" active={active === 'fileUpload'} title="useFileUpload" subtitle="POST /api/method/upload_file (multipart)" onSelect={(id) => setActive(id as HookId)}>
             {/* File picker */}
             <div>
-              <label className={labelCls}>File *</label>
+              <label className={labelCls}>{t.devDoc.file} *</label>
               <input type="file" onChange={(e) => setFuFile(e.target.files?.[0] ?? null)}
                 className="w-full cursor-pointer rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 file:mr-3 file:rounded file:border-0 file:bg-zinc-200 file:px-2 file:py-1 file:text-xs dark:file:bg-zinc-700 dark:file:text-zinc-200" />
               {fuFile && <p className="mt-1 text-xs text-zinc-400">{fuFile.name} &middot; {(fuFile.size / 1024).toFixed(1)} KB</p>}
             </div>
             {/* Optional fields */}
             <div className="grid grid-cols-2 gap-2">
-              <div><label className={labelCls}>Doctype</label><input value={fuDoctype} onChange={(e) => setFuDoctype(e.target.value)} placeholder="Task" className={inputCls} /></div>
-              <div><label className={labelCls}>Docname</label><input value={fuDocname} onChange={(e) => setFuDocname(e.target.value)} placeholder="TASK-0001" className={inputCls} /></div>
+              <div><label className={labelCls}>{t.devDoc.doctype}</label><input value={fuDoctype} onChange={(e) => setFuDoctype(e.target.value)} placeholder="Task" className={inputCls} /></div>
+              <div><label className={labelCls}>{t.devDoc.docname}</label><input value={fuDocname} onChange={(e) => setFuDocname(e.target.value)} placeholder="TASK-0001" className={inputCls} /></div>
             </div>
             <div className="grid grid-cols-2 gap-2">
-              <div><label className={labelCls}>Fieldname</label><input value={fuFieldname} onChange={(e) => setFuFieldname(e.target.value)} placeholder="attachment" className={inputCls} /></div>
-              <div><label className={labelCls}>Folder</label><input value={fuFolder} onChange={(e) => setFuFolder(e.target.value)} placeholder="Home" className={inputCls} /></div>
+              <div><label className={labelCls}>{t.devDoc.fieldname}</label><input value={fuFieldname} onChange={(e) => setFuFieldname(e.target.value)} placeholder="attachment" className={inputCls} /></div>
+              <div><label className={labelCls}>{t.devDoc.folder}</label><input value={fuFolder} onChange={(e) => setFuFolder(e.target.value)} placeholder="Home" className={inputCls} /></div>
             </div>
             <label className="flex cursor-pointer items-center gap-2 text-xs text-zinc-500">
               <input type="checkbox" checked={fuIsPrivate} onChange={(e) => setFuIsPrivate(e.target.checked)} className="h-3.5 w-3.5 rounded border-zinc-300" />
-              Private file
+              {t.devDoc.privateFile}
             </label>
             {/* Progress bar */}
             {fileUpload.loading && (
               <div>
                 <div className="mb-1 flex justify-between text-xs text-zinc-400">
-                  <span>Uploading…</span><span>{fileUpload.progress}%</span>
+                  <span>{t.common.uploading}…</span><span>{fileUpload.progress}%</span>
                 </div>
                 <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-700">
                   <div className="h-full rounded-full bg-green-500 transition-all" style={{ width: `${fileUpload.progress}%` }} />
@@ -666,27 +674,27 @@ export default function DocHookDevPage() {
                     fieldname: fuFieldname.trim() || undefined,
                   });
                 } catch { /* error shown via hook state */ }
-              }}>{fileUpload.loading ? `Uploading ${fileUpload.progress}%…` : '📤 Upload'}</button>
-              {(fileUpload.isCompleted || fileUpload.error) && <button className={btnSecondary} onClick={fileUpload.reset}>Reset</button>}
+              }}>{fileUpload.loading ? `${t.common.uploading} ${fileUpload.progress}%…` : `📤 ${t.common.upload}`}</button>
+              {(fileUpload.isCompleted || fileUpload.error) && <button className={btnSecondary} onClick={fileUpload.reset}>{t.common.reset}</button>}
             </div>
           </HookCard>
 
           {/* useDocSearch */}
           <HookCard id="docSearch" active={active === 'docSearch'} title="useDocSearch" subtitle="GET /api/resource/{Doctype}?filters=[[name,like,%…%]] (debounced)" onSelect={(id) => setActive(id as HookId)}>
-            <p className="text-xs text-zinc-400">Kết quả cập nhật realtime khi gõ — debounce 300ms.</p>
+            <p className="text-xs text-zinc-400">{t.devDoc.realtimeHint}</p>
             <div className="grid grid-cols-2 gap-2">
-              <div><label className={labelCls}>Doctype *</label><input value={dsResource} onChange={(e) => { setDsResource(e.target.value); setActive('docSearch'); }} placeholder="Task" className={inputCls} /></div>
-              <div><label className={labelCls}>Limit</label><input type="number" value={dsLimit} onChange={(e) => setDsLimit(e.target.value)} className={inputCls} /></div>
+              <div><label className={labelCls}>{t.devDoc.doctype} *</label><input value={dsResource} onChange={(e) => { setDsResource(e.target.value); setActive('docSearch'); }} placeholder="Task" className={inputCls} /></div>
+              <div><label className={labelCls}>{t.devDoc.limit}</label><input type="number" value={dsLimit} onChange={(e) => setDsLimit(e.target.value)} className={inputCls} /></div>
             </div>
-            <div><label className={labelCls}>Search keyword *</label>
+            <div><label className={labelCls}>{t.devDoc.searchKeyword} *</label>
               <input value={dsSearch} onChange={(e) => { setDsSearch(e.target.value); setActive('docSearch'); }}
-                placeholder="Type to search…" className={inputCls} />
+                placeholder={t.devDoc.typeToSearch} className={inputCls} />
             </div>
-            <div><label className={labelCls}>Fields <span className="font-normal text-zinc-400">(comma-separated)</span></label>
+            <div><label className={labelCls}>{t.devDoc.fields} <span className="font-normal text-zinc-400">(comma-separated)</span></label>
               <input value={dsFields} onChange={(e) => setDsFields(e.target.value)} placeholder="name, subject" className={inputCls} />
             </div>
             {/* Inline results preview */}
-            {dsResult.isLoading && <p className="text-xs text-blue-500">Searching…</p>}
+            {dsResult.isLoading && <p className="text-xs text-blue-500">{t.common.searching}</p>}
             {!dsResult.isLoading && dsResult.data && dsResult.data.length > 0 && (
               <ul className="space-y-1 rounded-lg border border-zinc-100 bg-zinc-50 p-2 dark:border-zinc-800 dark:bg-zinc-800/50">
                 {(dsResult.data as Record<string, unknown>[]).slice(0, 8).map((item, i) => (
@@ -698,7 +706,7 @@ export default function DocHookDevPage() {
               </ul>
             )}
             {!dsResult.isLoading && dsResult.data?.length === 0 && dsSearch.trim() && (
-              <p className="text-xs text-zinc-400">No results found.</p>
+              <p className="text-xs text-zinc-400">{t.devDoc.noResults}</p>
             )}
           </HookCard>
 

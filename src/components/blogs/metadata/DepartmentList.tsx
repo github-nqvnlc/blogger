@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { toast } from 'sonner';
 import { useGetList, useDeleteDoc } from '@/hooks';
+import { useLanguage } from '@/hooks/useLanguage';
 import { BlogDepartment } from '@/types/blogs';
 import { Filter } from '@/types/hooks';
 import {
@@ -11,7 +12,6 @@ import {
   PaginationState,
   SortingState,
 } from '@tanstack/react-table';
-
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
@@ -42,10 +42,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { AdminAccessDenied } from '@/components/layout/admin-access-denied';
 import { DepartmentForm } from '@/components/blogs/metadata/DepartmentForm';
 import { DepartmentTable } from '@/components/blogs/metadata/DepartmentTable';
-import { DepartmentColumns } from '@/components/blogs/metadata/DepartmentColumns';
-
+import { getDepartmentColumns } from '@/components/blogs/metadata/DepartmentColumns';
 import {
   Search,
   Plus,
@@ -55,7 +55,8 @@ import {
 const PAGE_SIZE = 20;
 
 export function DepartmentList() {
-  // ─── Table State (TanStack Table) ───────────────────────────
+  const { t } = useLanguage();
+  const copy = t.blogDepartments;
   const [sorting, setSorting] = React.useState<SortingState>([
     { id: 'sort_order', desc: false },
   ]);
@@ -64,16 +65,11 @@ export function DepartmentList() {
     pageSize: PAGE_SIZE,
   });
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
-
-  // ─── Filter Bar State (additional server-side filters) ─────
   const [statusFilter, setStatusFilter] = React.useState<'all' | 'active' | 'inactive'>('all');
-
-  // ─── Dialog & Selection State ────────────────────────────────
   const [isFormOpen, setIsFormOpen] = React.useState(false);
   const [editingDepartment, setEditingDepartment] = React.useState<BlogDepartment | null>(null);
   const [deletingDepartment, setDeletingDepartment] = React.useState<BlogDepartment | null>(null);
 
-  // ─── Build API Filters ──────────────────────────────────────
   const apiFilters = React.useMemo<Filter[]>(() => {
     const result: Filter[] = [];
 
@@ -91,7 +87,6 @@ export function DepartmentList() {
     return result;
   }, [statusFilter, columnFilters]);
 
-  // ─── Build OrderBy from TanStack Table sorting ──────────────
   const orderBy = React.useMemo(() => {
     if (sorting.length === 0) return { field: 'sort_order', order: 'asc' as const };
     const s = sorting[0];
@@ -101,8 +96,7 @@ export function DepartmentList() {
     };
   }, [sorting]);
 
-  // ─── Fetch Data ────────────────────────────────────────────
-  const { data: departments, isLoading, mutate: refetch } = useGetList<BlogDepartment>(
+  const { data: departments, isLoading, error, mutate: refetch } = useGetList<BlogDepartment>(
     'blog_departments',
     {
       fields: ['*'],
@@ -113,10 +107,8 @@ export function DepartmentList() {
     },
   );
 
-  // ─── Delete Mutation ───────────────────────────────────────
   const { deleteDoc: deleteDepartment, loading: isDeleting } = useDeleteDoc('blog_departments');
 
-  // ─── Handlers ─────────────────────────────────────────────
   const handleOpenCreateForm = React.useCallback(() => {
     setEditingDepartment(null);
     setIsFormOpen(true);
@@ -136,17 +128,17 @@ export function DepartmentList() {
     if (!deletingDepartment) return;
     try {
       await deleteDepartment(deletingDepartment.name);
-      toast.success('Xóa thành công', {
-        description: `Đã xóa bộ phận nội dung "${deletingDepartment.department_name}"`,
+      toast.success(copy.deleteSuccess, {
+        description: `${copy.deleteSuccessDescriptionPrefix} "${deletingDepartment.department_name}"`,
       });
       setDeletingDepartment(null);
       refetch();
     } catch {
-      toast.error('Xóa thất bại', {
-        description: 'Không thể xóa bộ phận nội dung này. Vui lòng thử lại.',
+      toast.error(copy.deleteFailure, {
+        description: copy.deleteFailureDescription,
       });
     }
-  }, [deletingDepartment, deleteDepartment, refetch]);
+  }, [copy.deleteFailure, copy.deleteFailureDescription, copy.deleteSuccess, copy.deleteSuccessDescriptionPrefix, deleteDepartment, deletingDepartment, refetch]);
 
   const handleFormSuccess = React.useCallback(() => {
     setIsFormOpen(false);
@@ -164,41 +156,48 @@ export function DepartmentList() {
     onDelete: handleDeleteClick,
   }), [handleOpenEditForm, handleToggleStatus, handleDeleteClick]);
 
-  // ─── Reset page when filters change ────────────────────────
   React.useEffect(() => {
     setPagination(prev => ({ ...prev, pageIndex: 0 }));
   }, [apiFilters, orderBy]);
 
-  const totalCount = departments?.length ?? 0;
+  const statusCode = (error as { response?: { status?: number } } | null)?.response?.status;
+  const isForbidden = statusCode === 403;
 
-  const columns: ColumnDef<BlogDepartment, unknown>[] = DepartmentColumns;
+  const totalCount = departments?.length ?? 0;
+  const columns: ColumnDef<BlogDepartment, unknown>[] = React.useMemo(
+    () => getDepartmentColumns(t),
+    [t],
+  );
+
+  if (isForbidden) {
+    return (
+      <AdminAccessDenied description={t.errors.blogDepartmentAccessDeniedDescription} />
+    );
+  }
 
   return (
     <>
       <div className="space-y-6">
-        {/* ─── Page Header ─── */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Bộ phận nội dung</h1>
+            <h1 className="text-3xl font-bold tracking-tight">{copy.title}</h1>
             <p className="text-muted-foreground mt-1">
-              Quản lý danh sách bộ phận nội dung
+              {copy.description}
             </p>
           </div>
           <Button onClick={handleOpenCreateForm}>
             <Plus className="mr-2 h-4 w-4" />
-            Thêm bộ phận
+            {copy.addDepartment}
           </Button>
         </div>
 
-        {/* ─── Filter Bar ─── */}
         <Card>
           <CardContent className="pt-6">
             <div className="flex flex-col sm:flex-row gap-4">
-              {/* Search Input */}
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Tìm kiếm theo tên, mã bộ phận..."
+                  placeholder={copy.searchPlaceholder}
                   value={(columnFilters.find(f => f.id === 'search')?.value as string) ?? ''}
                   onChange={e =>
                     setColumnFilters(prev => {
@@ -213,25 +212,23 @@ export function DepartmentList() {
                 />
               </div>
 
-              {/* Status Filter */}
               <Select
                 value={statusFilter}
                 onValueChange={v => setStatusFilter(v as typeof statusFilter)}
               >
                 <SelectTrigger className="w-full sm:w-[180px]">
-                  <SelectValue placeholder="Trạng thái" />
+                  <SelectValue placeholder={t.common.status} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tất cả</SelectItem>
-                  <SelectItem value="active">Đang hoạt động</SelectItem>
-                  <SelectItem value="inactive">Không hoạt động</SelectItem>
+                  <SelectItem value="all">{t.common.all}</SelectItem>
+                  <SelectItem value="active">{t.common.active}</SelectItem>
+                  <SelectItem value="inactive">{t.common.inactive}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </CardContent>
         </Card>
 
-        {/* ─── Data Table ─── */}
         <DepartmentTable
           columns={columns}
           data={departments ?? []}
@@ -248,26 +245,25 @@ export function DepartmentList() {
                 <Building2 className="h-6 w-6 text-muted-foreground" />
               </div>
               <div>
-                <p className="font-medium">Không tìm thấy bộ phận nội dung nào</p>
+                <p className="font-medium">{copy.emptyTitle}</p>
                 <p className="text-sm text-muted-foreground">
-                  Thử thay đổi bộ lọc hoặc tạo mới
+                  {copy.emptyDescription}
                 </p>
               </div>
               <Button variant="outline" size="sm" onClick={handleOpenCreateForm}>
                 <Plus className="mr-2 h-4 w-4" />
-                Thêm bộ phận nội dung
+                {copy.addDepartment}
               </Button>
             </div>
           }
         />
       </div>
 
-      {/* ─── Form Dialog ─── */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>
-              {editingDepartment ? 'Chỉnh sửa bộ phận nội dung' : 'Thêm bộ phận nội dung mới'}
+              {editingDepartment ? copy.editDepartmentTitle : copy.addDepartmentTitle}
             </DialogTitle>
           </DialogHeader>
           <DepartmentForm
@@ -278,28 +274,27 @@ export function DepartmentList() {
         </DialogContent>
       </Dialog>
 
-      {/* ─── Delete Confirmation Dialog ─── */}
       <AlertDialog
         open={!!deletingDepartment}
         onOpenChange={open => !open && setDeletingDepartment(null)}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Xác nhận xóa</AlertDialogTitle>
+            <AlertDialogTitle>{copy.deleteTitle}</AlertDialogTitle>
             <AlertDialogDescription>
-              Bạn có chắc chắn muốn xóa bộ phận nội dung &ldquo;{deletingDepartment?.department_name}&rdquo;?
-              Hành động này không thể hoàn tác và có thể ảnh hưởng đến các bài viết đang sử dụng bộ phận nội dung này.
+              {copy.deleteDescriptionStart} &ldquo;{deletingDepartment?.department_name}&rdquo;?{' '}
+              {copy.deleteDescriptionEnd}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogCancel>{t.common.cancel}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteConfirm}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               disabled={isDeleting}
             >
               {isDeleting ? <Spinner /> : null}
-              Xóa
+              {t.common.delete}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

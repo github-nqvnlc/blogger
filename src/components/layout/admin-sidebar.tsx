@@ -13,8 +13,10 @@ import {
   ChevronDown,
   LayoutDashboard,
   Menu,
+  LogOut,
+  User,
+  Loader2,
 } from 'lucide-react';
-
 import { cn } from '@/lib/utils';
 import {
   Sidebar,
@@ -40,6 +42,7 @@ import {
 } from '@/components/ui/collapsible';
 import { useAuth } from '@/hooks/useAuth';
 import { useGetDoc } from '@/hooks/useGetDoc';
+import { useLanguage } from '@/hooks/useLanguage';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -48,10 +51,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { LogOut, User, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
+import { buildLocalePath, stripLocaleFromPathname } from '@/i18n';
 
 interface NavSubItem {
   title: string;
@@ -72,93 +75,6 @@ interface NavGroup {
   items: NavItem[];
 }
 
-const NAV_ITEMS: NavGroup[] = [
-  {
-    title: 'Tổng quan',
-    items: [
-      {
-        title: 'Dashboard',
-        url: '/admin',
-        icon: LayoutDashboard,
-      },
-    ],
-  },
-  {
-    title: 'Quản lý Blog',
-    items: [
-      {
-        title: 'Bộ phận nội dung',
-        url: '/admin/blog-departments',
-        icon: Newspaper,
-      },
-      {
-        title: 'Danh mục',
-        url: '/admin/categories',
-        icon: FolderOpen,
-      },
-      {
-        title: 'Chủ đề',
-        url: '/admin/topics',
-        icon: Tags,
-      },
-      {
-        title: 'Nhãn',
-        url: '/admin/tags',
-        icon: MessageSquare,
-      },
-    ],
-  },
-  {
-    title: 'Bài viết',
-    items: [
-      {
-        title: 'Tất cả bài viết',
-        url: '/admin/posts',
-        icon: Newspaper,
-        badge: '12',
-      },
-      {
-        title: 'Bài nháp',
-        url: '/admin/posts?status=draft',
-        icon: Newspaper,
-        badge: '3',
-      },
-      {
-        title: 'Đã xuất bản',
-        url: '/admin/posts?status=published',
-        icon: Newspaper,
-        badge: '8',
-      },
-    ],
-  },
-  {
-    title: 'Phản hồi',
-    items: [
-      {
-        title: 'Bình luận',
-        url: '/admin/comments',
-        icon: MessageSquare,
-        badge: '5',
-      },
-    ],
-  },
-  {
-    title: 'Hệ thống',
-    items: [
-      {
-        title: 'Người dùng',
-        url: '/admin/users',
-        icon: Users,
-      },
-      {
-        title: 'Cài đặt',
-        url: '/admin/settings',
-        icon: Settings,
-      },
-    ],
-  },
-];
-
 function NavBadge({ badge }: { badge?: string }) {
   if (!badge) return null;
   return (
@@ -171,129 +87,16 @@ function NavBadge({ badge }: { badge?: string }) {
   );
 }
 
-export function AdminSidebar() {
-  const pathname = usePathname();
-  const { state } = useSidebar();
-
-  const isActive = (url: string) => {
-    if (url === '/admin') {
-      return pathname === '/admin';
-    }
-    return pathname.startsWith(url.split('?')[0]);
-  };
-
-  return (
-    <Sidebar collapsible="icon">
-      <SidebarHeader className='border-b'>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-            >
-              <Link href="/admin">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                  <Newspaper className="size-4" />
-                </div>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">Blog Admin</span>
-                  <span className="truncate text-xs text-muted-foreground">
-                    Hệ thống quản trị
-                  </span>
-                </div>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarHeader>
-
-      <SidebarContent>
-        {NAV_ITEMS.map((group, idx) => (
-          <SidebarGroup key={idx}>
-            {state === 'expanded' && (
-              <SidebarGroupLabel>{group.title}</SidebarGroupLabel>
-            )}
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {group.items.map(item => (
-                  <SidebarMenuItem key={item.url}>
-                    {item.items && item.items.length > 0 ? (
-                      <Collapsible defaultOpen={isActive(item.url)}>
-                        <CollapsibleTrigger asChild>
-                          <SidebarMenuButton
-                            isActive={isActive(item.url)}
-                            tooltip={item.title}
-                            className={cn(
-                              isActive(item.url) && 'bg-sidebar-accent',
-                            )}
-                          >
-                            {item.icon && <item.icon className="size-4" />}
-                            <span>{item.title}</span>
-                            <NavBadge badge={item.badge} />
-                            <ChevronDown className="ml-auto size-3 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-180" />
-                          </SidebarMenuButton>
-                        </CollapsibleTrigger>
-                        <CollapsibleContent>
-                          <SidebarMenuSub>
-                            {item.items!.map((subItem: NavSubItem) => (
-                              <SidebarMenuSubItem key={subItem.url}>
-                                <SidebarMenuSubButton
-                                  asChild
-                                  isActive={isActive(subItem.url)}
-                                >
-                                  <Link href={subItem.url}>
-                                    {subItem.icon && (
-                                      <subItem.icon className="size-4" />
-                                    )}
-                                    <span>{subItem.title}</span>
-                                  </Link>
-                                </SidebarMenuSubButton>
-                              </SidebarMenuSubItem>
-                            ))}
-                          </SidebarMenuSub>
-                        </CollapsibleContent>
-                      </Collapsible>
-                    ) : (
-                      <SidebarMenuButton
-                        asChild
-                        isActive={isActive(item.url)}
-                        tooltip={item.title}
-                        className={cn(isActive(item.url) && 'bg-sidebar-accent')}
-                      >
-                        <Link href={item.url}>
-                          {item.icon && <item.icon className="size-4" />}
-                          <span>{item.title}</span>
-                          <NavBadge badge={item.badge} />
-                        </Link>
-                      </SidebarMenuButton>
-                    )}
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        ))}
-      </SidebarContent>
-
-      <SidebarFooter className='border-t'>
-        <AdminSidebarFooter />
-      </SidebarFooter>
-    </Sidebar>
-  );
-}
-
 function AdminSidebarFooter() {
   const { currentUser, logout } = useAuth();
+  const { locale, t } = useLanguage();
+  const { state } = useSidebar();
 
   const { data: userProfile } = useGetDoc<{
     email: string;
     full_name: string;
     user_image: string;
-    name: string;
   }>('User', currentUser ?? undefined);
-
-  const { state } = useSidebar();
 
   const displayName = userProfile?.full_name || currentUser || 'Unknown';
   const displayEmail = userProfile?.email || '';
@@ -307,14 +110,11 @@ function AdminSidebarFooter() {
     .join('')
     .toUpperCase() || 'U';
 
-  const handleLogout = () => {
-    logout();
-  };
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
+          suppressHydrationWarning
           className={cn(
             'flex w-full items-center gap-3 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground cursor-pointer',
             state === 'collapsed' && 'justify-center',
@@ -366,24 +166,24 @@ function AdminSidebarFooter() {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href="/admin/profile" className="cursor-pointer">
+          <Link href={buildLocalePath(locale, '/admin/profile')} className="cursor-pointer">
             <User className="mr-2 h-4 w-4" />
-            <span>Hồ sơ cá nhân</span>
+            <span>{t.profile.title}</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href="/admin/settings" className="cursor-pointer">
+          <Link href={buildLocalePath(locale, '/admin/settings')} className="cursor-pointer">
             <Settings className="mr-2 h-4 w-4" />
-            <span>Cài đặt</span>
+            <span>{t.sidebar.settings}</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          onClick={handleLogout}
+          onClick={logout}
           className="text-destructive focus:text-destructive cursor-pointer"
         >
           <LogOut className="mr-2 h-4 w-4" />
-          <span>Đăng xuất</span>
+          <span>{t.profile.logout}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -409,5 +209,158 @@ export function AdminSidebarInset({ children }: { children: React.ReactNode }) {
         {children}
       </div>
     </SidebarInset>
+  );
+}
+
+export function AdminSidebar() {
+  const pathname = usePathname();
+  const { state } = useSidebar();
+  const { locale, t } = useLanguage();
+  const localizedPathname = stripLocaleFromPathname(pathname);
+
+  const navItems: NavGroup[] = [
+    {
+      title: t.sidebar.overview,
+      items: [
+        { title: t.sidebar.dashboard, url: '/admin', icon: LayoutDashboard },
+      ],
+    },
+    {
+      title: t.sidebar.blogManagement,
+      items: [
+        { title: t.sidebar.contentDepartment, url: '/admin/blog-departments', icon: Newspaper },
+        { title: t.sidebar.categories, url: '/admin/categories', icon: FolderOpen },
+        { title: t.sidebar.topics, url: '/admin/topics', icon: Tags },
+        { title: t.sidebar.tags, url: '/admin/tags', icon: MessageSquare },
+      ],
+    },
+    {
+      title: t.sidebar.posts,
+      items: [
+        { title: t.sidebar.allPosts, url: '/admin/posts', icon: Newspaper, badge: '12' },
+        { title: t.sidebar.drafts, url: '/admin/posts?status=draft', icon: Newspaper, badge: '3' },
+        { title: t.sidebar.published, url: '/admin/posts?status=published', icon: Newspaper, badge: '8' },
+      ],
+    },
+    {
+      title: t.sidebar.feedback,
+      items: [
+        { title: t.sidebar.comments, url: '/admin/comments', icon: MessageSquare, badge: '5' },
+      ],
+    },
+    {
+      title: t.sidebar.system,
+      items: [
+        { title: t.sidebar.users, url: '/admin/users', icon: Users },
+        { title: t.sidebar.settings, url: '/admin/settings', icon: Settings },
+      ],
+    },
+  ];
+
+  const isActive = (url: string) => {
+    if (url === '/admin') {
+      return localizedPathname === '/admin';
+    }
+    return localizedPathname.startsWith(url.split('?')[0]);
+  };
+
+  return (
+    <Sidebar collapsible="icon">
+      <SidebarHeader className="border-b">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              size="lg"
+              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+            >
+              <Link href={buildLocalePath(locale, '/admin')}>
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+                  <Newspaper className="size-4" />
+                </div>
+                <div className="grid flex-1 text-left text-sm leading-tight">
+                  <span className="truncate font-semibold">{t.sidebar.blogAdmin}</span>
+                  <span className="truncate text-xs text-muted-foreground">
+                    {t.sidebar.adminSystem}
+                  </span>
+                </div>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarHeader>
+
+      <SidebarContent>
+        {navItems.map((group, idx) => (
+          <SidebarGroup key={idx}>
+            {state === 'expanded' && (
+              <SidebarGroupLabel>{group.title}</SidebarGroupLabel>
+            )}
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {group.items.map(item => (
+                  <SidebarMenuItem key={item.url}>
+                    {item.items && item.items.length > 0 ? (
+                      <Collapsible defaultOpen={isActive(item.url)}>
+                        <CollapsibleTrigger asChild>
+                          <SidebarMenuButton
+                            isActive={isActive(item.url)}
+                            tooltip={item.title}
+                            className={cn(
+                              isActive(item.url) && 'bg-sidebar-accent',
+                            )}
+                          >
+                            {item.icon && <item.icon className="size-4" />}
+                            <span>{item.title}</span>
+                            <NavBadge badge={item.badge} />
+                            <ChevronDown className="ml-auto size-3 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-180" />
+                          </SidebarMenuButton>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <SidebarMenuSub>
+                            {item.items!.map((subItem: NavSubItem) => (
+                              <SidebarMenuSubItem key={subItem.url}>
+                                <SidebarMenuSubButton
+                                  asChild
+                                  isActive={isActive(subItem.url)}
+                                >
+                                  <Link href={buildLocalePath(locale, subItem.url)}>
+                                    {subItem.icon && (
+                                      <subItem.icon className="size-4" />
+                                    )}
+                                    <span>{subItem.title}</span>
+                                  </Link>
+                                </SidebarMenuSubButton>
+                              </SidebarMenuSubItem>
+                            ))}
+                          </SidebarMenuSub>
+                        </CollapsibleContent>
+                      </Collapsible>
+                    ) : (
+                      <SidebarMenuButton
+                        asChild
+                        isActive={isActive(item.url)}
+                        tooltip={item.title}
+                        className={cn(isActive(item.url) && 'bg-sidebar-accent')}
+                      >
+                        <Link href={buildLocalePath(locale, item.url)}>
+                          {item.icon && <item.icon className="size-4" />}
+                          <span>{item.title}</span>
+                          <NavBadge badge={item.badge} />
+                        </Link>
+                      </SidebarMenuButton>
+                    )}
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ))}
+      </SidebarContent>
+
+      <SidebarFooter className="border-t">
+        <AdminSidebarFooter />
+      </SidebarFooter>
+    </Sidebar>
   );
 }
