@@ -1,0 +1,120 @@
+---
+alwaysApply: true
+---
+
+## 0. Mandatory Rules (Hard Rules)
+
+- Always start every response/output with: **"Hi Boss Lộc" - Im " name of model in use" ( you must tell me who are you ! )**.  
+- Always communicate in **Vietnamese**, unless Boss Lộc explicitly requests another language.  
+- Use **Python 3** for scripts that involve data processing, automation,testing file ( but you need ask me before create test file) or complex logic.  
+- Use **Bash / npm scripts / Makefile** for simple build or shell commands.  
+- If the project is Node.js-based, use **npm/npx**. Otherwise, prefer the native ecosystem (e.g. Poetry for Python, Make for Go).  
+- Keep **mock data** separate from source code (in `mocks/` or `fixtures/`).  
+- Do not generate unnecessary comments in source code.  
+- Keep the project clean and eliminate redundant code.  
+- When finishing a task, always summarize clearly:  
+  - ✅ What has been done.  
+  - ❌ What has not been done yet.  
+---
+
+## 1. Coding Principles (Clean & Maintainable Code)
+
+### Constants Over Magic Numbers
+- Replace hard-coded values with named constants.  
+- Use descriptive constant names that explain the purpose.  
+- Keep constants at the top of the file or in a dedicated constants file.  
+
+### Meaningful Names
+- Variables, functions, and classes should reveal their purpose.  
+- Names should explain why something exists and how it is used.  
+- Avoid abbreviations unless they are universally understood.  
+
+### Smart Comments
+- Code should be self-explanatory; use comments to explain *why*, not *what*.  
+- Document APIs, complex algorithms, and non-obvious side effects.  
+
+### Single Responsibility Principle (SRP)
+- Each function should do exactly one thing.  
+- Functions should be small and focused.  
+- If a function needs a comment to explain what it does, split it into smaller ones.  
+
+### DRY (Don’t Repeat Yourself)
+- Extract repeated code into reusable functions.  
+- Share common logic through proper abstractions.  
+- Maintain a single source of truth.  
+
+### Clean Structure
+- Keep related code together.  
+- Organize files and folders in a logical hierarchy.  
+- Use consistent naming conventions.  
+
+### Encapsulation
+- Hide implementation details.  
+- Expose only clear and necessary interfaces.  
+- Move nested conditionals into well-named functions.  
+
+### Code Quality Maintenance
+- Continuously refactor the codebase.  
+- Fix technical debt early.  
+- Always leave the code cleaner than you found it.  
+
+---
+
+## 2. Development Workflow
+
+### File & Data Management
+- Keep mock data separate from source code.  
+- Ensure generated files are placed in the correct directories.  
+
+### Bug Fix Rule 🚨
+- **You are not allowed to create new files when fixing bugs.**  
+- If you propose creating a new file as part of the fix, you must ask **Boss Lộc** and wait for approval before proceeding.  
+
+### Task Summary
+- At the end of each task, provide a clear summary:  
+  - ✅ What has been done.  
+  - ❌ What has not been done yet.  
+
+---
+
+## 3. Testing & Validation
+- Write tests before fixing bugs.  
+- Cover edge cases and error conditions.  
+- Keep tests readable and maintainable.  
+
+---
+
+## 4. Version Control (Git Rules)
+- Write clear, meaningful commit messages.  
+- Make small, focused commits.  
+- Use descriptive branch names related to features or bug fixes.  
+
+---
+
+## ✅ Task Completion Checklist
+
+| Category            | Rule                                                                 | Status |
+|---------------------|----------------------------------------------------------------------|--------|
+| Mandatory           | Start every output with "Hi Boss Lộc"                                | ☐      |
+| Mandatory           | Use Python 3 CLI instead of Bash scripts                             | ☐      |
+| Mandatory           | Use npm and npx for Node.js tasks                                    | ☐      |
+| Mandatory           | Generate files in the correct directories                           | ☐      |
+| Mandatory           | Separate mock data from source code                                 | ☐      |
+| Mandatory           | No unnecessary comments in source code                              | ☐      |
+| Mandatory           | Keep code clean and eliminate redundant code                        | ☐      |
+| Mandatory           | Provide summary of done/not done at task end                        | ☐      |
+| Coding Principle    | Replace magic numbers with constants                                | ☐      |
+| Coding Principle    | Use meaningful names                                                | ☐      |
+| Coding Principle    | Smart comments explain *why*, not *what*                            | ☐      |
+| Coding Principle    | Follow SRP: each function does one thing                            | ☐      |
+| Coding Principle    | Apply DRY: no repeated code                                         | ☐      |
+| Coding Principle    | Organize code with clean structure                                  | ☐      |
+| Coding Principle    | Apply encapsulation, hide details                                   | ☐      |
+| Coding Principle    | Refactor continuously & fix technical debt early                    | ☐      |
+| Workflow / Bug Fix  | No new files allowed when fixing bugs without approval              | ☐      |
+| Testing             | Write tests before fixing bugs                                      | ☐      |
+| Testing             | Cover edge cases & errors                                          | ☐      |
+| Version Control     | Write clear commit messages                                         | ☐      |
+| Version Control     | Make small, focused commits                                         | ☐      |
+| Version Control     | Use descriptive branch names                                        | ☐      |
+---
