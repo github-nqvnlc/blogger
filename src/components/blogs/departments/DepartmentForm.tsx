@@ -2,9 +2,9 @@
 
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner";
 import { useCreateDoc, useUpdateDoc } from "@/hooks";
 import { BlogDepartment, DepartmentFormValues } from "@/types/blogs";
+import { showCrudError, showCrudSuccess } from "@/lib/crud-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,7 +17,7 @@ import { useLanguage } from "@/hooks/useLanguage";
 
 interface DepartmentFormProps {
   department: BlogDepartment | null;
-  onSuccess?: () => void;
+  onSuccess?: (department: BlogDepartment) => void;
   onCancel?: () => void;
 }
 
@@ -86,23 +86,26 @@ export function DepartmentForm({
       };
 
       if (isEditing && department) {
-        await updateDoc(department.name, payload);
-        toast.success(copy.updateSuccess, {
-          description: `${copy.updateSuccessPrefix}: "${values.department_name}"`,
-        });
+        const updatedDepartment = await updateDoc(department.name, payload);
+        showCrudSuccess(
+          copy.updateSuccess,
+          `${copy.updateSuccessPrefix}: "${values.department_name}"`,
+        );
+        onSuccess?.(updatedDepartment);
       } else {
-        await createDoc(payload);
-        toast.success(copy.createSuccess, {
-          description: `${copy.createSuccessPrefix}: "${values.department_name}"`,
-        });
+        const createdDepartment = await createDoc(payload);
+        showCrudSuccess(
+          copy.createSuccess,
+          `${copy.createSuccessPrefix}: "${values.department_name}"`,
+        );
+        onSuccess?.(createdDepartment);
       }
-
-      onSuccess?.();
     } catch (err) {
-      const message = err instanceof Error ? err.message : copy.unknownError;
-      toast.error(isEditing ? copy.updateFailure : copy.createFailure, {
-        description: message,
-      });
+      showCrudError(
+        isEditing ? copy.updateFailure : copy.createFailure,
+        err,
+        copy.unknownError,
+      );
     }
   };
 

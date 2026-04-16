@@ -1,11 +1,17 @@
 "use client";
 
-import React, { createContext, useContext, useMemo } from "react";
+import React, { createContext, useContext, useEffect } from "react";
+import dynamic from "next/dynamic";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 import { createApiClient } from "./apiClient";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { Dictionary, Locale } from "@/i18n";
+
+const Toaster = dynamic(
+  () => import("@/components/ui/sonner").then((mod) => mod.Toaster),
+  { ssr: false },
+);
 
 interface ApiContextValue {
   url: string;
@@ -36,7 +42,7 @@ export function ApiProvider({
   locale,
   dictionary,
 }: ApiProviderProps) {
-  useMemo(() => {
+  useEffect(() => {
     createApiClient();
   }, []);
 
@@ -46,6 +52,7 @@ export function ApiProvider({
         <QueryClientProvider client={queryClient}>
           <LanguageProvider locale={locale} dictionary={dictionary}>
             {children}
+            <Toaster position="top-right" />
           </LanguageProvider>
         </QueryClientProvider>
       </ApiContext.Provider>

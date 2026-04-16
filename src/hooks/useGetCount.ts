@@ -22,15 +22,19 @@ export function useGetCount(
   debug?: boolean,
   /** TanStack Query options */
   options?: UseGetCountOptions,
+  orFilters?: Filter[],
 ) {
   const apiClient = getApiClient();
 
   const query = useQuery<number, Error>({
-    queryKey: [resource, "count", filters],
+    queryKey: [resource, "count", filters, orFilters],
     queryFn: async () => {
       const params: Record<string, unknown> = {};
       if (filters?.length) {
         params.filters = serializeFilters(filters);
+      }
+      if (orFilters?.length) {
+        params.or_filters = serializeFilters(orFilters);
       }
 
       const res = await apiClient.get<number>(`/api/resource/${resource}`, {

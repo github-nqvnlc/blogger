@@ -15,10 +15,12 @@ export interface BlogDepartment {
 export interface Category {
   name: string;
   category: string;
-  department: string;
+  department:
+    | string
+    | Pick<BlogDepartment, "name" | "department_name" | "department_code">;
   description: string;
   is_active: number;
-  creation: number;
+  creation: string | number;
   slug: string;
 }
 
@@ -130,4 +132,12 @@ export interface DepartmentFormValues {
   description: string;
   is_active: boolean;
   sort_order: number;
+}
+
+export interface CategoryFormValues {
+  category: string;
+  department: string;
+  description: string;
+  slug: string;
+  is_active: boolean;
 }

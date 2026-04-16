@@ -1,4 +1,4 @@
-import type { Dictionary } from "./index";
+﻿import type { Dictionary } from "./index";
 
 export const vi: Dictionary = {
   metadata: {
@@ -154,6 +154,8 @@ export const vi: Dictionary = {
       "Tài khoản của bạn không có quyền xem danh sách bộ phận nội dung.",
     adminNotFoundHint: "Bạn có thể thử:",
     adminSidebarAccess: "Truy cập từ menu sidebar",
+    categoryAccessDeniedDescription:
+      "Tài khoản của bạn không có quyền xem danh sách danh mục.",
   },
   blogDepartments: {
     title: "Bộ phận nội dung",
@@ -174,8 +176,7 @@ export const vi: Dictionary = {
       "Không thể xóa bộ phận nội dung này. Vui lòng thử lại.",
     deleteSuccessDescriptionPrefix: "Đã xóa bộ phận nội dung",
     bulkDeleteTitle: "Xác nhận xóa nhiều",
-    bulkDeleteSuccessDescription:
-      "Đã xóa thành công {count} bộ phận nội dung",
+    bulkDeleteSuccessDescription: "Đã xóa thành công {count} bộ phận nội dung",
     itemsWillBeDeleted: "Hành động này không thể hoàn tác.",
     form: {
       updateSuccess: "Cập nhật thành công",
@@ -267,6 +268,105 @@ export const vi: Dictionary = {
       addCategory: "Thêm danh mục",
       addTopic: "Thêm chủ đề",
       addPost: "Thêm bài viết",
+    },
+  },
+  blogCategories: {
+    title: "Danh mục",
+    description: "Quản lý danh sách danh mục blog",
+    addCategory: "Thêm danh mục",
+    searchPlaceholder: "Tìm kiếm theo tên danh mục hoặc slug...",
+    emptyTitle: "Không tìm thấy danh mục nào",
+    emptyDescription: "Thử thay đổi bộ lọc hoặc tạo mới",
+    addCategoryTitle: "Thêm danh mục mới",
+    editCategoryTitle: "Chỉnh sửa danh mục",
+    deleteTitle: "Xác nhận xóa",
+    deleteDescriptionStart: "Bạn có chắc chắn muốn xóa danh mục",
+    deleteDescriptionEnd:
+      "Hành động này không thể hoàn tác và có thể ảnh hưởng đến các bài viết đang sử dụng danh mục này.",
+    deleteSuccess: "Xóa thành công",
+    deleteFailure: "Xóa thất bại",
+    deleteFailureDescription:
+      "Không thể xóa danh mục này. Vui lòng thử lại.",
+    deleteSuccessDescriptionPrefix: "Đã xóa danh mục",
+    bulkDeleteTitle: "Xác nhận xóa nhiều",
+    bulkDeleteSuccessDescription: "Đã xóa thành công {count} danh mục",
+    itemsWillBeDeleted: "Hành động này không thể hoàn tác.",
+    form: {
+      updateSuccess: "Cập nhật thành công",
+      updateFailure: "Cập nhật thất bại",
+      createSuccess: "Tạo mới thành công",
+      createFailure: "Tạo mới thất bại",
+      unknownError: "Đã xảy ra lỗi không xác định",
+      updateSuccessPrefix: "Đã cập nhật danh mục",
+      createSuccessPrefix: "Đã tạo danh mục",
+      department: "Bộ phận nội dung",
+      departmentPlaceholder: "Chọn bộ phận nội dung",
+      departmentRequired: "Bộ phận nội dung là bắt buộc",
+      name: "Tên danh mục",
+      namePlaceholder: "Thông báo chính thức",
+      nameRequired: "Tên danh mục là bắt buộc",
+      nameMin: "Tên danh mục phải có ít nhất 2 ký tự",
+      nameMax: "Tên danh mục không được vượt quá 100 ký tự",
+      slug: "Slug",
+      generateSlug: "Tự động tạo slug",
+      slugPlaceholder: "thong-bao-chinh-thuc",
+      slugHelp:
+        "Không bắt buộc. Chỉ dùng chữ thường, số và dấu gạch nối.",
+      slugMax: "Slug không được vượt quá 140 ký tự",
+      slugPattern:
+        "Slug chỉ được chứa chữ thường, số và dấu gạch nối",
+      description: "Mô tả",
+      descriptionPlaceholder:
+        "Mô tả ngắn về danh mục này (tối đa 500 ký tự)",
+      descriptionMax: "Mô tả không được vượt quá 500 ký tự",
+      activeStatus: "Trạng thái hoạt động",
+      activeDescription:
+        "Danh mục này có thể được sử dụng trong bài viết",
+      inactiveDescription:
+        "Danh mục này bị vô hiệu hóa và không hiển thị trong lựa chọn",
+      inactiveWarning:
+        "Danh mục này đang bị vô hiệu hóa. Bài viết sử dụng danh mục này vẫn hoạt động bình thường nhưng danh mục sẽ không xuất hiện trong danh sách chọn.",
+      cancel: "Hủy",
+      submitCreate: "Tạo mới",
+      submitUpdate: "Cập nhật",
+    },
+    table: {
+      creation: "Ngày tạo",
+      name: "Tên danh mục",
+      department: "Bộ phận",
+      slug: "Slug",
+      noSlug: "Không có slug",
+      description: "Mô tả",
+      noDescription: "Không có mô tả",
+      status: "Trạng thái",
+      actions: "Thao tác",
+      active: "Hoạt động",
+      inactive: "Không hoạt động",
+      edit: "Chỉnh sửa",
+      viewDetail: "Xem chi tiết",
+      deactivate: "Vô hiệu hóa",
+      activate: "Kích hoạt",
+      delete: "Xóa",
+      empty: "Không có dữ liệu",
+    },
+    detail: {
+      pageTitle: "Chi tiết danh mục",
+      backToList: "Quay lại danh sách",
+      overview: "Tổng quan",
+      overviewDescription: "Thông tin chung về danh mục này",
+      department: "Bộ phận nội dung",
+      departmentOwner: "Bộ phận sở hữu",
+      departmentOwnerDescription:
+        "Danh mục này thuộc về bộ phận nội dung sau",
+      viewDepartment: "Xem bộ phận",
+      slug: "Slug",
+      noSlug: "Không có slug",
+      description: "Mô tả",
+      noDescription: "Không có mô tả",
+      posts: "Bài viết",
+      totalPosts: "Tổng bài viết",
+      noPosts: "Không có bài viết",
+      visibility: "Phạm vi hiển thị",
     },
   },
   table: {
