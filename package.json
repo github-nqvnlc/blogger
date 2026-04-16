@@ -9,7 +9,10 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "setup:theme-1": "npx shadcn@latest add https://tweakcn.com/r/themes/tangerine.json",
+    "setup:theme-2": "npx shadcn@latest add https://tweakcn.com/r/themes/catppuccin.json",
+    "setup:theme-3": "npx shadcn@latest add https://tweakcn.com/r/themes/cosmic-night.json"
   },
   "dependencies": {
     "@base-ui/react": "^1.2.0",
