@@ -69,8 +69,9 @@ export function DepartmentList() {
     React.useState<BlogDepartment | null>(null);
   const [deletingDepartment, setDeletingDepartment] =
     React.useState<BlogDepartment | null>(null);
-  const [bulkDeletingDepts, setBulkDeletingDepts] =
-    React.useState<BlogDepartment[]>([]);
+  const [bulkDeletingDepts, setBulkDeletingDepts] = React.useState<
+    BlogDepartment[]
+  >([]);
 
   const apiFilters = React.useMemo<Filter[]>(() => {
     const result: Filter[] = [];
@@ -227,7 +228,12 @@ export function DepartmentList() {
       onToggle: handleToggleStatus,
       onDelete: handleDeleteClick,
     }),
-    [handleDeleteClick, handleOpenEditForm, handleToggleStatus, handleViewDetail],
+    [
+      handleDeleteClick,
+      handleOpenEditForm,
+      handleToggleStatus,
+      handleViewDetail,
+    ],
   );
 
   React.useEffect(() => {
@@ -299,17 +305,14 @@ export function DepartmentList() {
         {Object.keys(rowSelection).length > 0 && (
           <div className="flex items-center justify-end gap-3 rounded-lg border bg-muted/50 px-4 py-3">
             <span className="text-sm font-medium">
-              {Object.keys(rowSelection).length}{" "}
-              {t.common.selected}
+              {Object.keys(rowSelection).length} {t.common.selected}
             </span>
             <Button
               variant="destructive"
               size="sm"
               onClick={() =>
                 handleBulkDeleteClick(
-                  departments?.filter(
-                    (_, i) => rowSelection[i] === true,
-                  ) ?? [],
+                  departments?.filter((_, i) => rowSelection[i] === true) ?? [],
                 )
               }
             >
@@ -409,23 +412,24 @@ export function DepartmentList() {
               {copy.bulkDeleteTitle ?? copy.deleteTitle}
             </AlertDialogTitle>
             <AlertDialogDescription className="space-y-1">
-              {bulkDeletingDepts.length === 1
-                ? `${copy.deleteDescriptionStart} "${bulkDeletingDepts[0]?.department_name}"? ${copy.deleteDescriptionEnd}`
-                : (
-                  <span className="block space-y-1">
-                    {bulkDeletingDepts.slice(0, 5).map((dept) => (
-                      <span key={dept.name} className="flex items-start gap-2">
-                        <span className="text-muted-foreground shrink-0">-</span>
-                        <span>{dept.department_name}</span>
-                      </span>
-                    ))}
-                    {bulkDeletingDepts.length > 5 && (
-                      <span className="block text-muted-foreground">
-                        ... {bulkDeletingDepts.length - 5} {copy.itemsWillBeDeleted ?? "mục khác"}
-                      </span>
-                    )}
-                  </span>
-                )}
+              {bulkDeletingDepts.length === 1 ? (
+                `${copy.deleteDescriptionStart} "${bulkDeletingDepts[0]?.department_name}"? ${copy.deleteDescriptionEnd}`
+              ) : (
+                <span className="block space-y-1">
+                  {bulkDeletingDepts.slice(0, 5).map((dept) => (
+                    <span key={dept.name} className="flex items-start gap-2">
+                      <span className="text-muted-foreground shrink-0">-</span>
+                      <span>{dept.department_name}</span>
+                    </span>
+                  ))}
+                  {bulkDeletingDepts.length > 5 && (
+                    <span className="block text-muted-foreground">
+                      ... {bulkDeletingDepts.length - 5}{" "}
+                      {copy.itemsWillBeDeleted ?? "mục khác"}
+                    </span>
+                  )}
+                </span>
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

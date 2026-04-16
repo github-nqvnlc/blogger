@@ -35,7 +35,11 @@ interface DepartmentDetailProps {
   departmentId: string;
 }
 
-function StatusBadge({ active, activeLabel, inactiveLabel }: {
+function StatusBadge({
+  active,
+  activeLabel,
+  inactiveLabel,
+}: {
   active: boolean;
   activeLabel: string;
   inactiveLabel: string;
@@ -67,7 +71,13 @@ function OverviewSkeleton() {
   );
 }
 
-function EmptyState({ icon: Icon, label }: { icon: React.ElementType; label: string }) {
+function EmptyState({
+  icon: Icon,
+  label,
+}: {
+  icon: React.ElementType;
+  label: string;
+}) {
   return (
     <div className="flex min-h-40 flex-col items-center justify-center gap-3 rounded-lg border border-dashed text-center">
       <div className="rounded-full bg-muted p-3">
@@ -118,9 +128,8 @@ export function DepartmentDetail({ departmentId }: DepartmentDetailProps) {
     [departmentId],
   );
 
-  const { data: categories, isLoading: isLoadingCategories } = useGetList<Category>(
-    "categories",
-    {
+  const { data: categories, isLoading: isLoadingCategories } =
+    useGetList<Category>("categories", {
       fields: [
         "name",
         "category",
@@ -132,8 +141,7 @@ export function DepartmentDetail({ departmentId }: DepartmentDetailProps) {
       filters: [...departmentFilter],
       orderBy: { field: "creation", order: "desc" },
       limit: 100,
-    },
-  );
+    });
 
   const { data: topics, isLoading: isLoadingTopics } = useGetList<Topic>(
     "topics",
@@ -160,12 +168,15 @@ export function DepartmentDetail({ departmentId }: DepartmentDetailProps) {
     limit: 100,
   });
 
-  const { data: totalCategories } = useGetCount("categories", [...departmentFilter]);
+  const { data: totalCategories } = useGetCount("categories", [
+    ...departmentFilter,
+  ]);
   const { data: totalTopics } = useGetCount("topics", [...departmentFilter]);
   const { data: totalPosts } = useGetCount("posts", [...departmentFilter]);
 
-  const statusCode = (departmentError as { response?: { status?: number } } | null)
-    ?.response?.status;
+  const statusCode = (
+    departmentError as { response?: { status?: number } } | null
+  )?.response?.status;
 
   if (statusCode === 403) {
     return (
@@ -199,15 +210,16 @@ export function DepartmentDetail({ departmentId }: DepartmentDetailProps) {
             </h1>
           </div>
         </div>
-        <div className="flex flex-row items-center gap-2 " >
+        <div className="flex flex-row items-center gap-2 ">
           <StatusBadge
             active={department.is_active === 1}
             activeLabel={t.blogDepartments.table.active}
             inactiveLabel={t.blogDepartments.table.inactive}
           />
-          <p className="font-semibold text-sm italic text-muted-foreground">{department.creation
-            ? formatDate(new Date(department.creation), " HH:mm - dd/MM/yyyy")
-            : "-"}
+          <p className="font-semibold text-sm italic text-muted-foreground">
+            {department.creation
+              ? formatDate(new Date(department.creation), " HH:mm - dd/MM/yyyy")
+              : "-"}
           </p>
         </div>
       </div>
@@ -231,7 +243,10 @@ export function DepartmentDetail({ departmentId }: DepartmentDetailProps) {
         </CardContent>
       </Card>
 
-      <Tabs defaultValue="categories" className="space-y-2 bg-card rounded-xl p-2 lg:p-4 shadow-2xl">
+      <Tabs
+        defaultValue="categories"
+        className="space-y-2 bg-card rounded-xl p-2 lg:p-4 shadow-2xl"
+      >
         <TabsList variant="line" className="w-full justify-start ">
           <TabsTrigger value="categories">{copy.categories}</TabsTrigger>
           <TabsTrigger value="topics">{copy.topics}</TabsTrigger>
@@ -242,7 +257,9 @@ export function DepartmentDetail({ departmentId }: DepartmentDetailProps) {
           <Card>
             <CardHeader>
               <CardTitle>{copy.categories}</CardTitle>
-              <CardDescription>{copy.totalCategories}: {totalCategories ?? 0}</CardDescription>
+              <CardDescription>
+                {copy.totalCategories}: {totalCategories ?? 0}
+              </CardDescription>
             </CardHeader>
             <CardContent>
               {isLoadingCategories ? (
@@ -289,7 +306,9 @@ export function DepartmentDetail({ departmentId }: DepartmentDetailProps) {
           <Card>
             <CardHeader>
               <CardTitle>{copy.topics}</CardTitle>
-              <CardDescription>{copy.totalTopics}: {totalTopics ?? 0}</CardDescription>
+              <CardDescription>
+                {copy.totalTopics}: {totalTopics ?? 0}
+              </CardDescription>
             </CardHeader>
             <CardContent>
               {isLoadingTopics ? (
@@ -336,7 +355,9 @@ export function DepartmentDetail({ departmentId }: DepartmentDetailProps) {
           <Card>
             <CardHeader>
               <CardTitle>{copy.posts}</CardTitle>
-              <CardDescription>{copy.totalPosts}: {totalPosts ?? 0}</CardDescription>
+              <CardDescription>
+                {copy.totalPosts}: {totalPosts ?? 0}
+              </CardDescription>
             </CardHeader>
             <CardContent>
               {isLoadingPosts ? (

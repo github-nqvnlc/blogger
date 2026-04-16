@@ -53,8 +53,8 @@ export function DepartmentTable<TData, TValue>({
 }: DepartmentTableProps<TData, TValue>) {
   const { t } = useLanguage();
 
-    // eslint-disable-next-line react-hooks/incompatible-library
-    const table = useReactTable({
+  // eslint-disable-next-line react-hooks/incompatible-library
+  const table = useReactTable({
     data,
     columns,
     pageCount:

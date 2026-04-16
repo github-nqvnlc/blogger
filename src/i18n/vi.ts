@@ -285,8 +285,7 @@ export const vi: Dictionary = {
       "Hành động này không thể hoàn tác và có thể ảnh hưởng đến các bài viết đang sử dụng danh mục này.",
     deleteSuccess: "Xóa thành công",
     deleteFailure: "Xóa thất bại",
-    deleteFailureDescription:
-      "Không thể xóa danh mục này. Vui lòng thử lại.",
+    deleteFailureDescription: "Không thể xóa danh mục này. Vui lòng thử lại.",
     deleteSuccessDescriptionPrefix: "Đã xóa danh mục",
     bulkDeleteTitle: "Xác nhận xóa nhiều",
     bulkDeleteSuccessDescription: "Đã xóa thành công {count} danh mục",
@@ -310,18 +309,14 @@ export const vi: Dictionary = {
       slug: "Slug",
       generateSlug: "Tự động tạo slug",
       slugPlaceholder: "thong-bao-chinh-thuc",
-      slugHelp:
-        "Không bắt buộc. Chỉ dùng chữ thường, số và dấu gạch nối.",
+      slugHelp: "Không bắt buộc. Chỉ dùng chữ thường, số và dấu gạch nối.",
       slugMax: "Slug không được vượt quá 140 ký tự",
-      slugPattern:
-        "Slug chỉ được chứa chữ thường, số và dấu gạch nối",
+      slugPattern: "Slug chỉ được chứa chữ thường, số và dấu gạch nối",
       description: "Mô tả",
-      descriptionPlaceholder:
-        "Mô tả ngắn về danh mục này (tối đa 500 ký tự)",
+      descriptionPlaceholder: "Mô tả ngắn về danh mục này (tối đa 500 ký tự)",
       descriptionMax: "Mô tả không được vượt quá 500 ký tự",
       activeStatus: "Trạng thái hoạt động",
-      activeDescription:
-        "Danh mục này có thể được sử dụng trong bài viết",
+      activeDescription: "Danh mục này có thể được sử dụng trong bài viết",
       inactiveDescription:
         "Danh mục này bị vô hiệu hóa và không hiển thị trong lựa chọn",
       inactiveWarning:
@@ -356,8 +351,7 @@ export const vi: Dictionary = {
       overviewDescription: "Thông tin chung về danh mục này",
       department: "Bộ phận nội dung",
       departmentOwner: "Bộ phận sở hữu",
-      departmentOwnerDescription:
-        "Danh mục này thuộc về bộ phận nội dung sau",
+      departmentOwnerDescription: "Danh mục này thuộc về bộ phận nội dung sau",
       viewDepartment: "Xem bộ phận",
       slug: "Slug",
       noSlug: "Không có slug",

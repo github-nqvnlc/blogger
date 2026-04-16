@@ -71,9 +71,8 @@ export function CategoryList() {
   const [editingCategory, setEditingCategory] = React.useState<Category | null>(
     null,
   );
-  const [deletingCategory, setDeletingCategory] = React.useState<Category | null>(
-    null,
-  );
+  const [deletingCategory, setDeletingCategory] =
+    React.useState<Category | null>(null);
   const [bulkDeletingCategories, setBulkDeletingCategories] = React.useState<
     Category[]
   >([]);
@@ -184,7 +183,9 @@ export function CategoryList() {
 
   const handleViewDetail = React.useCallback(
     (category: Category) => {
-      router.push(buildLocalePath(locale, `/admin/categories/${category.name}`));
+      router.push(
+        buildLocalePath(locale, `/admin/categories/${category.name}`),
+      );
     },
     [locale, router],
   );
@@ -296,7 +297,9 @@ export function CategoryList() {
 
   if (statusCode === 403) {
     return (
-      <AdminAccessDenied description={t.errors.categoryAccessDeniedDescription} />
+      <AdminAccessDenied
+        description={t.errors.categoryAccessDeniedDescription}
+      />
     );
   }
 
@@ -388,7 +391,11 @@ export function CategoryList() {
                   {copy.emptyDescription}
                 </p>
               </div>
-              <Button variant="outline" size="sm" onClick={handleOpenCreateForm}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleOpenCreateForm}
+              >
                 <Plus className="mr-2 h-4 w-4" />
                 {copy.addCategory}
               </Button>
@@ -453,7 +460,10 @@ export function CategoryList() {
               ) : (
                 <span className="block space-y-1">
                   {bulkDeletingCategories.slice(0, 5).map((category) => (
-                    <span key={category.name} className="flex items-start gap-2">
+                    <span
+                      key={category.name}
+                      className="flex items-start gap-2"
+                    >
                       <span className="shrink-0 text-muted-foreground">-</span>
                       <span>{category.category}</span>
                     </span>

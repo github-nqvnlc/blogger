@@ -138,7 +138,14 @@ export function CategoryDetail({ categoryId }: CategoryDetailProps) {
   );
 
   const { data: posts, isLoading: isLoadingPosts } = useGetList<Post>("posts", {
-    fields: ["name", "title", "status", "visibility", "published_at", "creation"],
+    fields: [
+      "name",
+      "title",
+      "status",
+      "visibility",
+      "published_at",
+      "creation",
+    ],
     filters: [...categoryFilter],
     orderBy: { field: "creation", order: "desc" },
     limit: 100,
@@ -146,8 +153,9 @@ export function CategoryDetail({ categoryId }: CategoryDetailProps) {
 
   const { data: totalPosts } = useGetCount("posts", [...categoryFilter]);
 
-  const statusCode = (categoryError as { response?: { status?: number } } | null)
-    ?.response?.status;
+  const statusCode = (
+    categoryError as { response?: { status?: number } } | null
+  )?.response?.status;
 
   if (statusCode === 403) {
     return (
@@ -217,7 +225,9 @@ export function CategoryDetail({ categoryId }: CategoryDetailProps) {
           </CardHeader>
           <CardContent className="space-y-1">
             <div className="text-2xl font-semibold">{departmentName}</div>
-            {departmentCode ? <Badge variant="outline">{departmentCode}</Badge> : null}
+            {departmentCode ? (
+              <Badge variant="outline">{departmentCode}</Badge>
+            ) : null}
           </CardContent>
         </Card>
       </div>
@@ -238,7 +248,9 @@ export function CategoryDetail({ categoryId }: CategoryDetailProps) {
               <p className="font-medium">{departmentName}</p>
             </div>
             <div className="space-y-1 md:col-span-2">
-              <p className="text-sm text-muted-foreground">{copy.description}</p>
+              <p className="text-sm text-muted-foreground">
+                {copy.description}
+              </p>
               <p className="font-medium">
                 {category.description || copy.noDescription}
               </p>
@@ -255,7 +267,9 @@ export function CategoryDetail({ categoryId }: CategoryDetailProps) {
             <div>
               <p className="font-medium">{departmentName}</p>
               {departmentCode ? (
-                <p className="text-sm text-muted-foreground">{departmentCode}</p>
+                <p className="text-sm text-muted-foreground">
+                  {departmentCode}
+                </p>
               ) : null}
             </div>
             {departmentId ? (
@@ -317,7 +331,7 @@ export function CategoryDetail({ categoryId }: CategoryDetailProps) {
                                     " HH:mm dd/MM/yyyy",
                                   )
                                 : formatDate(
-                                    new Date(post.creation ?? Date.now()),
+                                    new Date(post.creation ?? new Date()),
                                     " HH:mm dd/MM/yyyy",
                                   )}
                             </p>

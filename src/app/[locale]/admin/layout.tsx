@@ -41,9 +41,7 @@ export default function AdminLayout({
             <SidebarTrigger className="lg:flex hidden" />
             <AdminBreadcrumb />
           </div>
-          <div className="lg:px-2">
-            {children}
-          </div>
+          <div className="lg:px-2">{children}</div>
         </AdminSidebarInset>
       </SidebarProvider>
     </TooltipProvider>

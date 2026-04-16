@@ -48,9 +48,7 @@ export function getCategoryColumns(
                 ? "indeterminate"
                 : false
           }
-          onCheckedChange={(value) =>
-            table.toggleAllPageRowsSelected(!!value)
-          }
+          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
           aria-label="Select all"
           className="translate-y-[2px]"
         />
@@ -69,7 +67,10 @@ export function getCategoryColumns(
     {
       accessorKey: "category",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t.blogCategories.table.name} />
+        <DataTableColumnHeader
+          column={column}
+          title={t.blogCategories.table.name}
+        />
       ),
       cell: ({ row, table }) => {
         const meta = table.options.meta as CategoryColumnMeta;
@@ -96,7 +97,9 @@ export function getCategoryColumns(
       cell: ({ row, table }) => {
         const meta = table.options.meta as CategoryColumnMeta;
         return (
-          <Badge variant="outline">{meta.getDepartmentLabel(row.original)}</Badge>
+          <Badge variant="outline">
+            {meta.getDepartmentLabel(row.original)}
+          </Badge>
         );
       },
       enableSorting: true,
@@ -104,11 +107,16 @@ export function getCategoryColumns(
     {
       accessorKey: "slug",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t.blogCategories.table.slug} />
+        <DataTableColumnHeader
+          column={column}
+          title={t.blogCategories.table.slug}
+        />
       ),
       cell: ({ row }) =>
         row.original.slug ? (
-          <code className="text-xs text-muted-foreground">{row.original.slug}</code>
+          <code className="text-xs text-muted-foreground">
+            {row.original.slug}
+          </code>
         ) : (
           <span className="italic text-muted-foreground">
             {t.blogCategories.table.noSlug}
@@ -186,7 +194,9 @@ export function getCategoryColumns(
               <DropdownMenuItem
                 onClick={() => meta.onToggle(category)}
                 className={cn(
-                  category.is_active === 1 ? "text-amber-600" : "text-green-600",
+                  category.is_active === 1
+                    ? "text-amber-600"
+                    : "text-green-600",
                 )}
               >
                 {category.is_active === 1 ? (

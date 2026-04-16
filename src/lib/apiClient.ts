@@ -62,7 +62,9 @@ function parseServerMessages(raw: unknown): string | null {
   return null;
 }
 
-function getFrappeErrorMessage(payload: FrappeErrorPayload | undefined): string | null {
+function getFrappeErrorMessage(
+  payload: FrappeErrorPayload | undefined,
+): string | null {
   if (!payload) return null;
 
   const serverMessage = parseServerMessages(payload._server_messages);
@@ -132,4 +134,3 @@ export function getApiClient(): AxiosInstance {
   }
   return _apiClient;
 }
-
