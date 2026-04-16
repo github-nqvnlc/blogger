@@ -1,9 +1,11 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useGetList, useDeleteDoc, useGetCount } from "@/hooks";
 import { useLanguage } from "@/hooks/useLanguage";
+import { buildLocalePath } from "@/i18n";
 import { BlogDepartment } from "@/types/blogs";
 import { Filter } from "@/types/hooks";
 import {
@@ -39,15 +41,16 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { AdminAccessDenied } from "@/components/layout/admin-access-denied";
-import { DepartmentForm } from "@/components/blogs/metadata/DepartmentForm";
-import { DepartmentTable } from "@/components/blogs/metadata/DepartmentTable";
-import { getDepartmentColumns } from "@/components/blogs/metadata/DepartmentColumns";
+import { DepartmentForm } from "@/components/blogs/departments/DepartmentForm";
+import { DepartmentTable } from "@/components/blogs/departments/DepartmentTable";
+import { getDepartmentColumns } from "@/components/blogs/departments/DepartmentColumns";
 import { Search, Plus, Building2, Trash2 } from "lucide-react";
 
 const PAGE_SIZE = 20;
 
 export function DepartmentList() {
-  const { t } = useLanguage();
+  const router = useRouter();
+  const { locale, t } = useLanguage();
   const copy = t.blogDepartments;
   const [sorting, setSorting] = React.useState<SortingState>([
     { id: "creation", desc: true },
@@ -128,6 +131,15 @@ export function DepartmentList() {
     setIsFormOpen(true);
   }, []);
 
+  const handleViewDetail = React.useCallback(
+    (dept: BlogDepartment) => {
+      router.push(
+        buildLocalePath(locale, `/admin/blog-departments/${dept.name}`),
+      );
+    },
+    [locale, router],
+  );
+
   const handleToggleStatus = React.useCallback(async (dept: BlogDepartment) => {
     setEditingDepartment(dept);
     setIsFormOpen(true);
@@ -206,11 +218,12 @@ export function DepartmentList() {
 
   const columnMeta = React.useMemo(
     () => ({
+      onView: handleViewDetail,
       onEdit: handleOpenEditForm,
       onToggle: handleToggleStatus,
       onDelete: handleDeleteClick,
     }),
-    [handleOpenEditForm, handleToggleStatus, handleDeleteClick],
+    [handleDeleteClick, handleOpenEditForm, handleToggleStatus, handleViewDetail],
   );
 
   React.useEffect(() => {

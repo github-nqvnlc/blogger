@@ -8,7 +8,8 @@ export interface BlogDepartment {
   department_code: string;
   description: string;
   is_active: number; // 1 = active, 0 = inactive
-  creation: number;
+  sort_order?: number;
+  creation: string | number;
 }
 
 export interface Category {
@@ -28,6 +29,7 @@ export interface Topic {
   desc: string;
   is_active: number;
   slug: string;
+  creation?: string | number;
 }
 
 export interface Tag {
@@ -60,6 +62,7 @@ export interface Post {
   visibility: PostVisibility;
   view_count: number;
   content: string;
+  creation?: string | number;
 }
 
 // ─── Junction Tables ───────────────────────────────────────

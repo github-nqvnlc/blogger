@@ -3,3 +3,4 @@
 
 export { DepartmentList } from "./DepartmentList";
 export { DepartmentForm } from "./DepartmentForm";
+export { DepartmentDetail } from "./DepartmentDetail";

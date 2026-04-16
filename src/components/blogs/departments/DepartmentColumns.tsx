@@ -2,6 +2,7 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import {
+  BookOpen,
   MoreHorizontal,
   Pencil,
   Trash2,
@@ -25,6 +26,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { formatDate } from "date-fns";
 
 export interface DepartmentColumnMeta {
+  onView: (dept: BlogDepartment) => void;
   onEdit: (dept: BlogDepartment) => void;
   onToggle: (dept: BlogDepartment) => void;
   onDelete: (dept: BlogDepartment) => void;
@@ -71,9 +73,13 @@ export function getDepartmentColumns(
           title={t.blogDepartments.table.name}
         />
       ),
-      cell: ({ row }) => (
-        <span className="font-medium">{row.original.department_name}</span>
-      ),
+      cell: ({ row, table }) => {
+        const meta = table.options.meta as DepartmentColumnMeta;
+        const dept = row.original;
+        return (
+          <span className="font-medium cursor-pointer hover:underline hover:underline-offset-4" onClick={() => meta.onView(dept)}>{row.original.department_name}</span>
+        );
+      },
       enableSorting: true,
     },
     {
@@ -151,6 +157,10 @@ export function getDepartmentColumns(
               <DropdownMenuItem onClick={() => meta.onEdit(dept)}>
                 <Pencil className="mr-2 h-4 w-4" />
                 {t.blogDepartments.table.edit}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => meta.onView(dept)}>
+                <BookOpen className="mr-2 h-4 w-4" />
+                {t.blogDepartments.table.viewDetail}
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => meta.onToggle(dept)}
