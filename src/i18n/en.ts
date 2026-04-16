@@ -45,6 +45,8 @@ export const en = {
     active: "Active",
     inactive: "Inactive",
     all: "All",
+    selected: "selected",
+    deleteSelected: "Delete selected",
   },
   home: {
     title: "Frappe Connect",
@@ -170,6 +172,10 @@ export const en = {
     deleteFailureDescription:
       "This department could not be deleted. Please try again.",
     deleteSuccessDescriptionPrefix: "Deleted content department",
+    bulkDeleteTitle: "Confirm bulk deletion",
+    bulkDeleteSuccessDescription:
+      "Successfully deleted {count} content departments",
+    itemsWillBeDeleted: "This action cannot be undone.",
     form: {
       updateSuccess: "Department updated successfully",
       updateFailure: "Failed to update department",
@@ -212,6 +218,7 @@ export const en = {
       submitUpdate: "Update",
     },
     table: {
+      creation: "Creation date",
       sortOrder: "Priority",
       id: "Department ID",
       name: "Department name",
@@ -220,6 +227,7 @@ export const en = {
       description: "Description",
       noDescription: "No description",
       status: "Status",
+      actions: "Actions",
       active: "Active",
       inactive: "Inactive",
       edit: "Edit",

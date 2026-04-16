@@ -21,6 +21,8 @@ import {
 import { DataTableColumnHeader } from "@/components/ui/data-table-column-header";
 import { cn } from "@/lib/utils";
 import type { Dictionary } from "@/i18n";
+import { Checkbox } from "@/components/ui/checkbox";
+import { formatDate } from "date-fns";
 
 export interface DepartmentColumnMeta {
   onEdit: (dept: BlogDepartment) => void;
@@ -33,32 +35,33 @@ export function getDepartmentColumns(
 ): ColumnDef<BlogDepartment, unknown>[] {
   return [
     {
-      accessorKey: "sort_order",
-      header: ({ column }) => (
-        <DataTableColumnHeader
-          column={column}
-          title={t.blogDepartments.table.sortOrder}
+      id: "select",
+      header: ({ table }) => (
+        <Checkbox
+          checked={
+            table.getIsAllPageRowsSelected()
+              ? true
+              : table.getIsSomePageRowsSelected()
+                ? "indeterminate"
+                : false
+          }
+          onCheckedChange={(value) =>
+            table.toggleAllPageRowsSelected(!!value)
+          }
+          aria-label="Select all"
+          className="translate-y-[2px]"
         />
       ),
       cell: ({ row }) => (
-        <span className="text-center block">
-          {row.original.sort_order ?? 0}
-        </span>
-      ),
-      enableSorting: true,
-    },
-    {
-      accessorKey: "name",
-      header: ({ column }) => (
-        <DataTableColumnHeader
-          column={column}
-          title={t.blogDepartments.table.id}
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label="Select row"
+          className="translate-y-[2px]"
         />
       ),
-      cell: ({ row }) => (
-        <span className="font-mono text-sm">{row.original.name}</span>
-      ),
-      enableSorting: true,
+      enableSorting: false,
+      enableHiding: false,
     },
     {
       accessorKey: "department_name",
@@ -121,7 +124,18 @@ export function getDepartmentColumns(
       enableSorting: false,
     },
     {
+      accessorKey: "creation",
+      header: t.blogDepartments.table.creation,
+      cell: ({ row }) => (
+        <span className="text-muted-foreground">
+          {formatDate(new Date(row.original.creation), " HH:mm dd/MM/yyyy")}
+        </span>
+      ),
+      enableSorting: false,
+    },
+    {
       id: "actions",
+      header: t.blogDepartments.table.actions,
       cell: ({ row, table }) => {
         const meta = table.options.meta as DepartmentColumnMeta;
         const dept = row.original;

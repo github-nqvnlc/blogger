@@ -47,6 +47,8 @@ export const vi: Dictionary = {
     active: "Đang hoạt động",
     inactive: "Không hoạt động",
     all: "Tất cả",
+    selected: "đã chọn",
+    deleteSelected: "Xóa đã chọn",
   },
   home: {
     title: "Frappe Connect",
@@ -171,6 +173,10 @@ export const vi: Dictionary = {
     deleteFailureDescription:
       "Không thể xóa bộ phận nội dung này. Vui lòng thử lại.",
     deleteSuccessDescriptionPrefix: "Đã xóa bộ phận nội dung",
+    bulkDeleteTitle: "Xác nhận xóa nhiều",
+    bulkDeleteSuccessDescription:
+      "Đã xóa thành công {count} bộ phận nội dung",
+    itemsWillBeDeleted: "Hành động này không thể hoàn tác.",
     form: {
       updateSuccess: "Cập nhật thành công",
       updateFailure: "Cập nhật thất bại",
@@ -212,6 +218,7 @@ export const vi: Dictionary = {
       submitUpdate: "Cập nhật",
     },
     table: {
+      creation: "Ngày tạo",
       sortOrder: "Thứ tự",
       id: "Mã bộ phận",
       name: "Tên bộ phận",
@@ -220,6 +227,7 @@ export const vi: Dictionary = {
       description: "Mô tả",
       noDescription: "Không có mô tả",
       status: "Trạng thái",
+      actions: "Actions",
       active: "Hoạt động",
       inactive: "Không hoạt động",
       edit: "Chỉnh sửa",

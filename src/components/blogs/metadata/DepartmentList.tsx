@@ -2,14 +2,14 @@
 
 import * as React from "react";
 import { toast } from "sonner";
-import { useGetList, useDeleteDoc } from "@/hooks";
+import { useGetList, useDeleteDoc, useGetCount } from "@/hooks";
 import { useLanguage } from "@/hooks/useLanguage";
 import { BlogDepartment } from "@/types/blogs";
 import { Filter } from "@/types/hooks";
 import {
   ColumnDef,
-  ColumnFiltersState,
   PaginationState,
+  RowSelectionState,
   SortingState,
 } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -43,7 +42,7 @@ import { AdminAccessDenied } from "@/components/layout/admin-access-denied";
 import { DepartmentForm } from "@/components/blogs/metadata/DepartmentForm";
 import { DepartmentTable } from "@/components/blogs/metadata/DepartmentTable";
 import { getDepartmentColumns } from "@/components/blogs/metadata/DepartmentColumns";
-import { Search, Plus, Building2 } from "lucide-react";
+import { Search, Plus, Building2, Trash2 } from "lucide-react";
 
 const PAGE_SIZE = 20;
 
@@ -51,23 +50,24 @@ export function DepartmentList() {
   const { t } = useLanguage();
   const copy = t.blogDepartments;
   const [sorting, setSorting] = React.useState<SortingState>([
-    { id: "sort_order", desc: false },
+    { id: "creation", desc: true },
   ]);
   const [pagination, setPagination] = React.useState<PaginationState>({
     pageIndex: 0,
     pageSize: PAGE_SIZE,
   });
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    [],
-  );
+  const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({});
   const [statusFilter, setStatusFilter] = React.useState<
     "all" | "active" | "inactive"
   >("all");
+  const [search, setSearch] = React.useState("");
   const [isFormOpen, setIsFormOpen] = React.useState(false);
   const [editingDepartment, setEditingDepartment] =
     React.useState<BlogDepartment | null>(null);
   const [deletingDepartment, setDeletingDepartment] =
     React.useState<BlogDepartment | null>(null);
+  const [bulkDeletingDepts, setBulkDeletingDepts] =
+    React.useState<BlogDepartment[]>([]);
 
   const apiFilters = React.useMemo<Filter[]>(() => {
     const result: Filter[] = [];
@@ -78,19 +78,20 @@ export function DepartmentList() {
       result.push(["is_active", "=", 0]);
     }
 
-    const searchValue = columnFilters.find((f) => f.id === "search")?.value as
-      | string
-      | undefined;
-    if (searchValue && searchValue.trim()) {
-      result.push(["name", "like", `%${searchValue.trim()}%`]);
-    }
-
     return result;
-  }, [statusFilter, columnFilters]);
+  }, [statusFilter]);
+
+  const searchOrFilters = React.useMemo<Filter[]>(() => {
+    if (!search.trim()) return [];
+    return [
+      ["department_name", "like", `%${search.trim()}%`],
+      ["department_code", "like", `%${search.trim()}%`],
+    ];
+  }, [search]);
 
   const orderBy = React.useMemo(() => {
     if (sorting.length === 0)
-      return { field: "sort_order", order: "asc" as const };
+      return { field: "creation", order: "asc" as const };
     const s = sorting[0];
     return {
       field: s.id,
@@ -106,10 +107,13 @@ export function DepartmentList() {
   } = useGetList<BlogDepartment>("blog_departments", {
     fields: ["*"],
     filters: apiFilters,
+    orFilters: searchOrFilters,
     orderBy,
     limit_start: pagination.pageIndex * pagination.pageSize,
     limit: pagination.pageSize,
   });
+
+  const { data: totalCount } = useGetCount("blog_departments", apiFilters);
 
   const { deleteDoc: deleteDepartment, loading: isDeleting } =
     useDeleteDoc("blog_departments");
@@ -163,6 +167,43 @@ export function DepartmentList() {
     setDeletingDepartment(dept);
   }, []);
 
+  const handleBulkDeleteClick = React.useCallback(
+    (selectedDepts: BlogDepartment[]) => {
+      setBulkDeletingDepts(selectedDepts);
+    },
+    [],
+  );
+
+  const handleBulkDeleteConfirm = React.useCallback(async () => {
+    if (bulkDeletingDepts.length === 0) return;
+    try {
+      await Promise.all(
+        bulkDeletingDepts.map((dept) => deleteDepartment(dept.name)),
+      );
+      toast.success(copy.deleteSuccess, {
+        description: `${copy.bulkDeleteSuccessDescription.replace(
+          "{count}",
+          String(bulkDeletingDepts.length),
+        )}`,
+      });
+      setBulkDeletingDepts([]);
+      setRowSelection({});
+      refetch();
+    } catch {
+      toast.error(copy.deleteFailure, {
+        description: copy.deleteFailureDescription,
+      });
+    }
+  }, [
+    bulkDeletingDepts,
+    copy.bulkDeleteSuccessDescription,
+    copy.deleteFailure,
+    copy.deleteFailureDescription,
+    copy.deleteSuccess,
+    deleteDepartment,
+    refetch,
+  ]);
+
   const columnMeta = React.useMemo(
     () => ({
       onEdit: handleOpenEditForm,
@@ -180,7 +221,6 @@ export function DepartmentList() {
     ?.response?.status;
   const isForbidden = statusCode === 403;
 
-  const totalCount = departments?.length ?? 0;
   const columns: ColumnDef<BlogDepartment, unknown>[] = React.useMemo(
     () => getDepartmentColumns(t),
     [t],
@@ -208,60 +248,71 @@ export function DepartmentList() {
           </Button>
         </div>
 
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder={copy.searchPlaceholder}
-                  value={
-                    (columnFilters.find((f) => f.id === "search")
-                      ?.value as string) ?? ""
-                  }
-                  onChange={(e) =>
-                    setColumnFilters((prev) => {
-                      const existing = prev.find((f) => f.id === "search");
-                      if (existing) {
-                        return prev.map((f) =>
-                          f.id === "search"
-                            ? { ...f, value: e.target.value }
-                            : f,
-                        );
-                      }
-                      return [...prev, { id: "search", value: e.target.value }];
-                    })
-                  }
-                  className="pl-9"
-                />
-              </div>
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder={copy.searchPlaceholder}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+                }
+              }}
+              className="pl-9"
+            />
+          </div>
 
-              <Select
-                value={statusFilter}
-                onValueChange={(v) => setStatusFilter(v as typeof statusFilter)}
-              >
-                <SelectTrigger className="w-full sm:w-[180px]">
-                  <SelectValue placeholder={t.common.status} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t.common.all}</SelectItem>
-                  <SelectItem value="active">{t.common.active}</SelectItem>
-                  <SelectItem value="inactive">{t.common.inactive}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </CardContent>
-        </Card>
+          <Select
+            value={statusFilter}
+            onValueChange={(v) => setStatusFilter(v as typeof statusFilter)}
+          >
+            <SelectTrigger className="w-full sm:w-[180px]">
+              <SelectValue placeholder={t.common.status} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t.common.all}</SelectItem>
+              <SelectItem value="active">{t.common.active}</SelectItem>
+              <SelectItem value="inactive">{t.common.inactive}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {Object.keys(rowSelection).length > 0 && (
+          <div className="flex items-center justify-end gap-3 rounded-lg border bg-muted/50 px-4 py-3">
+            <span className="text-sm font-medium">
+              {Object.keys(rowSelection).length}{" "}
+              {t.common.selected}
+            </span>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() =>
+                handleBulkDeleteClick(
+                  departments?.filter(
+                    (_, i) => rowSelection[i] === true,
+                  ) ?? [],
+                )
+              }
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              {t.common.deleteSelected}
+            </Button>
+          </div>
+        )}
 
         <DepartmentTable
           columns={columns}
           data={departments ?? []}
           isLoading={isLoading}
-          totalCount={totalCount}
+          totalCount={totalCount ?? 0}
           pagination={pagination}
           onPaginationChange={setPagination}
           sorting={sorting}
           onSortingChange={setSorting}
+          rowSelection={rowSelection}
+          onRowSelectionChange={setRowSelection}
           meta={columnMeta}
           emptyMessage={
             <div className="flex flex-col items-center justify-center gap-3 py-8">
@@ -321,6 +372,49 @@ export function DepartmentList() {
             <AlertDialogCancel>{t.common.cancel}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteConfirm}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={isDeleting}
+            >
+              {isDeleting ? <Spinner /> : null}
+              {t.common.delete}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={bulkDeletingDepts.length > 0}
+        onOpenChange={(open) => !open && setBulkDeletingDepts([])}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {copy.bulkDeleteTitle ?? copy.deleteTitle}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-1">
+              {bulkDeletingDepts.length === 1
+                ? `${copy.deleteDescriptionStart} "${bulkDeletingDepts[0]?.department_name}"? ${copy.deleteDescriptionEnd}`
+                : (
+                  <div className="space-y-1">
+                    {bulkDeletingDepts.slice(0, 5).map((dept) => (
+                      <div key={dept.name} className="flex items-start gap-2">
+                        <span className="text-muted-foreground shrink-0">-</span>
+                        <span>{dept.department_name}</span>
+                      </div>
+                    ))}
+                    {bulkDeletingDepts.length > 5 && (
+                      <div className="text-muted-foreground">
+                        ... {bulkDeletingDepts.length - 5} {copy.itemsWillBeDeleted ?? "mục khác"}
+                      </div>
+                    )}
+                  </div>
+                )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t.common.cancel}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleBulkDeleteConfirm}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               disabled={isDeleting}
             >

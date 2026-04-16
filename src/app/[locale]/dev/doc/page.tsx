@@ -758,7 +758,7 @@ export default function DocHookDevPage() {
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
       {/* Header */}
-      <div className="mb-6 sticky top-0 z-10 bg-zinc-50 shadow-xl p-4">
+      <div className="mb-6 sticky top-0 z-10 bg-zinc-50 dark:bg-zinc-800 shadow-xl p-4">
         <div className="mb-1 flex items-center gap-2">
           {/* <span className="rounded-md bg-zinc-200 px-2 py-0.5 font-mono text-xs text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">/dev/doc</span> */}
           <span className="text-xs text-zinc-400">

@@ -31,6 +31,8 @@ interface DepartmentTableProps<TData, TValue> {
   onPaginationChange: OnChangeFn<PaginationState>;
   sorting: SortingState;
   onSortingChange: OnChangeFn<SortingState>;
+  rowSelection?: Record<string, boolean>;
+  onRowSelectionChange?: OnChangeFn<Record<string, boolean>>;
   emptyMessage?: React.ReactNode;
   meta?: Record<string, unknown>;
 }
@@ -44,13 +46,15 @@ export function DepartmentTable<TData, TValue>({
   onPaginationChange,
   sorting,
   onSortingChange,
+  rowSelection,
+  onRowSelectionChange,
   emptyMessage,
   meta,
 }: DepartmentTableProps<TData, TValue>) {
   const { t } = useLanguage();
 
-  // eslint-disable-next-line react-hooks/incompatible-library
-  const table = useReactTable({
+    // eslint-disable-next-line react-hooks/incompatible-library
+    const table = useReactTable({
     data,
     columns,
     pageCount:
@@ -60,11 +64,14 @@ export function DepartmentTable<TData, TValue>({
     state: {
       pagination,
       sorting,
+      rowSelection: rowSelection ?? {},
     },
     onPaginationChange,
     onSortingChange,
+    onRowSelectionChange,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    enableRowSelection: true,
     manualPagination: true,
     manualSorting: true,
     meta,

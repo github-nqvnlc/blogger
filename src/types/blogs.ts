@@ -8,7 +8,7 @@ export interface BlogDepartment {
   department_code: string;
   description: string;
   is_active: number; // 1 = active, 0 = inactive
-  sort_order: number;
+  creation: number;
 }
 
 export interface Category {
@@ -17,7 +17,7 @@ export interface Category {
   department: string;
   description: string;
   is_active: number;
-  sort_order: number;
+  creation: number;
   slug: string;
 }
 
