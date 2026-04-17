@@ -12,4 +12,8 @@ export const errors = {
   adminSidebarAccess: "Truy cập từ menu sidebar",
   categoryAccessDeniedDescription:
     "Tài khoản của bạn không có quyền xem danh sách danh mục.",
+  topicAccessDeniedDescription:
+    "Tài khoản của bạn không có quyền xem danh sách chủ đề.",
+  tagAccessDeniedDescription:
+    "Tài khoản của bạn không có quyền xem danh sách nhãn.",
 } as const;

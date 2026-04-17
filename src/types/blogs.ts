@@ -27,7 +27,9 @@ export interface Category {
 export interface Topic {
   name: string;
   topic: string;
-  department: string;
+  department:
+    | string
+    | Pick<BlogDepartment, "name" | "department_name" | "department_code">;
   desc: string;
   is_active: number;
   slug: string;
@@ -40,6 +42,7 @@ export interface Tag {
   slug: string;
   description: string;
   is_active: number;
+  creation?: string | number;
 }
 
 // ─── Post ──────────────────────────────────────────────────
@@ -137,6 +140,21 @@ export interface DepartmentFormValues {
 export interface CategoryFormValues {
   category: string;
   department: string;
+  description: string;
+  slug: string;
+  is_active: boolean;
+}
+
+export interface TopicFormValues {
+  topic: string;
+  department: string;
+  desc: string;
+  slug: string;
+  is_active: boolean;
+}
+
+export interface TagFormValues {
+  tag_name: string;
   description: string;
   slug: string;
   is_active: boolean;

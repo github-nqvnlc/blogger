@@ -11,6 +11,8 @@ import { table } from "./table";
 import { pagination } from "./pagination";
 import { blogDepartments } from "./blogDepartments";
 import { blogCategories } from "./blogCategories";
+import { blogTopics } from "./blogTopics";
+import { blogTags } from "./blogTags";
 import { devDoc } from "./devDoc";
 
 export const vi = {
@@ -27,5 +29,7 @@ export const vi = {
   pagination,
   blogDepartments,
   blogCategories,
+  blogTopics,
+  blogTags,
   devDoc,
 } as const;
