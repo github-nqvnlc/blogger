@@ -82,7 +82,10 @@ export function CoverImageField({
   }
 
   const shouldShowUrlError =
-    source === "url" && urlTouched && value.trim() && !isSupportedImageUrl(value);
+    source === "url" &&
+    urlTouched &&
+    value.trim() &&
+    !isSupportedImageUrl(value);
 
   return (
     <div className="space-y-3">
@@ -127,7 +130,9 @@ export function CoverImageField({
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="space-y-1">
                 <p className="font-medium">{copy.uploadTab}</p>
-                <p className="text-sm text-muted-foreground">{copy.uploadHint}</p>
+                <p className="text-sm text-muted-foreground">
+                  {copy.uploadHint}
+                </p>
               </div>
               <Button
                 type="button"
@@ -152,7 +157,9 @@ export function CoverImageField({
               {loading ? (
                 <>
                   <Progress value={progress} />
-                  <p className="text-sm text-muted-foreground">{copy.uploadBusy}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {copy.uploadBusy}
+                  </p>
                 </>
               ) : (
                 <p className="text-sm text-muted-foreground">

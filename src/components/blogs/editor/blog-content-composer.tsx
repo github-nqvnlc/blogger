@@ -1,22 +1,22 @@
-'use client';
+"use client";
 
-import { useMemo, useState } from 'react';
-import { Copy, Eye, FileCode2, PencilLine, WandSparkles } from 'lucide-react';
-import { marked } from 'marked';
-import { format as formatWithPrettier } from 'prettier/standalone';
-import htmlPlugin from 'prettier/plugins/html';
-import TurndownService from 'turndown';
-import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
-import { useLanguage } from '@/hooks/useLanguage';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Textarea } from '@/components/ui/textarea';
-import { restoreEmbeddedMediaHtml, stripHtml } from '@/lib/blog-posts';
-import { TiptapEditor } from './tiptap-editor';
-import { RichContent } from './rich-content';
+import { useMemo, useState } from "react";
+import { Copy, Eye, FileCode2, PencilLine, WandSparkles } from "lucide-react";
+import { marked } from "marked";
+import { format as formatWithPrettier } from "prettier/standalone";
+import htmlPlugin from "prettier/plugins/html";
+import TurndownService from "turndown";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+import { useLanguage } from "@/hooks/useLanguage";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { restoreEmbeddedMediaHtml, stripHtml } from "@/lib/blog-posts";
+import { TiptapEditor } from "./tiptap-editor";
+import { RichContent } from "./rich-content";
 
-type ComposerView = 'editor' | 'html' | 'markdown' | 'preview';
+type ComposerView = "editor" | "html" | "markdown" | "preview";
 
 type BlogContentComposerProps = {
   id?: string;
@@ -27,26 +27,26 @@ type BlogContentComposerProps = {
 };
 
 const turndownService = new TurndownService({
-  headingStyle: 'atx',
-  codeBlockStyle: 'fenced',
+  headingStyle: "atx",
+  codeBlockStyle: "fenced",
 });
 
-turndownService.addRule('embedded-media-figure', {
+turndownService.addRule("embedded-media-figure", {
   filter: (node) =>
     node instanceof HTMLElement &&
-    node.tagName === 'FIGURE' &&
-    node.dataset.blogMedia === 'true',
+    node.tagName === "FIGURE" &&
+    node.dataset.blogMedia === "true",
   replacement: (_content, node) => `\n\n${(node as HTMLElement).outerHTML}\n\n`,
 });
 
 function normalizeHtml(value?: string | null): string {
-  return restoreEmbeddedMediaHtml(value ?? '').trim();
+  return restoreEmbeddedMediaHtml(value ?? "").trim();
 }
 
 function htmlToMarkdown(value: string): string {
   const normalized = normalizeHtml(value);
   if (!normalized) {
-    return '';
+    return "";
   }
 
   return turndownService.turndown(normalized).trim();
@@ -55,7 +55,7 @@ function htmlToMarkdown(value: string): string {
 function markdownToHtml(value: string): string {
   const normalized = value.trim();
   if (!normalized) {
-    return '';
+    return "";
   }
 
   const parsed = marked.parse(normalized, {
@@ -64,7 +64,7 @@ function markdownToHtml(value: string): string {
     gfm: true,
   });
 
-  return (typeof parsed === 'string' ? parsed : '').trim();
+  return (typeof parsed === "string" ? parsed : "").trim();
 }
 
 async function copyTextToClipboard(
@@ -97,7 +97,7 @@ export function BlogContentComposer({
   invalid,
 }: BlogContentComposerProps) {
   const { t } = useLanguage();
-  const [activeView, setActiveView] = useState<ComposerView>('editor');
+  const [activeView, setActiveView] = useState<ComposerView>("editor");
   const msg = t.blogEditor.composer;
   const msgToast = msg.toast;
   const normalizedValue = useMemo(() => normalizeHtml(value), [value]);
@@ -113,32 +113,32 @@ export function BlogContentComposer({
 
   async function handleCopy() {
     switch (activeView) {
-      case 'editor':
-        await copyTextToClipboard(previewText, 'Editor', {
-          success: msgToast.copied.replace('{tab}', msg.tabs.editor),
-          empty: msgToast.copyEmpty.replace('{tab}', msg.tabs.editor),
-          failed: msgToast.copyFailed.replace('{tab}', msg.tabs.editor),
+      case "editor":
+        await copyTextToClipboard(previewText, "Editor", {
+          success: msgToast.copied.replace("{tab}", msg.tabs.editor),
+          empty: msgToast.copyEmpty.replace("{tab}", msg.tabs.editor),
+          failed: msgToast.copyFailed.replace("{tab}", msg.tabs.editor),
         });
         return;
-      case 'html':
-        await copyTextToClipboard(htmlDraft, 'HTML', {
-          success: msgToast.copied.replace('{tab}', msg.tabs.html),
-          empty: msgToast.copyEmpty.replace('{tab}', msg.tabs.html),
-          failed: msgToast.copyFailed.replace('{tab}', msg.tabs.html),
+      case "html":
+        await copyTextToClipboard(htmlDraft, "HTML", {
+          success: msgToast.copied.replace("{tab}", msg.tabs.html),
+          empty: msgToast.copyEmpty.replace("{tab}", msg.tabs.html),
+          failed: msgToast.copyFailed.replace("{tab}", msg.tabs.html),
         });
         return;
-      case 'markdown':
-        await copyTextToClipboard(markdownDraft, 'Markdown', {
-          success: msgToast.copied.replace('{tab}', msg.tabs.markdown),
-          empty: msgToast.copyEmpty.replace('{tab}', msg.tabs.markdown),
-          failed: msgToast.copyFailed.replace('{tab}', msg.tabs.markdown),
+      case "markdown":
+        await copyTextToClipboard(markdownDraft, "Markdown", {
+          success: msgToast.copied.replace("{tab}", msg.tabs.markdown),
+          empty: msgToast.copyEmpty.replace("{tab}", msg.tabs.markdown),
+          failed: msgToast.copyFailed.replace("{tab}", msg.tabs.markdown),
         });
         return;
-      case 'preview':
-        await copyTextToClipboard(previewText, 'Preview', {
-          success: msgToast.copied.replace('{tab}', msg.tabs.preview),
-          empty: msgToast.copyEmpty.replace('{tab}', msg.tabs.preview),
-          failed: msgToast.copyFailed.replace('{tab}', msg.tabs.preview),
+      case "preview":
+        await copyTextToClipboard(previewText, "Preview", {
+          success: msgToast.copied.replace("{tab}", msg.tabs.preview),
+          empty: msgToast.copyEmpty.replace("{tab}", msg.tabs.preview),
+          failed: msgToast.copyFailed.replace("{tab}", msg.tabs.preview),
         });
         return;
       default:
@@ -149,7 +149,7 @@ export function BlogContentComposer({
   async function handleFormatHtml() {
     try {
       const formatted = await formatWithPrettier(htmlDraft, {
-        parser: 'html',
+        parser: "html",
         plugins: [htmlPlugin],
       });
 
@@ -165,11 +165,11 @@ export function BlogContentComposer({
     const typedView = nextView as ComposerView;
     setActiveView(typedView);
 
-    if (typedView === 'html') {
+    if (typedView === "html") {
       setHtmlDraft(normalizedValue);
     }
 
-    if (typedView === 'markdown') {
+    if (typedView === "markdown") {
       setMarkdownDraft(htmlToMarkdown(normalizedValue));
     }
   }
@@ -185,9 +185,9 @@ export function BlogContentComposer({
   }
 
   const copySource =
-    activeView === 'editor' || activeView === 'preview'
+    activeView === "editor" || activeView === "preview"
       ? previewText
-      : activeView === 'html'
+      : activeView === "html"
         ? htmlDraft
         : markdownDraft;
 
@@ -197,8 +197,8 @@ export function BlogContentComposer({
       data-blog-content-composer
       tabIndex={-1}
       className={cn(
-        'rounded-2xl border bg-background p-4 outline-none',
-        invalid && 'border-red-500 ring-2 ring-red-500/20',
+        "rounded-2xl border bg-background p-4 outline-none",
+        invalid && "border-red-500 ring-2 ring-red-500/20",
       )}
     >
       <Tabs value={activeView} onValueChange={handleViewChange}>
@@ -223,7 +223,7 @@ export function BlogContentComposer({
           </TabsList>
 
           <div className="flex items-center justify-end gap-2">
-            {activeView === 'html' ? (
+            {activeView === "html" ? (
               <Button
                 type="button"
                 variant="outline"
@@ -279,10 +279,7 @@ export function BlogContentComposer({
 
         <TabsContent value="preview" className="pt-4">
           <div className="min-h-[28rem] rounded-xl border bg-muted/10 p-4">
-            <RichContent
-              value={normalizedValue}
-              emptyText={msg.emptyPreview}
-            />
+            <RichContent value={normalizedValue} emptyText={msg.emptyPreview} />
           </div>
         </TabsContent>
       </Tabs>

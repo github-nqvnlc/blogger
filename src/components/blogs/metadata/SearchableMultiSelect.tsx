@@ -217,7 +217,9 @@ export function SearchableMultiSelect({
                     <Check
                       className={cn(
                         "ml-2 size-4 shrink-0",
-                        values.includes(option.value) ? "opacity-100" : "opacity-0",
+                        values.includes(option.value)
+                          ? "opacity-100"
+                          : "opacity-0",
                       )}
                     />
                   </CommandItem>

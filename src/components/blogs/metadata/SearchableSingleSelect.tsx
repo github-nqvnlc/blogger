@@ -158,7 +158,8 @@ export function SearchableSingleSelect({
   );
 
   const currentOption = useMemo(
-    () => mergedOptions.find((option) => option.value === value) ?? selectedOption,
+    () =>
+      mergedOptions.find((option) => option.value === value) ?? selectedOption,
     [mergedOptions, selectedOption, value],
   );
 
@@ -185,7 +186,9 @@ export function SearchableSingleSelect({
             invalid && "border-destructive",
           )}
         >
-          <span className="truncate">{currentOption?.label ?? placeholder}</span>
+          <span className="truncate">
+            {currentOption?.label ?? placeholder}
+          </span>
           <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>

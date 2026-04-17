@@ -60,7 +60,9 @@ export const Indent = Extension.create({
       indent:
         () =>
         ({ editor, commands }) => {
-          const currentIndent = Number(editor.getAttributes("paragraph").indent ?? 0);
+          const currentIndent = Number(
+            editor.getAttributes("paragraph").indent ?? 0,
+          );
           return INDENT_TYPES.every((type) =>
             commands.updateAttributes(type, {
               indent: clampIndent(currentIndent + 1),
@@ -70,7 +72,9 @@ export const Indent = Extension.create({
       outdent:
         () =>
         ({ editor, commands }) => {
-          const currentIndent = Number(editor.getAttributes("paragraph").indent ?? 0);
+          const currentIndent = Number(
+            editor.getAttributes("paragraph").indent ?? 0,
+          );
           return INDENT_TYPES.every((type) =>
             commands.updateAttributes(type, {
               indent: clampIndent(currentIndent - 1),

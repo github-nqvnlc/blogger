@@ -314,7 +314,10 @@ export function AdminSidebar() {
       const currentParams = new URLSearchParams(currentQuery ?? "");
       const urlParams = new URLSearchParams(urlQuery);
       const paramKey = urlParams.keys().next().value;
-      return isPathMatch && currentParams.get(paramKey ?? "") === urlParams.get(paramKey ?? "");
+      return (
+        isPathMatch &&
+        currentParams.get(paramKey ?? "") === urlParams.get(paramKey ?? "")
+      );
     }
 
     if (currentQuery) {
@@ -324,7 +327,11 @@ export function AdminSidebar() {
         .flatMap((g) => g.items)
         .some((item) => {
           const [itemPath, itemQuery] = item.url.split("?");
-          return itemPath === pathnameOnly && itemQuery && new URLSearchParams(itemQuery).get(paramKey ?? "") !== null;
+          return (
+            itemPath === pathnameOnly &&
+            itemQuery &&
+            new URLSearchParams(itemQuery).get(paramKey ?? "") !== null
+          );
         });
       return pathnameOnly === urlPath && !hasParamMenu;
     }

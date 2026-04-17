@@ -4,7 +4,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { useAuth, useCreateDoc, useGetDoc, useGetList, useUpdateDoc } from "@/hooks";
+import {
+  useAuth,
+  useCreateDoc,
+  useGetDoc,
+  useGetList,
+  useUpdateDoc,
+} from "@/hooks";
 import { useLanguage } from "@/hooks/useLanguage";
 import { buildLocalePath, getDictionary } from "@/i18n";
 import {
@@ -50,10 +56,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { CoverImageField, CoverSource } from "@/components/blogs/metadata/CoverImageField";
 import {
-  SearchableMultiSelect,
-} from "@/components/blogs/metadata/SearchableMultiSelect";
+  CoverImageField,
+  CoverSource,
+} from "@/components/blogs/metadata/CoverImageField";
+import { SearchableMultiSelect } from "@/components/blogs/metadata/SearchableMultiSelect";
 import {
   SearchableSingleSelect,
   SelectOption,
@@ -62,10 +69,7 @@ import { PostContentPreview } from "@/components/blogs/posts/PostContentPreview"
 import { BlogContentComposer } from "@/components/blogs/editor/blog-content-composer";
 
 type StepNumber = 1 | 2 | 3;
-type FieldName =
-  | keyof PostFormValues
-  | "topics"
-  | "tags";
+type FieldName = keyof PostFormValues | "topics" | "tags";
 
 const INITIAL_FORM_STATE: PostFormValues = {
   title: "",
@@ -80,7 +84,10 @@ const INITIAL_FORM_STATE: PostFormValues = {
   content: "",
 };
 
-const STEPS: Array<{ step: StepNumber; titleKey: "metadata" | "content" | "review" }> = [
+const STEPS: Array<{
+  step: StepNumber;
+  titleKey: "metadata" | "content" | "review";
+}> = [
   { step: 1, titleKey: "metadata" },
   { step: 2, titleKey: "content" },
   { step: 3, titleKey: "review" },
@@ -116,7 +123,9 @@ function focusField(fieldName: FieldName) {
     tags: "#post-tags",
   };
 
-  const element = document.querySelector(selectors[fieldName]) as HTMLElement | null;
+  const element = document.querySelector(
+    selectors[fieldName],
+  ) as HTMLElement | null;
   if (!element) {
     return;
   }
@@ -141,7 +150,9 @@ export default function CreatePostPage() {
   const [isCoverBusy, setIsCoverBusy] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [slugEdited, setSlugEdited] = useState(false);
-  const [fieldErrors, setFieldErrors] = useState<Partial<Record<FieldName, string>>>({});
+  const [fieldErrors, setFieldErrors] = useState<
+    Partial<Record<FieldName, string>>
+  >({});
 
   const { data: selectedDepartment } = useGetDoc<BlogDepartment>(
     "blog_departments",
@@ -180,7 +191,9 @@ export default function CreatePostPage() {
     {
       fields: ["name", "tag_name", "slug", "description", "creation"],
       filters:
-        selectedTagIds.length > 0 ? [["name", "in", selectedTagIds]] : undefined,
+        selectedTagIds.length > 0
+          ? [["name", "in", selectedTagIds]]
+          : undefined,
       orderBy: { field: "creation", order: "desc" },
       limit: selectedTagIds.length || 20,
     },
@@ -199,14 +212,14 @@ export default function CreatePostPage() {
     () =>
       selectedDepartment
         ? {
-          value: selectedDepartment.name,
-          label: selectedDepartment.department_name,
-          description: selectedDepartment.department_code,
-          keywords: [
-            selectedDepartment.department_code,
-            selectedDepartment.description,
-          ].filter(Boolean),
-        }
+            value: selectedDepartment.name,
+            label: selectedDepartment.department_name,
+            description: selectedDepartment.department_code,
+            keywords: [
+              selectedDepartment.department_code,
+              selectedDepartment.description,
+            ].filter(Boolean),
+          }
         : null,
     [selectedDepartment],
   );
@@ -215,13 +228,14 @@ export default function CreatePostPage() {
     () =>
       selectedCategory
         ? {
-          value: selectedCategory.name,
-          label: getCategoryName(selectedCategory),
-          description: selectedCategory.slug || selectedCategory.description,
-          keywords: [selectedCategory.slug, selectedCategory.description].filter(
-            Boolean,
-          ),
-        }
+            value: selectedCategory.name,
+            label: getCategoryName(selectedCategory),
+            description: selectedCategory.slug || selectedCategory.description,
+            keywords: [
+              selectedCategory.slug,
+              selectedCategory.description,
+            ].filter(Boolean),
+          }
         : null,
     [selectedCategory],
   );
@@ -265,14 +279,18 @@ export default function CreatePostPage() {
   }, [selectedTagIds, selectedTagsData]);
 
   const selectedTopics = useMemo(() => {
-    const topicMap = new Map((selectedTopicsData ?? []).map((topic) => [topic.name, topic]));
+    const topicMap = new Map(
+      (selectedTopicsData ?? []).map((topic) => [topic.name, topic]),
+    );
     return selectedTopicIds
       .map((topicId) => topicMap.get(topicId))
       .filter((topic): topic is Topic => Boolean(topic));
   }, [selectedTopicIds, selectedTopicsData]);
 
   const selectedTags = useMemo(() => {
-    const tagMap = new Map((selectedTagsData ?? []).map((tag) => [tag.name, tag]));
+    const tagMap = new Map(
+      (selectedTagsData ?? []).map((tag) => [tag.name, tag]),
+    );
     return selectedTagIds
       .map((tagId) => tagMap.get(tagId))
       .filter((tag): tag is Tag => Boolean(tag));
@@ -320,7 +338,9 @@ export default function CreatePostPage() {
     });
   }, [form.title, slugEdited]);
 
-  function applyValidationErrors(nextErrors: Partial<Record<FieldName, string>>) {
+  function applyValidationErrors(
+    nextErrors: Partial<Record<FieldName, string>>,
+  ) {
     setFieldErrors(nextErrors);
 
     const firstErrorField = (Object.keys(nextErrors) as FieldName[])[0];
@@ -356,7 +376,10 @@ export default function CreatePostPage() {
       nextErrors.thumb = copy.validation.thumbRequired;
     }
 
-    if (form.slug.trim() && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(form.slug.trim())) {
+    if (
+      form.slug.trim() &&
+      !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(form.slug.trim())
+    ) {
       nextErrors.slug = copy.validation.slugPattern;
     } else if (form.slug.trim().length > 140) {
       nextErrors.slug = copy.validation.slugMax;
@@ -506,7 +529,7 @@ export default function CreatePostPage() {
   return (
     <main className="flex flex-col gap-6">
       <Card>
-        <CardHeader className="gap-3 px-4 py-4 sm:px-6">
+        <CardHeader className="gap-3 px-4 sm:px-6">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="space-y-1">
               <CardTitle className="text-2xl tracking-tight">
@@ -516,7 +539,9 @@ export default function CreatePostPage() {
             </div>
 
             <Button asChild variant="outline" size="sm" type="button">
-              <Link href={buildLocalePath(locale, "/admin/posts")}>{copy.cancel}</Link>
+              <Link href={buildLocalePath(locale, "/admin/posts")}>
+                {copy.cancel}
+              </Link>
             </Button>
           </div>
 
@@ -539,14 +564,18 @@ export default function CreatePostPage() {
                     <div
                       className={cn(
                         "flex size-6 shrink-0 items-center justify-center rounded-full border text-xs font-semibold",
-                        isActive && "border-primary bg-primary text-primary-foreground",
-                        isCompleted && "border-emerald-500 bg-emerald-500 text-white",
+                        isActive &&
+                          "border-primary bg-primary text-primary-foreground",
+                        isCompleted &&
+                          "border-emerald-500 bg-emerald-500 text-white",
                       )}
                     >
                       {stepItem.step}
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm font-medium leading-none">{stepCopy.title}</p>
+                      <p className="text-sm font-medium leading-none">
+                        {stepCopy.title}
+                      </p>
                       <p className="mt-1 text-xs text-muted-foreground">
                         {stepCopy.description}
                       </p>
@@ -591,7 +620,9 @@ export default function CreatePostPage() {
                   id="post-excerpt"
                   rows={4}
                   value={form.excerpt}
-                  onChange={(event) => updateField("excerpt", event.target.value)}
+                  onChange={(event) =>
+                    updateField("excerpt", event.target.value)
+                  }
                   placeholder={copy.form.excerptPlaceholder}
                   aria-invalid={Boolean(fieldErrors.excerpt)}
                   className={cn(fieldErrors.excerpt && "border-destructive")}
@@ -631,7 +662,9 @@ export default function CreatePostPage() {
                   aria-invalid={Boolean(fieldErrors.slug)}
                   className={cn(fieldErrors.slug && "border-destructive")}
                 />
-                <p className="text-xs text-muted-foreground">{copy.form.slugHelp}</p>
+                <p className="text-xs text-muted-foreground">
+                  {copy.form.slugHelp}
+                </p>
               </div>
 
               {/* Department */}
@@ -649,7 +682,11 @@ export default function CreatePostPage() {
                       "creation",
                     ]}
                     filters={[["is_active", "=", 1]]}
-                    searchFields={["department_name", "department_code", "description"]}
+                    searchFields={[
+                      "department_name",
+                      "department_code",
+                      "description",
+                    ]}
                     valueField="name"
                     labelField="department_name"
                     descriptionField="department_code"
@@ -690,9 +727,9 @@ export default function CreatePostPage() {
                     filters={
                       form.department
                         ? [
-                          ["is_active", "=", 1],
-                          ["department", "=", form.department],
-                        ]
+                            ["is_active", "=", 1],
+                            ["department", "=", form.department],
+                          ]
                         : undefined
                     }
                     searchFields={["category", "slug", "description"]}
@@ -741,9 +778,9 @@ export default function CreatePostPage() {
                     filters={
                       form.department
                         ? [
-                          ["is_active", "=", 1],
-                          ["department", "=", form.department],
-                        ]
+                            ["is_active", "=", 1],
+                            ["department", "=", form.department],
+                          ]
                         : undefined
                     }
                     searchFields={["topic", "slug", "desc"]}
@@ -778,7 +815,13 @@ export default function CreatePostPage() {
                   <SearchableMultiSelect
                     values={selectedTagIds}
                     resource="tags"
-                    fields={["name", "tag_name", "slug", "description", "creation"]}
+                    fields={[
+                      "name",
+                      "tag_name",
+                      "slug",
+                      "description",
+                      "creation",
+                    ]}
                     filters={[["is_active", "=", 1]]}
                     searchFields={["tag_name", "slug", "description"]}
                     valueField="name"
@@ -798,16 +841,21 @@ export default function CreatePostPage() {
                   />
                 </div>
               </div>
-              
+
               {/* Status */}
               <div className="space-y-2">
                 <Label>{copy.form.status}</Label>
                 <Select
                   value={form.status || undefined}
-                  onValueChange={(value) => updateField("status", value as PostFormValues["status"])}
+                  onValueChange={(value) =>
+                    updateField("status", value as PostFormValues["status"])
+                  }
                 >
                   <SelectTrigger
-                    className={cn("w-full", fieldErrors.status && "border-destructive")}
+                    className={cn(
+                      "w-full",
+                      fieldErrors.status && "border-destructive",
+                    )}
                     aria-invalid={Boolean(fieldErrors.status)}
                     data-post-status-trigger=""
                   >
@@ -829,7 +877,10 @@ export default function CreatePostPage() {
                 <Select
                   value={form.visibility || undefined}
                   onValueChange={(value) =>
-                    updateField("visibility", value as PostFormValues["visibility"])
+                    updateField(
+                      "visibility",
+                      value as PostFormValues["visibility"],
+                    )
                   }
                 >
                   <SelectTrigger
@@ -840,12 +891,17 @@ export default function CreatePostPage() {
                     aria-invalid={Boolean(fieldErrors.visibility)}
                     data-post-visibility-trigger=""
                   >
-                    <SelectValue placeholder={copy.form.visibilityPlaceholder} />
+                    <SelectValue
+                      placeholder={copy.form.visibilityPlaceholder}
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     {POST_VISIBILITY_VALUES.map((visibility) => (
                       <SelectItem key={visibility} value={visibility}>
-                        {formatPostVisibilityLabel(visibility, visibilityLabels)}
+                        {formatPostVisibilityLabel(
+                          visibility,
+                          visibilityLabels,
+                        )}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -879,7 +935,9 @@ export default function CreatePostPage() {
                   id="post-thumb-desc"
                   rows={4}
                   value={form.thumb_desc}
-                  onChange={(event) => updateField("thumb_desc", event.target.value)}
+                  onChange={(event) =>
+                    updateField("thumb_desc", event.target.value)
+                  }
                   placeholder={copy.form.thumbDescPlaceholder}
                   aria-invalid={Boolean(fieldErrors.thumb_desc)}
                   className={cn(fieldErrors.thumb_desc && "border-destructive")}
@@ -889,7 +947,6 @@ export default function CreatePostPage() {
                 </p>
               </div>
             </div>
-
           </CardContent>
         </Card>
       ) : null}
@@ -927,7 +984,11 @@ export default function CreatePostPage() {
             {form.thumb ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={form.thumb.includes("https") ? form.thumb : `${getBaseUrl()}${form.thumb}`}
+                src={
+                  form.thumb.includes("https")
+                    ? form.thumb
+                    : `${getBaseUrl()}${form.thumb}`
+                }
                 alt={form.title || copy.cover.previewAlt}
                 className="max-h-[420px] w-full rounded-2xl border object-cover"
               />
@@ -935,15 +996,21 @@ export default function CreatePostPage() {
 
             <div className="space-y-4">
               <div className="flex flex-wrap items-center gap-2">
-                <Badge>{formatPostStatusLabel(form.status, statusLabels)}</Badge>
+                <Badge>
+                  {formatPostStatusLabel(form.status, statusLabels)}
+                </Badge>
                 <Badge variant="outline">
                   {formatPostVisibilityLabel(form.visibility, visibilityLabels)}
                 </Badge>
                 {selectedDepartment ? (
-                  <Badge variant="secondary">{selectedDepartment.department_name}</Badge>
+                  <Badge variant="secondary">
+                    {selectedDepartment.department_name}
+                  </Badge>
                 ) : null}
                 {selectedCategory ? (
-                  <Badge variant="outline">{getCategoryName(selectedCategory)}</Badge>
+                  <Badge variant="outline">
+                    {getCategoryName(selectedCategory)}
+                  </Badge>
                 ) : null}
                 {coverSource === "upload" && coverFileMeta ? (
                   <Badge variant="secondary">
@@ -955,12 +1022,18 @@ export default function CreatePostPage() {
               </div>
 
               <div className="space-y-3">
-                <h1 className="text-4xl font-semibold tracking-tight">{form.title}</h1>
+                <h1 className="text-4xl font-semibold tracking-tight">
+                  {form.title}
+                </h1>
                 {form.excerpt ? (
-                  <p className="text-lg leading-8 text-muted-foreground">{form.excerpt}</p>
+                  <p className="text-lg leading-8 text-muted-foreground">
+                    {form.excerpt}
+                  </p>
                 ) : null}
                 {form.thumb_desc ? (
-                  <p className="text-sm text-muted-foreground">{form.thumb_desc}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {form.thumb_desc}
+                  </p>
                 ) : null}
               </div>
 
@@ -975,7 +1048,9 @@ export default function CreatePostPage() {
                         </Badge>
                       ))
                     ) : (
-                      <Badge variant="outline">{copy.previewSection.emptyTopics}</Badge>
+                      <Badge variant="outline">
+                        {copy.previewSection.emptyTopics}
+                      </Badge>
                     )}
                   </div>
                 </div>
@@ -990,7 +1065,9 @@ export default function CreatePostPage() {
                         </Badge>
                       ))
                     ) : (
-                      <Badge variant="outline">{copy.previewSection.emptyTags}</Badge>
+                      <Badge variant="outline">
+                        {copy.previewSection.emptyTags}
+                      </Badge>
                     )}
                   </div>
                 </div>
@@ -1016,9 +1093,14 @@ export default function CreatePostPage() {
           {currentStep === 1 ? (
             <>
               <Button asChild variant="outline" type="button">
-                <Link href={buildLocalePath(locale, "/admin/posts")}>{copy.cancel}</Link>
+                <Link href={buildLocalePath(locale, "/admin/posts")}>
+                  {copy.cancel}
+                </Link>
               </Button>
-              <Button type="button" onClick={() => validateStepOne() && setCurrentStep(2)}>
+              <Button
+                type="button"
+                onClick={() => validateStepOne() && setCurrentStep(2)}
+              >
                 {copy.continue}
               </Button>
             </>
@@ -1026,10 +1108,17 @@ export default function CreatePostPage() {
 
           {currentStep === 2 ? (
             <>
-              <Button type="button" variant="outline" onClick={() => setCurrentStep(1)}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setCurrentStep(1)}
+              >
                 {copy.back}
               </Button>
-              <Button type="button" onClick={() => validateStepTwo() && setCurrentStep(3)}>
+              <Button
+                type="button"
+                onClick={() => validateStepTwo() && setCurrentStep(3)}
+              >
                 {copy.preview}
               </Button>
             </>
@@ -1037,7 +1126,11 @@ export default function CreatePostPage() {
 
           {currentStep === 3 ? (
             <>
-              <Button type="button" variant="outline" onClick={() => setCurrentStep(2)}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setCurrentStep(2)}
+              >
                 {copy.back}
               </Button>
               <Button

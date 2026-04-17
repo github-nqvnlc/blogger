@@ -47,7 +47,8 @@ export const blogEditor = {
     dialog: {
       link: {
         title: "Insert link",
-        description: "Enter a valid URL. If text is selected, the editor will attach the link to the selection.",
+        description:
+          "Enter a valid URL. If text is selected, the editor will attach the link to the selection.",
         label: "Link URL",
         placeholder: "https://example.com",
         submit: "Insert link",
@@ -61,7 +62,8 @@ export const blogEditor = {
       },
       video: {
         title: "Insert video from URL",
-        description: "Supports YouTube, Vimeo and .mp4/.webm/.ogg video file links.",
+        description:
+          "Supports YouTube, Vimeo and .mp4/.webm/.ogg video file links.",
         label: "Video URL",
         placeholder: "https://www.youtube.com/watch?v=...",
         submit: "Insert video",
@@ -72,7 +74,8 @@ export const blogEditor = {
       invalidLinkUrl: "Please enter a link URL.",
       invalidLinkProtocol: "Link must be an http(s) URL or internal path.",
       invalidImageUrl: "Invalid image URL.",
-      invalidVideoUrl: "Invalid video URL. Only supports YouTube, Vimeo or .mp4/.webm/.ogg files.",
+      invalidVideoUrl:
+        "Invalid video URL. Only supports YouTube, Vimeo or .mp4/.webm/.ogg files.",
       invalidImageType: "Only image files are accepted for insertion.",
       uploadFailed: "Cannot upload image to content.",
     },

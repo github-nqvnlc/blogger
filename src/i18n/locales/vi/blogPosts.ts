@@ -144,8 +144,7 @@ export const blogPosts = {
     excerptMax: "Tóm tắt không được vượt quá 500 ký tự.",
     statusRequired: "Vui lòng chọn trạng thái bài viết.",
     visibilityRequired: "Vui lòng chọn phạm vi hiển thị.",
-    slugPattern:
-      "Slug chỉ được chứa chữ thường, số và dấu gạch nối.",
+    slugPattern: "Slug chỉ được chứa chữ thường, số và dấu gạch nối.",
     slugMax: "Slug không được vượt quá 140 ký tự.",
     contentRequired: "Vui lòng nhập nội dung bài viết.",
     generic: "Vui lòng kiểm tra lại thông tin đã nhập.",

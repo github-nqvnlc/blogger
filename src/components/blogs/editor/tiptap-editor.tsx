@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { EditorContent, useEditor, useEditorState } from '@tiptap/react';
-import { Extension, mergeAttributes, Node } from '@tiptap/core';
-import StarterKit from '@tiptap/starter-kit';
-import Image from '@tiptap/extension-image';
-import TextAlign from '@tiptap/extension-text-align';
-import { TextStyle } from '@tiptap/extension-text-style';
-import Color from '@tiptap/extension-color';
-import Highlight from '@tiptap/extension-highlight';
+import { useEffect, useMemo, useRef, useState } from "react";
+import { EditorContent, useEditor, useEditorState } from "@tiptap/react";
+import { Extension, mergeAttributes, Node } from "@tiptap/core";
+import StarterKit from "@tiptap/starter-kit";
+import Image from "@tiptap/extension-image";
+import TextAlign from "@tiptap/extension-text-align";
+import { TextStyle } from "@tiptap/extension-text-style";
+import Color from "@tiptap/extension-color";
+import Highlight from "@tiptap/extension-highlight";
 import {
   AlignCenter,
   AlignJustify,
@@ -34,17 +34,17 @@ import {
   UnderlineIcon,
   Upload,
   Video,
-} from 'lucide-react';
-import { useFileUpload } from '@/hooks';
-import { useLanguage } from '@/hooks/useLanguage';
+} from "lucide-react";
+import { useFileUpload } from "@/hooks";
+import { useLanguage } from "@/hooks/useLanguage";
 import {
   isSupportedImageUrl,
   normalizeBlogMediaUrl,
   parseVideoMediaUrl,
   restoreEmbeddedMediaHtml,
 } from "@/lib/blog-posts";
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -52,13 +52,13 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Progress } from '@/components/ui/progress';
-import { Spinner } from '@/components/ui/spinner';
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
+import { Spinner } from "@/components/ui/spinner";
 
-type MediaDialogKind = 'link' | 'image' | 'video';
+type MediaDialogKind = "link" | "image" | "video";
 
 type BlogEditorProps = {
   value: string;
@@ -66,9 +66,9 @@ type BlogEditorProps = {
   disabled?: boolean;
 };
 
-type TextAlignValue = 'left' | 'center' | 'right' | 'justify';
+type TextAlignValue = "left" | "center" | "right" | "justify";
 
-declare module '@tiptap/core' {
+declare module "@tiptap/core" {
   interface Commands<ReturnType> {
     fontSize: {
       setFontSize: (fontSize: string) => ReturnType;
@@ -94,17 +94,17 @@ const DEFAULT_EDITOR_STATE = {
   isCodeBlock: false,
   canUndo: false,
   canRedo: false,
-  textAlign: 'left' as TextAlignValue,
-  fontSize: '',
-  textColor: '',
-  highlightColor: '',
+  textAlign: "left" as TextAlignValue,
+  fontSize: "",
+  textColor: "",
+  highlightColor: "",
   indent: 0,
 };
 
-const FONT_SIZE_OPTIONS = ['12px', '14px', '16px', '18px', '24px', '32px'];
-const INDENT_NODE_TYPES = ['paragraph', 'heading', 'blockquote', 'codeBlock'];
-const DEFAULT_TEXT_COLOR = '#111827';
-const DEFAULT_HIGHLIGHT_COLOR = '#fef08a';
+const FONT_SIZE_OPTIONS = ["12px", "14px", "16px", "18px", "24px", "32px"];
+const INDENT_NODE_TYPES = ["paragraph", "heading", "blockquote", "codeBlock"];
+const DEFAULT_TEXT_COLOR = "#111827";
+const DEFAULT_HIGHLIGHT_COLOR = "#fef08a";
 
 function clampIndent(value: number): number {
   return Math.max(0, Math.min(5, value));
@@ -114,28 +114,28 @@ function getActiveBlockAttributes(editor: {
   isActive: (name: string, attributes?: Record<string, unknown>) => boolean;
   getAttributes: (name: string) => Record<string, unknown>;
 }) {
-  if (editor.isActive('heading')) {
-    return editor.getAttributes('heading');
+  if (editor.isActive("heading")) {
+    return editor.getAttributes("heading");
   }
 
-  if (editor.isActive('blockquote')) {
-    return editor.getAttributes('blockquote');
+  if (editor.isActive("blockquote")) {
+    return editor.getAttributes("blockquote");
   }
 
-  if (editor.isActive('codeBlock')) {
-    return editor.getAttributes('codeBlock');
+  if (editor.isActive("codeBlock")) {
+    return editor.getAttributes("codeBlock");
   }
 
-  return editor.getAttributes('paragraph');
+  return editor.getAttributes("paragraph");
 }
 
 const FontSize = Extension.create({
-  name: 'fontSize',
+  name: "fontSize",
 
   addGlobalAttributes() {
     return [
       {
-        types: ['textStyle'],
+        types: ["textStyle"],
         attributes: {
           fontSize: {
             default: null,
@@ -161,17 +161,20 @@ const FontSize = Extension.create({
       setFontSize:
         (fontSize: string) =>
         ({ chain }) =>
-          chain().setMark('textStyle', { fontSize }).run(),
+          chain().setMark("textStyle", { fontSize }).run(),
       unsetFontSize:
         () =>
         ({ chain }) =>
-          chain().setMark('textStyle', { fontSize: null }).removeEmptyTextStyle().run(),
+          chain()
+            .setMark("textStyle", { fontSize: null })
+            .removeEmptyTextStyle()
+            .run(),
     };
   },
 });
 
 const Indent = Extension.create({
-  name: 'indent',
+  name: "indent",
 
   addGlobalAttributes() {
     return [
@@ -181,13 +184,15 @@ const Indent = Extension.create({
           indent: {
             default: 0,
             parseHTML: (element) => {
-              const value = (element as HTMLElement).getAttribute('data-indent');
+              const value = (element as HTMLElement).getAttribute(
+                "data-indent",
+              );
               const parsed = value ? Number(value) : 0;
               return Number.isFinite(parsed) ? clampIndent(parsed) : 0;
             },
             renderHTML: (attributes) => {
               const level =
-                typeof attributes.indent === 'number'
+                typeof attributes.indent === "number"
                   ? clampIndent(attributes.indent)
                   : 0;
 
@@ -196,7 +201,7 @@ const Indent = Extension.create({
               }
 
               return {
-                'data-indent': String(level),
+                "data-indent": String(level),
                 style: `margin-left: ${level * 2}rem;`,
               };
             },
@@ -220,7 +225,7 @@ const Indent = Extension.create({
             }
           }
 
-          return commands.updateAttributes('paragraph', {
+          return commands.updateAttributes("paragraph", {
             indent: nextLevel,
           });
         },
@@ -245,8 +250,8 @@ const Indent = Extension.create({
 });
 
 const EmbeddedMedia = Node.create({
-  name: 'embeddedMedia',
-  group: 'block',
+  name: "embeddedMedia",
+  group: "block",
   atom: true,
   draggable: true,
   selectable: true,
@@ -254,16 +259,16 @@ const EmbeddedMedia = Node.create({
   addAttributes() {
     return {
       src: {
-        default: '',
+        default: "",
       },
       provider: {
-        default: 'file',
+        default: "file",
       },
       kind: {
-        default: 'file',
+        default: "file",
       },
       title: {
-        default: 'Embedded media',
+        default: "Embedded media",
       },
     };
   },
@@ -271,16 +276,16 @@ const EmbeddedMedia = Node.create({
   parseHTML() {
     return [
       {
-        tag: 'figure[data-blog-media]',
+        tag: "figure[data-blog-media]",
         getAttrs: (element) => {
           const figure = element as HTMLElement;
-          const iframe = figure.querySelector('iframe');
-          const video = figure.querySelector('video');
+          const iframe = figure.querySelector("iframe");
+          const video = figure.querySelector("video");
           const src =
-            iframe?.getAttribute('src') ??
-            video?.getAttribute('src') ??
-            figure.getAttribute('src') ??
-            '';
+            iframe?.getAttribute("src") ??
+            video?.getAttribute("src") ??
+            figure.getAttribute("src") ??
+            "";
 
           if (!src) {
             return false;
@@ -288,22 +293,22 @@ const EmbeddedMedia = Node.create({
 
           const inferredKind =
             figure.dataset.kind ??
-            (iframe ? 'embed' : video ? 'file' : undefined) ??
-            (figure.dataset.provider === 'youtube' ||
-            figure.dataset.provider === 'vimeo'
-              ? 'embed'
-              : 'file');
+            (iframe ? "embed" : video ? "file" : undefined) ??
+            (figure.dataset.provider === "youtube" ||
+            figure.dataset.provider === "vimeo"
+              ? "embed"
+              : "file");
 
           return {
             src,
-            provider: figure.dataset.provider ?? 'file',
+            provider: figure.dataset.provider ?? "file",
             kind: inferredKind,
             title:
               figure.dataset.title ??
-              iframe?.getAttribute('title') ??
-              video?.getAttribute('title') ??
-              figure.getAttribute('title') ??
-              'Embedded media',
+              iframe?.getAttribute("title") ??
+              video?.getAttribute("title") ??
+              figure.getAttribute("title") ??
+              "Embedded media",
           };
         },
       },
@@ -313,46 +318,46 @@ const EmbeddedMedia = Node.create({
   renderHTML({ HTMLAttributes }) {
     const figureAttributes = mergeAttributes(
       {
-        'data-blog-media': 'true',
-        'data-provider': HTMLAttributes.provider,
-        'data-kind': HTMLAttributes.kind,
-        'data-title': HTMLAttributes.title,
-        class: 'my-6 overflow-hidden rounded-xl',
+        "data-blog-media": "true",
+        "data-provider": HTMLAttributes.provider,
+        "data-kind": HTMLAttributes.kind,
+        "data-title": HTMLAttributes.title,
+        class: "my-6 overflow-hidden rounded-xl",
       },
       HTMLAttributes,
     );
 
-    if (HTMLAttributes.kind === 'embed') {
+    if (HTMLAttributes.kind === "embed") {
       return [
-        'figure',
+        "figure",
         figureAttributes,
         [
-          'iframe',
+          "iframe",
           {
             src: HTMLAttributes.src,
-            title: HTMLAttributes.title || 'Embedded video',
+            title: HTMLAttributes.title || "Embedded video",
             allow:
-              'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share',
-            allowfullscreen: 'true',
-            frameborder: '0',
-            class: 'aspect-video w-full rounded-xl border-0',
+              "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share",
+            allowfullscreen: "true",
+            frameborder: "0",
+            class: "aspect-video w-full rounded-xl border-0",
           },
         ],
       ];
     }
 
     return [
-      'figure',
+      "figure",
       figureAttributes,
       [
-        'video',
+        "video",
         {
           src: HTMLAttributes.src,
-          title: HTMLAttributes.title || 'Video file',
-          controls: 'true',
-          playsinline: 'true',
-          preload: 'metadata',
-          class: 'w-full rounded-xl',
+          title: HTMLAttributes.title || "Video file",
+          controls: "true",
+          playsinline: "true",
+          preload: "metadata",
+          class: "w-full rounded-xl",
         },
       ],
     ];
@@ -360,10 +365,10 @@ const EmbeddedMedia = Node.create({
 });
 
 function normalizeEditorHtml(value?: string | null): string {
-  const trimmed = value?.trim() ?? '';
+  const trimmed = value?.trim() ?? "";
 
-  if (!trimmed || trimmed === '<p></p>') {
-    return '';
+  if (!trimmed || trimmed === "<p></p>") {
+    return "";
   }
 
   return trimmed;
@@ -388,7 +393,7 @@ function ToolbarButton({
     <Button
       type="button"
       size="sm"
-      variant={active ? 'default' : 'outline'}
+      variant={active ? "default" : "outline"}
       disabled={disabled}
       onClick={onClick}
       title={title}
@@ -399,18 +404,14 @@ function ToolbarButton({
   );
 }
 
-export function TiptapEditor({
-  value,
-  onChange,
-  disabled,
-}: BlogEditorProps) {
+export function TiptapEditor({ value, onChange, disabled }: BlogEditorProps) {
   const { t } = useLanguage();
   const msg = t.blogEditor.editor;
   const msgDialog = msg.dialog;
   const uploadImageInputRef = useRef<HTMLInputElement | null>(null);
   const inlineUpload = useFileUpload();
   const [dialogKind, setDialogKind] = useState<MediaDialogKind | null>(null);
-  const [dialogValue, setDialogValue] = useState('');
+  const [dialogValue, setDialogValue] = useState("");
   const [dialogError, setDialogError] = useState<string | null>(null);
   const [inlineUploadError, setInlineUploadError] = useState<string | null>(
     null,
@@ -432,11 +433,11 @@ export function TiptapEditor({
       FontSize,
       Indent,
       TextAlign.configure({
-        types: ['heading', 'paragraph', 'blockquote', 'codeBlock'],
+        types: ["heading", "paragraph", "blockquote", "codeBlock"],
       }),
       Image.configure({
         HTMLAttributes: {
-          class: 'rounded-xl',
+          class: "rounded-xl",
         },
       }),
       EmbeddedMedia,
@@ -446,7 +447,7 @@ export function TiptapEditor({
     editorProps: {
       attributes: {
         class:
-          'min-h-72 px-4 py-3 focus:outline-none [&_.ProseMirror-selectednode]:ring-2 [&_.ProseMirror-selectednode]:ring-primary [&_a]:cursor-pointer [&_a]:text-primary [&_a]:underline [&_blockquote]:border-l [&_blockquote]:pl-4 [&_blockquote]:italic [&_figure]:my-6 [&_iframe]:aspect-video [&_iframe]:w-full [&_iframe]:rounded-xl [&_ol]:list-decimal [&_ol]:pl-6 [&_pre]:overflow-x-auto [&_pre]:rounded-xl [&_pre]:bg-muted [&_pre]:p-4 [&_ul]:list-disc [&_ul]:pl-6 [&_video]:w-full [&_video]:rounded-xl',
+          "min-h-72 px-4 py-3 focus:outline-none [&_.ProseMirror-selectednode]:ring-2 [&_.ProseMirror-selectednode]:ring-primary [&_a]:cursor-pointer [&_a]:text-primary [&_a]:underline [&_blockquote]:border-l [&_blockquote]:pl-4 [&_blockquote]:italic [&_figure]:my-6 [&_iframe]:aspect-video [&_iframe]:w-full [&_iframe]:rounded-xl [&_ol]:list-decimal [&_ol]:pl-6 [&_pre]:overflow-x-auto [&_pre]:rounded-xl [&_pre]:bg-muted [&_pre]:p-4 [&_ul]:list-disc [&_ul]:pl-6 [&_video]:w-full [&_video]:rounded-xl",
       },
     },
     onUpdate({ editor: currentEditor }) {
@@ -471,7 +472,7 @@ export function TiptapEditor({
     const nextValue = normalizeEditorHtml(restoreEmbeddedMediaHtml(value));
 
     if (currentValue !== nextValue) {
-      editor.commands.setContent(nextValue || '', {
+      editor.commands.setContent(nextValue || "", {
         emitUpdate: false,
       });
     }
@@ -486,25 +487,25 @@ export function TiptapEditor({
         }
 
         const blockAttributes = getActiveBlockAttributes(currentEditor);
-        const textStyleAttributes = currentEditor.getAttributes('textStyle');
-        const highlightAttributes = currentEditor.getAttributes('highlight');
+        const textStyleAttributes = currentEditor.getAttributes("textStyle");
+        const highlightAttributes = currentEditor.getAttributes("highlight");
 
         return {
-          isBold: currentEditor.isActive('bold'),
-          isItalic: currentEditor.isActive('italic'),
-          isUnderline: currentEditor.isActive('underline'),
-          isHeading2: currentEditor.isActive('heading', { level: 2 }),
-          isHeading3: currentEditor.isActive('heading', { level: 3 }),
-          isBulletList: currentEditor.isActive('bulletList'),
-          isOrderedList: currentEditor.isActive('orderedList'),
-          isBlockquote: currentEditor.isActive('blockquote'),
-          isCodeBlock: currentEditor.isActive('codeBlock'),
+          isBold: currentEditor.isActive("bold"),
+          isItalic: currentEditor.isActive("italic"),
+          isUnderline: currentEditor.isActive("underline"),
+          isHeading2: currentEditor.isActive("heading", { level: 2 }),
+          isHeading3: currentEditor.isActive("heading", { level: 3 }),
+          isBulletList: currentEditor.isActive("bulletList"),
+          isOrderedList: currentEditor.isActive("orderedList"),
+          isBlockquote: currentEditor.isActive("blockquote"),
+          isCodeBlock: currentEditor.isActive("codeBlock"),
           canUndo: currentEditor.can().undo(),
           canRedo: currentEditor.can().redo(),
-          textAlign: (blockAttributes.textAlign as TextAlignValue) || 'left',
-          fontSize: (textStyleAttributes.fontSize as string) || '',
-          textColor: (textStyleAttributes.color as string) || '',
-          highlightColor: (highlightAttributes.color as string) || '',
+          textAlign: (blockAttributes.textAlign as TextAlignValue) || "left",
+          fontSize: (textStyleAttributes.fontSize as string) || "",
+          textColor: (textStyleAttributes.color as string) || "",
+          highlightColor: (highlightAttributes.color as string) || "",
           indent: Number(blockAttributes.indent ?? 0),
         };
       },
@@ -512,7 +513,7 @@ export function TiptapEditor({
 
   const dialogText = useMemo(() => {
     switch (dialogKind) {
-      case 'link':
+      case "link":
         return {
           title: msgDialog.link.title,
           description: msgDialog.link.description,
@@ -520,7 +521,7 @@ export function TiptapEditor({
           placeholder: msgDialog.link.placeholder,
           submitLabel: msgDialog.link.submit,
         };
-      case 'image':
+      case "image":
         return {
           title: msgDialog.image.title,
           description: msgDialog.image.description,
@@ -528,7 +529,7 @@ export function TiptapEditor({
           placeholder: msgDialog.image.placeholder,
           submitLabel: msgDialog.image.submit,
         };
-      case 'video':
+      case "video":
         return {
           title: msgDialog.video.title,
           description: msgDialog.video.description,
@@ -543,13 +544,13 @@ export function TiptapEditor({
 
   function openDialog(kind: MediaDialogKind) {
     setDialogKind(kind);
-    setDialogValue('');
+    setDialogValue("");
     setDialogError(null);
   }
 
   function closeDialog() {
     setDialogKind(null);
-    setDialogValue('');
+    setDialogValue("");
     setDialogError(null);
   }
 
@@ -564,7 +565,7 @@ export function TiptapEditor({
       return;
     }
 
-    if (!/^https?:\/\//i.test(normalized) && !normalized.startsWith('/')) {
+    if (!/^https?:\/\//i.test(normalized) && !normalized.startsWith("/")) {
       setDialogError(msg.error.invalidLinkProtocol);
       return;
     }
@@ -572,8 +573,8 @@ export function TiptapEditor({
     const { empty } = editor.state.selection;
     const linkAttributes = {
       href: normalized,
-      target: '_blank',
-      rel: 'noopener noreferrer',
+      target: "_blank",
+      rel: "noopener noreferrer",
     };
 
     if (empty) {
@@ -581,11 +582,11 @@ export function TiptapEditor({
         .chain()
         .focus()
         .insertContent({
-          type: 'text',
+          type: "text",
           text: normalized,
           marks: [
             {
-              type: 'link',
+              type: "link",
               attrs: linkAttributes,
             },
           ],
@@ -595,7 +596,7 @@ export function TiptapEditor({
       editor
         .chain()
         .focus()
-        .extendMarkRange('link')
+        .extendMarkRange("link")
         .setLink(linkAttributes)
         .run();
     }
@@ -633,7 +634,7 @@ export function TiptapEditor({
       .chain()
       .focus()
       .insertContent({
-        type: 'embeddedMedia',
+        type: "embeddedMedia",
         attrs: parsed,
       })
       .run();
@@ -643,17 +644,17 @@ export function TiptapEditor({
   function handleDialogSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (dialogKind === 'link') {
+    if (dialogKind === "link") {
       insertLink();
       return;
     }
 
-    if (dialogKind === 'image') {
+    if (dialogKind === "image") {
       insertImageFromUrl();
       return;
     }
 
-    if (dialogKind === 'video') {
+    if (dialogKind === "video") {
       insertVideoFromUrl();
     }
   }
@@ -662,13 +663,13 @@ export function TiptapEditor({
     event: React.ChangeEvent<HTMLInputElement>,
   ) {
     const file = event.target.files?.[0];
-    event.target.value = '';
+    event.target.value = "";
 
     if (!editor || !file) {
       return;
     }
 
-    if (!file.type.startsWith('image/')) {
+    if (!file.type.startsWith("image/")) {
       setInlineUploadError(msg.error.invalidImageType);
       return;
     }
@@ -690,19 +691,17 @@ export function TiptapEditor({
         .run();
     } catch (error) {
       setInlineUploadError(
-        error instanceof Error
-          ? error.message
-          : msg.error.uploadFailed,
+        error instanceof Error ? error.message : msg.error.uploadFailed,
       );
     }
   }
 
   const mediaPreview = useMemo(() => {
-    if (!dialogKind || dialogKind === 'link') {
+    if (!dialogKind || dialogKind === "link") {
       return null;
     }
 
-    if (dialogKind === 'image') {
+    if (dialogKind === "image") {
       const normalized = normalizeBlogMediaUrl(dialogValue);
       if (!normalized || !isSupportedImageUrl(normalized)) {
         return null;
@@ -725,7 +724,7 @@ export function TiptapEditor({
       return null;
     }
 
-    if (parsed.kind === 'embed') {
+    if (parsed.kind === "embed") {
       return (
         <div className="overflow-hidden rounded-xl border">
           <iframe
@@ -805,36 +804,36 @@ export function TiptapEditor({
         </ToolbarButton>
 
         <ToolbarButton
-          active={editorState.textAlign === 'left'}
+          active={editorState.textAlign === "left"}
           disabled={!editor || disabled}
-          onClick={() => editor?.chain().focus().setTextAlign('left').run()}
+          onClick={() => editor?.chain().focus().setTextAlign("left").run()}
           title={msg.toolbar.alignLeft}
         >
           <AlignLeft />
         </ToolbarButton>
 
         <ToolbarButton
-          active={editorState.textAlign === 'center'}
+          active={editorState.textAlign === "center"}
           disabled={!editor || disabled}
-          onClick={() => editor?.chain().focus().setTextAlign('center').run()}
+          onClick={() => editor?.chain().focus().setTextAlign("center").run()}
           title={msg.toolbar.alignCenter}
         >
           <AlignCenter />
         </ToolbarButton>
 
         <ToolbarButton
-          active={editorState.textAlign === 'right'}
+          active={editorState.textAlign === "right"}
           disabled={!editor || disabled}
-          onClick={() => editor?.chain().focus().setTextAlign('right').run()}
+          onClick={() => editor?.chain().focus().setTextAlign("right").run()}
           title={msg.toolbar.alignRight}
         >
           <AlignRight />
         </ToolbarButton>
 
         <ToolbarButton
-          active={editorState.textAlign === 'justify'}
+          active={editorState.textAlign === "justify"}
           disabled={!editor || disabled}
-          onClick={() => editor?.chain().focus().setTextAlign('justify').run()}
+          onClick={() => editor?.chain().focus().setTextAlign("justify").run()}
           title={msg.toolbar.alignJustify}
         >
           <AlignJustify />
@@ -879,7 +878,7 @@ export function TiptapEditor({
             <option value="">{msg.toolbar.fontSize}</option>
             {FONT_SIZE_OPTIONS.map((fontSize) => (
               <option key={fontSize} value={fontSize}>
-                {fontSize.replace('px', '')}
+                {fontSize.replace("px", "")}
               </option>
             ))}
           </select>
@@ -907,7 +906,11 @@ export function TiptapEditor({
             disabled={!editor || disabled}
             value={editorState.highlightColor || DEFAULT_HIGHLIGHT_COLOR}
             onChange={(event) =>
-              editor?.chain().focus().setHighlight({ color: event.target.value }).run()
+              editor
+                ?.chain()
+                .focus()
+                .setHighlight({ color: event.target.value })
+                .run()
             }
             className="h-8 w-10 rounded border-0 bg-transparent p-0"
           />
@@ -951,7 +954,7 @@ export function TiptapEditor({
 
         <ToolbarButton
           disabled={!editor || disabled}
-          onClick={() => openDialog('link')}
+          onClick={() => openDialog("link")}
           title={msg.toolbar.insertLink}
         >
           <Link2 />
@@ -959,7 +962,7 @@ export function TiptapEditor({
 
         <ToolbarButton
           disabled={!editor || disabled}
-          onClick={() => openDialog('image')}
+          onClick={() => openDialog("image")}
           title={msg.toolbar.insertImageUrl}
         >
           <ImagePlus />
@@ -975,7 +978,7 @@ export function TiptapEditor({
 
         <ToolbarButton
           disabled={!editor || disabled}
-          onClick={() => openDialog('video')}
+          onClick={() => openDialog("video")}
           title={msg.toolbar.insertVideoUrl}
         >
           <Video />

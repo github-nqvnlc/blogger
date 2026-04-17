@@ -149,7 +149,8 @@ export const blogPosts = {
     slugMax: "The slug must not exceed 140 characters.",
     contentRequired: "Please enter the post content.",
     generic: "Please review the entered information.",
-    coverBusy: "The cover image is still uploading. Please wait until it finishes.",
+    coverBusy:
+      "The cover image is still uploading. Please wait until it finishes.",
   },
   toast: {
     createSuccess: "Post created successfully",
