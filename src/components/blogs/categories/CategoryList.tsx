@@ -99,8 +99,8 @@ function DepartmentFilterCombobox({
   const selectedDept =
     value === "all"
       ? null
-      : (departments ?? []).find((d) => d.name === value) ??
-      (filteredDepartments ?? []).find((d) => d.name === value);
+      : ((departments ?? []).find((d) => d.name === value) ??
+        (filteredDepartments ?? []).find((d) => d.name === value));
 
   const handleSelect = (deptName: string) => {
     onChange(deptName);
@@ -131,7 +131,9 @@ function DepartmentFilterCombobox({
           ) : value === "all" ? (
             <span className="truncate text-muted-foreground">{allLabel}</span>
           ) : (
-            <span className="truncate text-muted-foreground">{placeholder}</span>
+            <span className="truncate text-muted-foreground">
+              {placeholder}
+            </span>
           )}
         </Button>
       </PopoverTrigger>
@@ -191,12 +193,11 @@ function DepartmentFilterCombobox({
               Không có bộ phận nào
             </p>
           )}
-          {deferredSearch &&
-            (filteredDepartments ?? []).length === 0 && (
-              <p className="p-2 text-center text-sm text-muted-foreground">
-                Không tìm thấy &ldquo;{deferredSearch}&rdquo;
-              </p>
-            )}
+          {deferredSearch && (filteredDepartments ?? []).length === 0 && (
+            <p className="p-2 text-center text-sm text-muted-foreground">
+              Không tìm thấy &ldquo;{deferredSearch}&rdquo;
+            </p>
+          )}
         </div>
       </PopoverContent>
     </Popover>
@@ -289,13 +290,12 @@ export function CategoryList() {
     limit: pagination.pageSize,
   });
 
-  const { data: departments, isLoading: isLoadingDepartments } = useGetList<
-    BlogDepartment
-  >("blog_departments", {
-    fields: ["name", "department_name", "department_code"],
-    orderBy: { field: "department_name", order: "asc" },
-    limit: 100,
-  });
+  const { data: departments, isLoading: isLoadingDepartments } =
+    useGetList<BlogDepartment>("blog_departments", {
+      fields: ["name", "department_name", "department_code"],
+      orderBy: { field: "department_name", order: "asc" },
+      limit: 100,
+    });
 
   const { data: totalCount } = useGetCount(
     "categories",

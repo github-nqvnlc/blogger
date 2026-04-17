@@ -43,8 +43,7 @@ export const blogTopics = {
     slugMax: "Slug không được vượt quá 140 ký tự",
     slugPattern: "Slug chỉ được chứa chữ thường, số và dấu gạch nối",
     description: "Mô tả",
-    descriptionPlaceholder:
-      "Mô tả ngắn về chủ đề này (tối đa 500 ký tự)",
+    descriptionPlaceholder: "Mô tả ngắn về chủ đề này (tối đa 500 ký tự)",
     descriptionMax: "Mô tả không được vượt quá 500 ký tự",
     activeStatus: "Trạng thái hoạt động",
     activeDescription: "Chủ đề này có thể được sử dụng trong bài viết",

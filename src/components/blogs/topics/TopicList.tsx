@@ -99,8 +99,8 @@ function DepartmentFilterCombobox({
   const selectedDept =
     value === "all"
       ? null
-      : (departments ?? []).find((d) => d.name === value) ??
-        (filteredDepartments ?? []).find((d) => d.name === value);
+      : ((departments ?? []).find((d) => d.name === value) ??
+        (filteredDepartments ?? []).find((d) => d.name === value));
 
   const handleSelect = (deptName: string) => {
     onChange(deptName);
@@ -131,7 +131,9 @@ function DepartmentFilterCombobox({
           ) : value === "all" ? (
             <span className="truncate text-muted-foreground">{allLabel}</span>
           ) : (
-            <span className="truncate text-muted-foreground">{placeholder}</span>
+            <span className="truncate text-muted-foreground">
+              {placeholder}
+            </span>
           )}
         </Button>
       </PopoverTrigger>
@@ -285,13 +287,12 @@ export function TopicList() {
     limit: pagination.pageSize,
   });
 
-  const { data: departments, isLoading: isLoadingDepartments } = useGetList<
-    BlogDepartment
-  >("blog_departments", {
-    fields: ["name", "department_name", "department_code"],
-    orderBy: { field: "department_name", order: "asc" },
-    limit: 100,
-  });
+  const { data: departments, isLoading: isLoadingDepartments } =
+    useGetList<BlogDepartment>("blog_departments", {
+      fields: ["name", "department_name", "department_code"],
+      orderBy: { field: "department_name", order: "asc" },
+      limit: 100,
+    });
 
   const { data: totalCount } = useGetCount(
     "topics",
@@ -301,7 +302,8 @@ export function TopicList() {
     searchOrFilters,
   );
 
-  const { deleteDoc: deleteTopic, loading: isDeleting } = useDeleteDoc("topics");
+  const { deleteDoc: deleteTopic, loading: isDeleting } =
+    useDeleteDoc("topics");
 
   const departmentMap = React.useMemo(
     () =>
@@ -547,7 +549,11 @@ export function TopicList() {
                   {copy.emptyDescription}
                 </p>
               </div>
-              <Button variant="outline" size="sm" onClick={handleOpenCreateForm}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleOpenCreateForm}
+              >
                 <Plus className="mr-2 h-4 w-4" />
                 {copy.addTopic}
               </Button>
@@ -579,8 +585,8 @@ export function TopicList() {
           <AlertDialogHeader>
             <AlertDialogTitle>{copy.deleteTitle}</AlertDialogTitle>
             <AlertDialogDescription>
-              {copy.deleteDescriptionStart} &ldquo;{deletingTopic?.topic}&rdquo;?{" "}
-              {copy.deleteDescriptionEnd}
+              {copy.deleteDescriptionStart} &ldquo;{deletingTopic?.topic}
+              &rdquo;? {copy.deleteDescriptionEnd}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

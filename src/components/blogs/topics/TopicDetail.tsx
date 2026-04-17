@@ -201,9 +201,8 @@ export function TopicDetail({ topicId }: TopicDetailProps) {
 
   const totalPosts = posts?.length ?? 0;
 
-  const statusCode = (
-    topicError as { response?: { status?: number } } | null
-  )?.response?.status;
+  const statusCode = (topicError as { response?: { status?: number } } | null)
+    ?.response?.status;
 
   if (statusCode === 403) {
     return (
@@ -278,7 +277,9 @@ export function TopicDetail({ topicId }: TopicDetailProps) {
             <CardTitle>{copy.description}</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-2">
-            <CardDescription>{topic.desc || copy.noDescription}</CardDescription>
+            <CardDescription>
+              {topic.desc || copy.noDescription}
+            </CardDescription>
           </CardContent>
         </Card>
       </div>
@@ -291,7 +292,8 @@ export function TopicDetail({ topicId }: TopicDetailProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {isLoadingPostTopics || (relatedPostIds.length > 0 && isLoadingPosts) ? (
+          {isLoadingPostTopics ||
+          (relatedPostIds.length > 0 && isLoadingPosts) ? (
             <Skeleton className="h-48 w-full rounded-xl" />
           ) : !posts?.length ? (
             <EmptyState icon={FolderOpen} label={copy.noPosts} />

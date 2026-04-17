@@ -50,8 +50,7 @@ export const blogCategories = {
     descriptionMax: "Description must not exceed 500 characters",
     activeStatus: "Active status",
     activeDescription: "This category can be used in posts",
-    inactiveDescription:
-      "This category is disabled and hidden from selectors",
+    inactiveDescription: "This category is disabled and hidden from selectors",
     inactiveWarning:
       "This category is disabled. Posts that already use it will continue to work, but the category will no longer appear in selection lists.",
     cancel: "Cancel",

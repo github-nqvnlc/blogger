@@ -15,7 +15,8 @@ export const blogTopics = {
     "This action cannot be undone and may affect posts that currently use this topic.",
   deleteSuccess: "Topic deleted successfully",
   deleteFailure: "Failed to delete topic",
-  deleteFailureDescription: "This topic could not be deleted. Please try again.",
+  deleteFailureDescription:
+    "This topic could not be deleted. Please try again.",
   deleteSuccessDescriptionPrefix: "Deleted topic",
   bulkDeleteTitle: "Confirm bulk deletion",
   bulkDeleteSuccessDescription: "Successfully deleted {count} topics",

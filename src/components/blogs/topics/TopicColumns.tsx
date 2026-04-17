@@ -65,7 +65,10 @@ export function getTopicColumns(t: Dictionary): ColumnDef<Topic, unknown>[] {
     {
       accessorKey: "topic",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t.blogTopics.table.name} />
+        <DataTableColumnHeader
+          column={column}
+          title={t.blogTopics.table.name}
+        />
       ),
       cell: ({ row, table }) => {
         const meta = table.options.meta as TopicColumnMeta;
@@ -102,7 +105,10 @@ export function getTopicColumns(t: Dictionary): ColumnDef<Topic, unknown>[] {
     {
       accessorKey: "slug",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t.blogTopics.table.slug} />
+        <DataTableColumnHeader
+          column={column}
+          title={t.blogTopics.table.slug}
+        />
       ),
       cell: ({ row }) =>
         row.original.slug ? (

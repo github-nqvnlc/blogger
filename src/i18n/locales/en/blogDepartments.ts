@@ -8,7 +8,8 @@ export const blogDepartments = {
   addDepartmentTitle: "Add a new content department",
   editDepartmentTitle: "Edit content department",
   deleteTitle: "Confirm deletion",
-  deleteDescriptionStart: "Are you sure you want to delete the content department",
+  deleteDescriptionStart:
+    "Are you sure you want to delete the content department",
   deleteDescriptionEnd:
     "This action cannot be undone and may affect posts that currently use this department.",
   deleteSuccess: "Department deleted successfully",

@@ -180,12 +180,13 @@ export function TagDetail({ tagId }: TagDetailProps) {
 
   const totalPosts = posts?.length ?? 0;
 
-  const statusCode = (
-    tagError as { response?: { status?: number } } | null
-  )?.response?.status;
+  const statusCode = (tagError as { response?: { status?: number } } | null)
+    ?.response?.status;
 
   if (statusCode === 403) {
-    return <AdminAccessDenied description={t.errors.tagAccessDeniedDescription} />;
+    return (
+      <AdminAccessDenied description={t.errors.tagAccessDeniedDescription} />
+    );
   }
 
   if (isLoadingTag) {
@@ -207,7 +208,9 @@ export function TagDetail({ tagId }: TagDetailProps) {
             </Link>
           </Button>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">{tag.tag_name}</h1>
+            <h1 className="text-3xl font-bold tracking-tight">
+              {tag.tag_name}
+            </h1>
           </div>
         </div>
         <div className="flex flex-row items-center justify-between gap-2">
@@ -260,7 +263,8 @@ export function TagDetail({ tagId }: TagDetailProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {isLoadingPostTags || (relatedPostIds.length > 0 && isLoadingPosts) ? (
+          {isLoadingPostTags ||
+          (relatedPostIds.length > 0 && isLoadingPosts) ? (
             <Skeleton className="h-48 w-full rounded-xl" />
           ) : !posts?.length ? (
             <EmptyState icon={FolderOpen} label={copy.noPosts} />

@@ -231,7 +231,12 @@ export function TagList() {
       onToggle: handleToggleStatus,
       onDelete: handleDeleteClick,
     }),
-    [handleDeleteClick, handleOpenEditForm, handleToggleStatus, handleViewDetail],
+    [
+      handleDeleteClick,
+      handleOpenEditForm,
+      handleToggleStatus,
+      handleViewDetail,
+    ],
   );
 
   React.useEffect(() => {
@@ -340,7 +345,11 @@ export function TagList() {
                   {copy.emptyDescription}
                 </p>
               </div>
-              <Button variant="outline" size="sm" onClick={handleOpenCreateForm}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleOpenCreateForm}
+              >
                 <Plus className="mr-2 h-4 w-4" />
                 {copy.addTag}
               </Button>
@@ -372,8 +381,8 @@ export function TagList() {
           <AlertDialogHeader>
             <AlertDialogTitle>{copy.deleteTitle}</AlertDialogTitle>
             <AlertDialogDescription>
-              {copy.deleteDescriptionStart} &ldquo;{deletingTag?.tag_name}&rdquo;?{" "}
-              {copy.deleteDescriptionEnd}
+              {copy.deleteDescriptionStart} &ldquo;{deletingTag?.tag_name}
+              &rdquo;? {copy.deleteDescriptionEnd}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
