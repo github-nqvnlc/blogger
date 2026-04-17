@@ -12,6 +12,7 @@ export const sidebar = {
   allPosts: "All Posts",
   drafts: "Drafts",
   published: "Published",
+  createPost: "Create New Post",
   feedback: "Feedback",
   comments: "Comments",
   system: "System",

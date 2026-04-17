@@ -13,6 +13,8 @@ import { blogDepartments } from "./blogDepartments";
 import { blogCategories } from "./blogCategories";
 import { blogTopics } from "./blogTopics";
 import { blogTags } from "./blogTags";
+import { blogPosts } from "./blogPosts";
+import { blogEditor } from "./blogEditor";
 import { devDoc } from "./devDoc";
 
 export const vi = {
@@ -31,5 +33,7 @@ export const vi = {
   blogCategories,
   blogTopics,
   blogTags,
+  blogPosts,
+  blogEditor,
   devDoc,
 } as const;

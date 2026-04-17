@@ -10,12 +10,16 @@ import {
   MessageSquare,
   Users,
   Settings,
+  FilePlus,
   ChevronDown,
   LayoutDashboard,
   Menu,
   LogOut,
   User,
   Loader2,
+  Lightbulb,
+  FilePenLine,
+  FileCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -123,7 +127,7 @@ function AdminSidebarFooter() {
         >
           {currentUser ? (
             <>
-              <Avatar className="size-8 shrink-0">
+              <Avatar className="size-10 shrink-0 border border-sidebar-border shadow-2xl">
                 <AvatarImage src={avatarUrl || undefined} alt={displayName} />
                 <AvatarFallback>{initials}</AvatarFallback>
               </Avatar>
@@ -245,13 +249,18 @@ export function AdminSidebar() {
           url: "/admin/categories",
           icon: FolderOpen,
         },
-        { title: t.sidebar.topics, url: "/admin/topics", icon: Tags },
-        { title: t.sidebar.tags, url: "/admin/tags", icon: MessageSquare },
+        { title: t.sidebar.topics, url: "/admin/topics", icon: Lightbulb },
+        { title: t.sidebar.tags, url: "/admin/tags", icon: Tags },
       ],
     },
     {
       title: t.sidebar.posts,
       items: [
+        {
+          title: t.sidebar.createPost,
+          url: "/admin/posts/new",
+          icon: FilePlus,
+        },
         {
           title: t.sidebar.allPosts,
           url: "/admin/posts",
@@ -261,13 +270,13 @@ export function AdminSidebar() {
         {
           title: t.sidebar.drafts,
           url: "/admin/posts?status=draft",
-          icon: Newspaper,
+          icon: FilePenLine,
           badge: "3",
         },
         {
           title: t.sidebar.published,
           url: "/admin/posts?status=published",
-          icon: Newspaper,
+          icon: FileCheck,
           badge: "8",
         },
       ],
@@ -296,7 +305,31 @@ export function AdminSidebar() {
     if (url === "/admin") {
       return localizedPathname === "/admin";
     }
-    return localizedPathname.startsWith(url.split("?")[0]);
+
+    const [urlPath, urlQuery] = url.split("?");
+    const [pathnameOnly, currentQuery] = localizedPathname.split("?");
+
+    if (urlQuery) {
+      const isPathMatch = pathnameOnly === urlPath;
+      const currentParams = new URLSearchParams(currentQuery ?? "");
+      const urlParams = new URLSearchParams(urlQuery);
+      const paramKey = urlParams.keys().next().value;
+      return isPathMatch && currentParams.get(paramKey ?? "") === urlParams.get(paramKey ?? "");
+    }
+
+    if (currentQuery) {
+      const currentParams = new URLSearchParams(currentQuery);
+      const paramKey = currentParams.keys().next().value;
+      const hasParamMenu = navItems
+        .flatMap((g) => g.items)
+        .some((item) => {
+          const [itemPath, itemQuery] = item.url.split("?");
+          return itemPath === pathnameOnly && itemQuery && new URLSearchParams(itemQuery).get(paramKey ?? "") !== null;
+        });
+      return pathnameOnly === urlPath && !hasParamMenu;
+    }
+
+    return pathnameOnly === urlPath;
   };
 
   return (

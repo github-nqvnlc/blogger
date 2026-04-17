@@ -159,3 +159,26 @@ export interface TagFormValues {
   slug: string;
   is_active: boolean;
 }
+
+export type PostStatusOption = PostStatus;
+export type PostVisibilityOption = PostVisibility;
+
+export interface PostFileDoc {
+  name: string;
+  file_url: string;
+  file_name: string;
+  is_private: number;
+}
+
+export interface PostFormValues {
+  title: string;
+  department: string;
+  category: string;
+  slug: string;
+  thumb: string;
+  thumb_desc: string;
+  excerpt: string;
+  status: PostStatusOption;
+  visibility: PostVisibilityOption;
+  content: string;
+}
