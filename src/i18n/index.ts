@@ -1,5 +1,5 @@
-import { en } from "./en";
-import { vi } from "./vi";
+import { en } from "./locales/en";
+import { vi } from "./locales/vi";
 
 export const dictionaries = { en, vi } as const;
 

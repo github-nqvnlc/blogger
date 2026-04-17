@@ -71,6 +71,7 @@ function OverviewSkeleton() {
         <Skeleton className="h-28 w-full rounded-xl" />
         <Skeleton className="h-28 w-full rounded-xl" />
       </div>
+      <Skeleton className="h-40 w-full rounded-xl" />
       <Skeleton className="h-80 w-full rounded-xl" />
     </div>
   );
