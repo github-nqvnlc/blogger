@@ -160,13 +160,18 @@ export function getCategoryColumns(
     },
     {
       accessorKey: "creation",
-      header: t.blogCategories.table.creation,
+      header: ({ column }) => (
+        <DataTableColumnHeader
+          column={column}
+          title={t.blogCategories.table.creation}
+        />
+      ),
       cell: ({ row }) => (
         <span className="text-muted-foreground">
           {formatDate(new Date(row.original.creation), " HH:mm dd/MM/yyyy")}
         </span>
       ),
-      enableSorting: false,
+      enableSorting: true,
     },
     {
       id: "actions",

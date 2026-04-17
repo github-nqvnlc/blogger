@@ -8,7 +8,7 @@ import {
   RowSelectionState,
   SortingState,
 } from "@tanstack/react-table";
-import { FolderOpen, Plus, Search, Trash2 } from "lucide-react";
+import { Check, FolderOpen, Plus, Search, Trash2 } from "lucide-react";
 import { useDeleteDoc, useGetCount, useGetList } from "@/hooks";
 import { useLanguage } from "@/hooks/useLanguage";
 import { buildLocalePath } from "@/i18n";
@@ -39,6 +39,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -47,9 +52,156 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 import { Spinner } from "@/components/ui/spinner";
 
 const PAGE_SIZE = 20;
+
+function DepartmentFilterCombobox({
+  value,
+  onChange,
+  departments,
+  isLoading,
+  placeholder,
+  allLabel,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  departments: BlogDepartment[];
+  isLoading: boolean;
+  placeholder: string;
+  allLabel: string;
+}) {
+  const [open, setOpen] = React.useState(false);
+  const [search, setSearch] = React.useState("");
+  const deferredSearch = React.useDeferredValue(search);
+  const searchInputRef = React.useRef<HTMLInputElement>(null);
+
+  const searchFilters = React.useMemo<Filter[]>(() => {
+    const keyword = deferredSearch.trim();
+    if (!keyword) return [];
+    return [
+      ["department_name", "like", `%${keyword}%`],
+      ["department_code", "like", `%${keyword}%`],
+    ];
+  }, [deferredSearch]);
+
+  const { data: filteredDepartments } = useGetList<BlogDepartment>(
+    "blog_departments",
+    {
+      fields: ["name", "department_name", "department_code"],
+      orFilters: searchFilters,
+      orderBy: { field: "department_name", order: "asc" },
+      limit: 20,
+    },
+  );
+
+  const selectedDept =
+    value === "all"
+      ? null
+      : (departments ?? []).find((d) => d.name === value) ??
+      (filteredDepartments ?? []).find((d) => d.name === value);
+
+  const handleSelect = (deptName: string) => {
+    onChange(deptName);
+    setOpen(false);
+    setSearch("");
+  };
+
+  React.useEffect(() => {
+    if (!open) {
+      setSearch("");
+    } else {
+      searchInputRef.current?.focus();
+    }
+  }, [open]);
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className="w-full justify-start sm:w-[250px]"
+        >
+          {isLoading && <Spinner className="mr-2 size-4" />}
+          {selectedDept ? (
+            <span className="truncate">{selectedDept.department_name}</span>
+          ) : value === "all" ? (
+            <span className="truncate text-muted-foreground">{allLabel}</span>
+          ) : (
+            <span className="truncate text-muted-foreground">{placeholder}</span>
+          )}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent
+        className="w-[--radix-popover-trigger-width] sm:w-[250px] p-0"
+        align="start"
+      >
+        <div className="border-b p-2">
+          <Input
+            ref={searchInputRef}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={placeholder}
+          />
+        </div>
+        <div
+          className="max-h-64 overflow-y-auto overscroll-contain p-1"
+          onWheel={(event) => event.stopPropagation()}
+        >
+          <button
+            type="button"
+            className={cn(
+              "hover:bg-accent hover:text-accent-foreground flex w-full items-center justify-between rounded-sm px-2 py-2 text-left text-sm",
+              value === "all" && "bg-accent/50",
+            )}
+            onClick={() => handleSelect("all")}
+          >
+            <span className="font-medium">{allLabel}</span>
+            {value === "all" && <Check className="ml-2 h-4 w-4 shrink-0" />}
+          </button>
+          {(filteredDepartments ?? []).map((dept) => {
+            const isSelected = value === dept.name;
+            return (
+              <button
+                key={dept.name}
+                type="button"
+                className={cn(
+                  "hover:bg-accent hover:text-accent-foreground flex w-full items-center justify-between rounded-sm px-2 py-2 text-left text-sm",
+                  isSelected && "bg-accent/50",
+                )}
+                onClick={() => handleSelect(dept.name)}
+              >
+                <div className="min-w-0">
+                  <p className="truncate font-medium">{dept.department_name}</p>
+                </div>
+                <Check
+                  className={cn(
+                    "ml-2 h-4 w-4 shrink-0",
+                    isSelected ? "opacity-100" : "opacity-0",
+                  )}
+                />
+              </button>
+            );
+          })}
+          {(filteredDepartments ?? []).length === 0 && !deferredSearch && (
+            <p className="p-2 text-center text-sm text-muted-foreground">
+              Không có bộ phận nào
+            </p>
+          )}
+          {deferredSearch &&
+            (filteredDepartments ?? []).length === 0 && (
+              <p className="p-2 text-center text-sm text-muted-foreground">
+                Không tìm thấy &ldquo;{deferredSearch}&rdquo;
+              </p>
+            )}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 export function CategoryList() {
   const router = useRouter();
@@ -66,6 +218,7 @@ export function CategoryList() {
   const [statusFilter, setStatusFilter] = React.useState<
     "all" | "active" | "inactive"
   >("all");
+  const [departmentFilter, setDepartmentFilter] = React.useState<string>("all");
   const [search, setSearch] = React.useState("");
   const [isFormOpen, setIsFormOpen] = React.useState(false);
   const [editingCategory, setEditingCategory] = React.useState<Category | null>(
@@ -86,8 +239,12 @@ export function CategoryList() {
       result.push(["is_active", "=", 0]);
     }
 
+    if (departmentFilter !== "all") {
+      result.push(["department", "=", departmentFilter]);
+    }
+
     return result;
-  }, [statusFilter]);
+  }, [statusFilter, departmentFilter]);
 
   const searchOrFilters = React.useMemo<Filter[]>(() => {
     if (!search.trim()) return [];
@@ -132,10 +289,12 @@ export function CategoryList() {
     limit: pagination.pageSize,
   });
 
-  const { data: departments } = useGetList<BlogDepartment>("blog_departments", {
+  const { data: departments, isLoading: isLoadingDepartments } = useGetList<
+    BlogDepartment
+  >("blog_departments", {
     fields: ["name", "department_name", "department_code"],
     orderBy: { field: "department_name", order: "asc" },
-    limit: 200,
+    limit: 100,
   });
 
   const { data: totalCount } = useGetCount(
@@ -285,7 +444,7 @@ export function CategoryList() {
 
   React.useEffect(() => {
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
-  }, [apiFilters, orderBy]);
+  }, [apiFilters, departmentFilter, orderBy]);
 
   const statusCode = (error as { response?: { status?: number } } | null)
     ?.response?.status;
@@ -306,7 +465,7 @@ export function CategoryList() {
   return (
     <>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex sm:flex-row flex-col gap-6 sm:items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">{copy.title}</h1>
             <p className="mt-1 text-muted-foreground">{copy.description}</p>
@@ -346,6 +505,15 @@ export function CategoryList() {
               <SelectItem value="inactive">{t.common.inactive}</SelectItem>
             </SelectContent>
           </Select>
+
+          <DepartmentFilterCombobox
+            value={departmentFilter}
+            onChange={setDepartmentFilter}
+            departments={departments ?? []}
+            isLoading={isLoadingDepartments}
+            placeholder={copy.filterByDepartment}
+            allLabel={copy.allDepartments}
+          />
         </div>
 
         {Object.keys(rowSelection).length > 0 && (

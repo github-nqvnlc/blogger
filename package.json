@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "workflow:check": "eslint . && tsc --noEmit && prettier --write . && prettier --check . && next build",
     "setup:theme-1": "npx shadcn@latest add https://tweakcn.com/r/themes/tangerine.json",
     "setup:theme-2": "npx shadcn@latest add https://tweakcn.com/r/themes/catppuccin.json",
     "setup:theme-3": "npx shadcn@latest add https://tweakcn.com/r/themes/cosmic-night.json"

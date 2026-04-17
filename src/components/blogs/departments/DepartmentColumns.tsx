@@ -134,13 +134,18 @@ export function getDepartmentColumns(
     },
     {
       accessorKey: "creation",
-      header: t.blogDepartments.table.creation,
+      header: ({ column }) => (
+        <DataTableColumnHeader
+          column={column}
+          title={t.blogDepartments.table.creation}
+        />
+      ),
       cell: ({ row }) => (
         <span className="text-muted-foreground">
           {formatDate(new Date(row.original.creation), " HH:mm dd/MM/yyyy")}
         </span>
       ),
-      enableSorting: false,
+      enableSorting: true,
     },
     {
       id: "actions",

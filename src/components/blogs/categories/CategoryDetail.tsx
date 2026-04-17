@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ArrowLeft, BookOpen, FolderOpen } from "lucide-react";
+import { ArrowLeft, BookOpen, FolderOpen, Hash, Pencil } from "lucide-react";
 import { formatDate } from "date-fns";
 import { notFound } from "next/navigation";
 import { useGetCount, useGetDoc, useGetList } from "@/hooks";
@@ -20,8 +20,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { CategoryForm } from "./CategoryForm";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
   TableBody,
@@ -91,10 +97,12 @@ function StatCard({
   title,
   value,
   icon: Icon,
+  link,
 }: {
   title: string;
-  value?: number;
+  value?: number | string;
   icon: React.ElementType;
+  link?: string;
 }) {
   return (
     <Card>
@@ -105,7 +113,15 @@ function StatCard({
         <Icon className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
       <CardContent>
-        <div className="text-3xl font-semibold">{value ?? 0}</div>
+        <div className="text-3xl font-semibold">
+          {link ? (
+            <Link href={link} className="hover:underline underline-offset-4">
+              {value ?? 0}
+            </Link>
+          ) : (
+            <span>{value ?? 0}</span>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
@@ -115,11 +131,13 @@ export function CategoryDetail({ categoryId }: CategoryDetailProps) {
   const { locale, t } = useLanguage();
   const copy = t.blogCategories.detail;
   const common = t.common;
+  const [editDialogOpen, setEditDialogOpen] = React.useState(false);
 
   const {
     data: category,
     isLoading: isLoadingCategory,
     error: categoryError,
+    mutate: refetchCategory,
   } = useGetDoc<Category>("categories", categoryId);
 
   const departmentId =
@@ -179,12 +197,6 @@ export function CategoryDetail({ categoryId }: CategoryDetailProps) {
       ? category.department
       : category.department.department_name);
 
-  const departmentCode =
-    department?.department_code ??
-    (typeof category.department === "string"
-      ? ""
-      : category.department.department_code);
-
   return (
     <div className="space-y-6">
       <div className="space-y-2">
@@ -201,157 +213,121 @@ export function CategoryDetail({ categoryId }: CategoryDetailProps) {
             </h1>
           </div>
         </div>
-        <div className="flex flex-row items-center gap-2">
-          <StatusBadge
-            active={category.is_active === 1}
-            activeLabel={t.blogCategories.table.active}
-            inactiveLabel={t.blogCategories.table.inactive}
-          />
-          <p className="text-sm font-semibold italic text-muted-foreground">
-            {category.creation
-              ? formatDate(new Date(category.creation), " HH:mm - dd/MM/yyyy")
-              : "-"}
-          </p>
+        <div className="flex flex-row items-center justify-between gap-2">
+          <div className="flex flex-row items-center gap-2">
+            <StatusBadge
+              active={category.is_active === 1}
+              activeLabel={t.blogCategories.table.active}
+              inactiveLabel={t.blogCategories.table.inactive}
+            />
+            <p className="text-sm font-semibold italic text-muted-foreground">
+              {category.creation
+                ? formatDate(new Date(category.creation), " HH:mm - dd/MM/yyyy")
+                : "-"}
+            </p>
+          </div>
+          <Button size="sm" onClick={() => setEditDialogOpen(true)}>
+            Chỉnh sửa
+            <Pencil className="h-4 w-4 ml-2" />
+          </Button>
         </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
         <StatCard title={copy.totalPosts} value={totalPosts} icon={BookOpen} />
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              {copy.department}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-1">
-            <div className="text-2xl font-semibold">{departmentName}</div>
-            {departmentCode ? (
-              <Badge variant="outline">{departmentCode}</Badge>
-            ) : null}
-          </CardContent>
-        </Card>
+        <StatCard
+          title={copy.department}
+          value={departmentName}
+          icon={Hash}
+          link={buildLocalePath(
+            locale,
+            `/admin/blog-departments/${departmentId}`,
+          )}
+        />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+      <div className="w-full">
         <Card>
           <CardHeader>
-            <CardTitle>{copy.overview}</CardTitle>
-            <CardDescription>{copy.overviewDescription}</CardDescription>
+            <CardTitle>{copy.description}</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">{copy.slug}</p>
-              <p className="font-medium">{category.slug || copy.noSlug}</p>
-            </div>
-            <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">{copy.department}</p>
-              <p className="font-medium">{departmentName}</p>
-            </div>
-            <div className="space-y-1 md:col-span-2">
-              <p className="text-sm text-muted-foreground">
-                {copy.description}
-              </p>
-              <p className="font-medium">
-                {category.description || copy.noDescription}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>{copy.departmentOwner}</CardTitle>
-            <CardDescription>{copy.departmentOwnerDescription}</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div>
-              <p className="font-medium">{departmentName}</p>
-              {departmentCode ? (
-                <p className="text-sm text-muted-foreground">
-                  {departmentCode}
-                </p>
-              ) : null}
-            </div>
-            {departmentId ? (
-              <Button asChild variant="outline" size="sm">
-                <Link
-                  href={buildLocalePath(
-                    locale,
-                    `/admin/blog-departments/${departmentId}`,
-                  )}
-                >
-                  {copy.viewDepartment}
-                </Link>
-              </Button>
-            ) : null}
+            <CardDescription>
+              {category.description || copy.noDescription}
+            </CardDescription>
           </CardContent>
         </Card>
       </div>
 
-      <Tabs
-        defaultValue="posts"
-        className="space-y-2 rounded-xl bg-card p-2 shadow-2xl lg:p-4"
-      >
-        <TabsList variant="line" className="w-full justify-start">
-          <TabsTrigger value="posts">{copy.posts}</TabsTrigger>
-        </TabsList>
+      <Card>
+        <CardHeader>
+          <CardTitle>{copy.posts}</CardTitle>
+          <CardDescription>
+            {copy.totalPosts}: {totalPosts ?? 0}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isLoadingPosts ? (
+            <Skeleton className="h-48 w-full rounded-xl" />
+          ) : !posts?.length ? (
+            <EmptyState icon={FolderOpen} label={copy.noPosts} />
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{copy.posts}</TableHead>
+                  <TableHead>{common.status}</TableHead>
+                  <TableHead>{copy.visibility}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {posts.map((post) => (
+                  <TableRow key={post.name}>
+                    <TableCell>
+                      <div className="space-y-1">
+                        <p className="font-medium">{post.title}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {post.published_at
+                            ? formatDate(
+                                new Date(post.published_at),
+                                " HH:mm dd/MM/yyyy",
+                              )
+                            : formatDate(
+                                new Date(post.creation ?? new Date()),
+                                " HH:mm dd/MM/yyyy",
+                              )}
+                        </p>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{post.status}</Badge>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {post.visibility}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
 
-        <TabsContent value="posts">
-          <Card>
-            <CardHeader>
-              <CardTitle>{copy.posts}</CardTitle>
-              <CardDescription>
-                {copy.totalPosts}: {totalPosts ?? 0}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {isLoadingPosts ? (
-                <Skeleton className="h-48 w-full rounded-xl" />
-              ) : !posts?.length ? (
-                <EmptyState icon={FolderOpen} label={copy.noPosts} />
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{copy.posts}</TableHead>
-                      <TableHead>{common.status}</TableHead>
-                      <TableHead>{copy.visibility}</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {posts.map((post) => (
-                      <TableRow key={post.name}>
-                        <TableCell>
-                          <div className="space-y-1">
-                            <p className="font-medium">{post.title}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {post.published_at
-                                ? formatDate(
-                                    new Date(post.published_at),
-                                    " HH:mm dd/MM/yyyy",
-                                  )
-                                : formatDate(
-                                    new Date(post.creation ?? new Date()),
-                                    " HH:mm dd/MM/yyyy",
-                                  )}
-                            </p>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{post.status}</Badge>
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {post.visibility}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>{t.blogCategories.editCategoryTitle}</DialogTitle>
+          </DialogHeader>
+          <CategoryForm
+            category={category}
+            onSuccess={() => {
+              setEditDialogOpen(false);
+              refetchCategory();
+            }}
+            onCancel={() => setEditDialogOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

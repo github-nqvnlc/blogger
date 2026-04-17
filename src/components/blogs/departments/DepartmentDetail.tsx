@@ -2,7 +2,14 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ArrowLeft, BookOpen, FolderTree, Hash, Layers3 } from "lucide-react";
+import {
+  ArrowLeft,
+  BookOpen,
+  FolderTree,
+  Hash,
+  Layers3,
+  Pencil,
+} from "lucide-react";
 import { useGetCount, useGetDoc, useGetList } from "@/hooks";
 import { useLanguage } from "@/hooks/useLanguage";
 import { buildLocalePath } from "@/i18n";
@@ -18,6 +25,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -28,6 +41,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { DepartmentForm } from "./DepartmentForm";
 import { notFound } from "next/navigation";
 import { formatDate } from "date-fns";
 
@@ -116,11 +130,13 @@ export function DepartmentDetail({ departmentId }: DepartmentDetailProps) {
   const { locale, t } = useLanguage();
   const copy = t.blogDepartments.detail;
   const common = t.common;
+  const [editDialogOpen, setEditDialogOpen] = React.useState(false);
 
   const {
     data: department,
     isLoading: isLoadingDepartment,
     error: departmentError,
+    mutate: refetchDepartment,
   } = useGetDoc<BlogDepartment>("blog_departments", departmentId);
 
   const departmentFilter = React.useMemo(
@@ -210,17 +226,27 @@ export function DepartmentDetail({ departmentId }: DepartmentDetailProps) {
             </h1>
           </div>
         </div>
-        <div className="flex flex-row items-center gap-2 ">
-          <StatusBadge
-            active={department.is_active === 1}
-            activeLabel={t.blogDepartments.table.active}
-            inactiveLabel={t.blogDepartments.table.inactive}
-          />
-          <p className="font-semibold text-sm italic text-muted-foreground">
-            {department.creation
-              ? formatDate(new Date(department.creation), " HH:mm - dd/MM/yyyy")
-              : "-"}
-          </p>
+        <div className="flex flex-row items-center justify-between gap-2">
+          <div className="flex flex-row items-center gap-2 ">
+            <StatusBadge
+              active={department.is_active === 1}
+              activeLabel={t.blogDepartments.table.active}
+              inactiveLabel={t.blogDepartments.table.inactive}
+            />
+            <p className="font-semibold text-sm italic text-muted-foreground">
+              {department.creation
+                ? formatDate(
+                    new Date(department.creation),
+                    " HH:mm - dd/MM/yyyy",
+                  )
+                : "-"}
+            </p>
+          </div>
+
+          <Button size="sm" onClick={() => setEditDialogOpen(true)}>
+            Chỉnh sửa
+            <Pencil className="h-4 w-4 ml-2" />
+          </Button>
         </div>
       </div>
 
@@ -239,7 +265,9 @@ export function DepartmentDetail({ departmentId }: DepartmentDetailProps) {
           <CardTitle>{copy.description}</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-2">
-          <CardDescription>{department.description}</CardDescription>
+          <CardDescription>
+            {department.description || copy.noDescription}
+          </CardDescription>
         </CardContent>
       </Card>
 
@@ -401,6 +429,22 @@ export function DepartmentDetail({ departmentId }: DepartmentDetailProps) {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>{t.blogDepartments.editDepartmentTitle}</DialogTitle>
+          </DialogHeader>
+          <DepartmentForm
+            department={department}
+            onSuccess={() => {
+              setEditDialogOpen(false);
+              refetchDepartment();
+            }}
+            onCancel={() => setEditDialogOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
