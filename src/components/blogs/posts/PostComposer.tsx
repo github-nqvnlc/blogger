@@ -132,10 +132,7 @@ interface PostComposerProps {
   postId?: string;
 }
 
-export function PostComposer({
-  mode = "create",
-  postId,
-}: PostComposerProps) {
+export function PostComposer({ mode = "create", postId }: PostComposerProps) {
   const isEditMode = mode === "edit";
   const router = useRouter();
   const { locale, t } = useLanguage();
@@ -161,7 +158,7 @@ export function PostComposer({
     data: existingPost,
     isLoading: isLoadingExistingPost,
     error: existingPostError,
-  } = useGetDoc<Post>("posts", isEditMode ? postId ?? null : null, {
+  } = useGetDoc<Post>("posts", isEditMode ? (postId ?? null) : null, {
     enabled: !!currentUser && isEditMode && !!postId,
   });
 
@@ -372,11 +369,11 @@ export function PostComposer({
       department:
         typeof existingPost.department === "string"
           ? existingPost.department
-          : existingPost.department?.name ?? "",
+          : (existingPost.department?.name ?? ""),
       category:
         typeof existingPost.category === "string"
           ? existingPost.category
-          : existingPost.category?.name ?? "",
+          : (existingPost.category?.name ?? ""),
       slug: existingPost.slug ?? "",
       thumb: existingPost.thumb ?? "",
       thumb_desc: existingPost.thumb_desc ?? "",
@@ -777,9 +774,7 @@ export function PostComposer({
             </div>
 
             <Button asChild variant="outline" size="sm" type="button">
-              <Link href={cancelHref}>
-                {copy.cancel}
-              </Link>
+              <Link href={cancelHref}>{copy.cancel}</Link>
             </Button>
           </div>
 
@@ -1331,9 +1326,7 @@ export function PostComposer({
           {currentStep === 1 ? (
             <>
               <Button asChild variant="outline" type="button">
-                <Link href={cancelHref}>
-                  {copy.cancel}
-                </Link>
+                <Link href={cancelHref}>{copy.cancel}</Link>
               </Button>
               <Button
                 type="button"

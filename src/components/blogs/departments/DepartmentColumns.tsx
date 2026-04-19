@@ -2,7 +2,7 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import {
-Eye,
+  Eye,
   MoreHorizontal,
   Pencil,
   Trash2,

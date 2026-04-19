@@ -30,7 +30,11 @@ import {
   formatPostStatusLabel,
   formatPostVisibilityLabel,
 } from "@/lib/blog-posts";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export interface PostColumnMeta {
   onView: (post: Post) => void;
@@ -90,7 +94,10 @@ export function getPostColumns(t: Dictionary): ColumnDef<Post, unknown>[] {
     {
       accessorKey: "thumb",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t.blogPosts.table.thumb} />
+        <DataTableColumnHeader
+          column={column}
+          title={t.blogPosts.table.thumb}
+        />
       ),
       cell: ({ row, table }) => {
         const meta = table.options.meta as PostColumnMeta;
@@ -101,7 +108,11 @@ export function getPostColumns(t: Dictionary): ColumnDef<Post, unknown>[] {
             className="max-w-[360px] cursor-pointer space-y-1"
             onClick={() => meta.onView(post)}
           >
-            <img src={post.thumb} alt={post.title} className="w-auto h-30 rounded-sm aspect-video object-cover" />
+            <img
+              src={post.thumb}
+              alt={post.title}
+              className="w-auto h-30 rounded-sm aspect-video object-cover"
+            />
           </div>
         );
       },
@@ -110,7 +121,10 @@ export function getPostColumns(t: Dictionary): ColumnDef<Post, unknown>[] {
     {
       accessorKey: "title",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t.blogPosts.table.title} />
+        <DataTableColumnHeader
+          column={column}
+          title={t.blogPosts.table.title}
+        />
       ),
       cell: ({ row, table }) => {
         const meta = table.options.meta as PostColumnMeta;
@@ -127,9 +141,7 @@ export function getPostColumns(t: Dictionary): ColumnDef<Post, unknown>[] {
                   {post.title}
                 </p>
               </TooltipTrigger>
-              <TooltipContent>
-                {post.title}
-              </TooltipContent>
+              <TooltipContent>{post.title}</TooltipContent>
             </Tooltip>
             <p className="text-justify text-xs italic text-muted-foreground truncate line-clamp-3 whitespace-normal wrap-break-word">
               {post.excerpt || "-"}
@@ -149,7 +161,11 @@ export function getPostColumns(t: Dictionary): ColumnDef<Post, unknown>[] {
       ),
       cell: ({ row, table }) => {
         const meta = table.options.meta as PostColumnMeta;
-        return <Badge variant="outline">{meta.getDepartmentLabel(row.original)}</Badge>;
+        return (
+          <Badge variant="outline">
+            {meta.getDepartmentLabel(row.original)}
+          </Badge>
+        );
       },
       enableSorting: true,
     },
@@ -163,14 +179,19 @@ export function getPostColumns(t: Dictionary): ColumnDef<Post, unknown>[] {
       ),
       cell: ({ row, table }) => {
         const meta = table.options.meta as PostColumnMeta;
-        return <Badge variant="outline">{meta.getCategoryLabel(row.original)}</Badge>;
+        return (
+          <Badge variant="outline">{meta.getCategoryLabel(row.original)}</Badge>
+        );
       },
       enableSorting: true,
     },
     {
       accessorKey: "status",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t.blogPosts.table.status} />
+        <DataTableColumnHeader
+          column={column}
+          title={t.blogPosts.table.status}
+        />
       ),
       cell: ({ row }) => <StatusBadge post={row.original} t={t} />,
       enableSorting: true,
@@ -185,7 +206,10 @@ export function getPostColumns(t: Dictionary): ColumnDef<Post, unknown>[] {
       ),
       cell: ({ row }) => (
         <Badge variant="secondary">
-          {formatPostVisibilityLabel(row.original.visibility, t.blogPosts.visibility)}
+          {formatPostVisibilityLabel(
+            row.original.visibility,
+            t.blogPosts.visibility,
+          )}
         </Badge>
       ),
       enableSorting: true,
@@ -193,10 +217,15 @@ export function getPostColumns(t: Dictionary): ColumnDef<Post, unknown>[] {
     {
       accessorKey: "view_count",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t.blogPosts.table.views} />
+        <DataTableColumnHeader
+          column={column}
+          title={t.blogPosts.table.views}
+        />
       ),
       cell: ({ row }) => (
-        <span className="text-muted-foreground">{row.original.view_count ?? 0}</span>
+        <span className="text-muted-foreground">
+          {row.original.view_count ?? 0}
+        </span>
       ),
       enableSorting: true,
     },

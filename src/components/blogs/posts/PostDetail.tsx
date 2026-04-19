@@ -3,7 +3,15 @@
 import * as React from "react";
 import Link from "next/link";
 import { formatDate } from "date-fns";
-import { ArrowLeft, Archive, Eye, FolderTree, Pencil, Send, Trash2 } from "lucide-react";
+import {
+  ArrowLeft,
+  Archive,
+  Eye,
+  FolderTree,
+  Pencil,
+  Send,
+  Trash2,
+} from "lucide-react";
 import { notFound, useRouter } from "next/navigation";
 import { useDeleteDoc, useGetDoc, useGetList, useUpdateDoc } from "@/hooks";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -222,7 +230,10 @@ export function PostDetail({ postId }: PostDetailProps) {
       await deletePost(post.name);
       showCrudSuccess(
         t.blogPosts.toast.deleteSuccess,
-        t.blogPosts.toast.deleteSuccessDescription.replace("{title}", post.title),
+        t.blogPosts.toast.deleteSuccessDescription.replace(
+          "{title}",
+          post.title,
+        ),
       );
       router.push(buildLocalePath(locale, "/admin/posts"));
     } catch (err) {
@@ -278,20 +289,31 @@ export function PostDetail({ postId }: PostDetailProps) {
               </Link>
             </Button>
             <div className="space-y-2">
-              <h1 className="text-3xl font-bold tracking-tight">{post.title}</h1>
+              <h1 className="text-3xl font-bold tracking-tight">
+                {post.title}
+              </h1>
               <div className="flex flex-wrap items-center gap-2">
-                <Badge>{formatPostStatusLabel(post.status, t.blogPosts.status)}</Badge>
-                <Badge variant="secondary">
-                  {formatPostVisibilityLabel(post.visibility, t.blogPosts.visibility)}
+                <Badge>
+                  {formatPostStatusLabel(post.status, t.blogPosts.status)}
                 </Badge>
-                {post.slug ? <Badge variant="outline">/{post.slug}</Badge> : null}
+                <Badge variant="secondary">
+                  {formatPostVisibilityLabel(
+                    post.visibility,
+                    t.blogPosts.visibility,
+                  )}
+                </Badge>
+                {post.slug ? (
+                  <Badge variant="outline">/{post.slug}</Badge>
+                ) : null}
               </div>
             </div>
           </div>
 
           <div className="flex flex-wrap gap-2">
             <Button asChild variant="outline" size="sm">
-              <Link href={buildLocalePath(locale, `/admin/posts/${post.name}/edit`)}>
+              <Link
+                href={buildLocalePath(locale, `/admin/posts/${post.name}/edit`)}
+              >
                 <Pencil className="mr-2 h-4 w-4" />
                 {t.blogPosts.actions.edit}
               </Link>
@@ -361,7 +383,10 @@ export function PostDetail({ postId }: PostDetailProps) {
           icon={FolderTree}
           href={
             departmentId
-              ? buildLocalePath(locale, `/admin/blog-departments/${departmentId}`)
+              ? buildLocalePath(
+                  locale,
+                  `/admin/blog-departments/${departmentId}`,
+                )
               : undefined
           }
         />
@@ -375,11 +400,7 @@ export function PostDetail({ postId }: PostDetailProps) {
               : undefined
           }
         />
-        <StatCard
-          title={copy.views}
-          value={post.view_count ?? 0}
-          icon={Eye}
-        />
+        <StatCard title={copy.views} value={post.view_count ?? 0} icon={Eye} />
       </div>
 
       <Card>

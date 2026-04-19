@@ -9,7 +9,15 @@ import {
   RowSelectionState,
   SortingState,
 } from "@tanstack/react-table";
-import { Archive, FolderOpen, Plus, Search, Send, SquarePen, Trash2 } from "lucide-react";
+import {
+  Archive,
+  FolderOpen,
+  Plus,
+  Search,
+  Send,
+  SquarePen,
+  Trash2,
+} from "lucide-react";
 import { useDeleteDoc, useGetCount, useGetList, useUpdateDoc } from "@/hooks";
 import { useLanguage } from "@/hooks/useLanguage";
 import { buildLocalePath } from "@/i18n";
@@ -188,7 +196,9 @@ export function PostList() {
 
   const departmentLabelMap = React.useMemo(
     () =>
-      new Map((departments ?? []).map((item) => [item.name, item.department_name])),
+      new Map(
+        (departments ?? []).map((item) => [item.name, item.department_name]),
+      ),
     [departments],
   );
   const categoryLabelMap = React.useMemo(
@@ -202,7 +212,9 @@ export function PostList() {
         typeof post.department === "string"
           ? post.department
           : post.department?.name;
-      return value ? departmentLabelMap.get(value) ?? value : copy.table.unknownDepartment;
+      return value
+        ? (departmentLabelMap.get(value) ?? value)
+        : copy.table.unknownDepartment;
     },
     [copy.table.unknownDepartment, departmentLabelMap],
   );
@@ -211,7 +223,9 @@ export function PostList() {
     (post: Post) => {
       const value =
         typeof post.category === "string" ? post.category : post.category?.name;
-      return value ? categoryLabelMap.get(value) ?? value : copy.table.unknownCategory;
+      return value
+        ? (categoryLabelMap.get(value) ?? value)
+        : copy.table.unknownCategory;
     },
     [categoryLabelMap, copy.table.unknownCategory],
   );
@@ -255,7 +269,15 @@ export function PostList() {
         );
       }
     },
-    [copy.status, copy.toast.statusUpdateFailure, copy.toast.statusUpdateFailureDescription, copy.toast.statusUpdateSuccess, copy.toast.statusUpdateSuccessDescription, refetch, updatePost],
+    [
+      copy.status,
+      copy.toast.statusUpdateFailure,
+      copy.toast.statusUpdateFailureDescription,
+      copy.toast.statusUpdateSuccess,
+      copy.toast.statusUpdateSuccessDescription,
+      refetch,
+      updatePost,
+    ],
   );
 
   const handleDeleteConfirm = React.useCallback(async () => {
@@ -265,7 +287,10 @@ export function PostList() {
       await deletePost(deletingPost.name);
       showCrudSuccess(
         copy.toast.deleteSuccess,
-        copy.toast.deleteSuccessDescription.replace("{title}", deletingPost.title),
+        copy.toast.deleteSuccessDescription.replace(
+          "{title}",
+          deletingPost.title,
+        ),
       );
       setDeletingPost(null);
       refetch();
@@ -376,7 +401,13 @@ export function PostList() {
       getDepartmentLabel,
       getCategoryLabel,
     }),
-    [getCategoryLabel, getDepartmentLabel, handleEdit, handleStatusUpdate, handleViewDetail],
+    [
+      getCategoryLabel,
+      getDepartmentLabel,
+      handleEdit,
+      handleStatusUpdate,
+      handleViewDetail,
+    ],
   );
 
   React.useEffect(() => {
@@ -388,7 +419,9 @@ export function PostList() {
       return;
     }
 
-    const categoryExists = (categories ?? []).some((item) => item.name === categoryFilter);
+    const categoryExists = (categories ?? []).some(
+      (item) => item.name === categoryFilter,
+    );
     if (!categoryExists) {
       setCategoryFilter("all");
     }
@@ -412,7 +445,9 @@ export function PostList() {
     <div className="space-y-6">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div className="space-y-1">
-          <h1 className="text-3xl font-bold tracking-tight">{copy.list.title}</h1>
+          <h1 className="text-3xl font-bold tracking-tight">
+            {copy.list.title}
+          </h1>
           <p className="text-sm text-muted-foreground">
             {copy.list.description}
           </p>
@@ -438,7 +473,9 @@ export function PostList() {
 
         <Select
           value={statusFilter}
-          onValueChange={(value) => setStatusFilter(value as typeof statusFilter)}
+          onValueChange={(value) =>
+            setStatusFilter(value as typeof statusFilter)
+          }
         >
           <SelectTrigger className="w-full lg:w-[180px]">
             <SelectValue placeholder={copy.filters.status} />
@@ -502,15 +539,27 @@ export function PostList() {
             {Object.keys(rowSelection).length} {t.common.selected}
           </span>
           <div className="flex flex-wrap gap-2">
-            <Button size="sm" variant="outline" onClick={() => handleBulkStatusUpdate("Published")}>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => handleBulkStatusUpdate("Published")}
+            >
               <Send className="mr-2 h-4 w-4" />
               {copy.actions.publish}
             </Button>
-            <Button size="sm" variant="outline" onClick={() => handleBulkStatusUpdate("Draft")}>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => handleBulkStatusUpdate("Draft")}
+            >
               <SquarePen className="mr-2 h-4 w-4" />
               {copy.actions.moveToDraft}
             </Button>
-            <Button size="sm" variant="outline" onClick={() => handleBulkStatusUpdate("Archived")}>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => handleBulkStatusUpdate("Archived")}
+            >
               <Archive className="mr-2 h-4 w-4" />
               {copy.actions.archive}
             </Button>
@@ -519,7 +568,8 @@ export function PostList() {
               size="sm"
               onClick={() =>
                 setBulkDeletingPosts(
-                  posts?.filter((_, index) => rowSelection[index] === true) ?? [],
+                  posts?.filter((_, index) => rowSelection[index] === true) ??
+                    [],
                 )
               }
             >
