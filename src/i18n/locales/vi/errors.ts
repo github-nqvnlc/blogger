@@ -16,4 +16,6 @@ export const errors = {
     "Tài khoản của bạn không có quyền xem danh sách chủ đề.",
   tagAccessDeniedDescription:
     "Tài khoản của bạn không có quyền xem danh sách nhãn.",
+  postAccessDeniedDescription:
+    "Tài khoản của bạn không có quyền xem danh sách bài viết.",
 } as const;

@@ -2,7 +2,7 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import {
-  BookOpen,
+Eye,
   MoreHorizontal,
   Pencil,
   Trash2,
@@ -167,7 +167,7 @@ export function getDepartmentColumns(
                 {t.blogDepartments.table.edit}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => meta.onView(dept)}>
-                <BookOpen className="mr-2 h-4 w-4" />
+                <Eye className="mr-2 h-4 w-4" />
                 {t.blogDepartments.table.viewDetail}
               </DropdownMenuItem>
               <DropdownMenuItem

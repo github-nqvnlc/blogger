@@ -9,7 +9,7 @@ export const sidebar = {
   topics: "Chủ đề",
   tags: "Gắn nhãn",
   posts: "Bài viết",
-  allPosts: "Tất cả bài viết",
+  allPosts: "Danh sách bài viết",
   drafts: "Bài nháp",
   published: "Đã xuất bản",
   createPost: "Tạo bài viết mới",

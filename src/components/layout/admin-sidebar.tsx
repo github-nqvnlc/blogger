@@ -267,18 +267,6 @@ export function AdminSidebar() {
           icon: Newspaper,
           badge: "12",
         },
-        {
-          title: t.sidebar.drafts,
-          url: "/admin/posts?status=draft",
-          icon: FilePenLine,
-          badge: "3",
-        },
-        {
-          title: t.sidebar.published,
-          url: "/admin/posts?status=published",
-          icon: FileCheck,
-          badge: "8",
-        },
       ],
     },
     {

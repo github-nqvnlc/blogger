@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Newspaper, MessageSquare, Tags, Eye } from "lucide-react";
+import { Newspaper, MessageSquare, Tags, Eye, } from "lucide-react";
 import { useLanguage } from "@/hooks/useLanguage";
 
 export default function AdminDashboardPage() {

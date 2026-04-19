@@ -3,12 +3,17 @@ export const blogPosts = {
   createTitle: "Create new post",
   createDescription:
     "Compose a blog post step by step with metadata, content, and a final preview.",
+  editTitle: "Edit post",
+  editDescription:
+    "Update the metadata, content, cover image, and post relations before saving.",
   cancel: "Cancel",
   continue: "Continue",
   back: "Back",
   preview: "Preview",
   create: "Create post",
   creating: "Creating...",
+  save: "Save changes",
+  saving: "Saving...",
   stepCounter: "Step {current}/3",
   steps: {
     metadata: {
@@ -22,7 +27,7 @@ export const blogPosts = {
     },
     review: {
       title: "Preview",
-      description: "Review the full post before creating it.",
+      description: "Review the full post before saving.",
     },
   },
   status: {
@@ -152,8 +157,88 @@ export const blogPosts = {
     coverBusy:
       "The cover image is still uploading. Please wait until it finishes.",
   },
+  list: {
+    title: "Manage posts",
+    description:
+      "Review published workflow, update content status, and manage post records.",
+    addPost: "Add post",
+    emptyTitle: "No posts found",
+    emptyDescription:
+      "Create a new post or adjust the current filters to see matching content.",
+    deleteConfirmDescription:
+      'Delete the post "{title}" permanently? This action cannot be undone.',
+    bulkDeleteConfirmDescription:
+      "Delete {count} selected posts permanently? This action cannot be undone.",
+  },
+  table: {
+    thumb: "Image thumbnail",
+    title: "Post",
+    department: "Department",
+    category: "Category",
+    status: "Status",
+    visibility: "Visibility",
+    views: "Views",
+    publishedAt: "Published at",
+    noPublishedDate: "Not published yet",
+    actions: "Actions",
+    unknownDepartment: "Unknown department",
+    unknownCategory: "Unknown category",
+  },
+  detail: {
+    backToList: "Back to posts",
+    department: "Department",
+    category: "Category",
+    views: "Views",
+    summary: "Summary",
+    noExcerpt: "No excerpt available.",
+    topics: "Topics",
+    noTopics: "No topics linked",
+    tags: "Tags",
+    noTags: "No tags linked",
+    content: "Content",
+    contentDescription: "Rendered content preview for this post.",
+    noContent: "No content available.",
+    noDepartment: "No department assigned",
+    noCategory: "No category assigned",
+    noPublishedDate: "Not published yet",
+    deleteConfirmDescription:
+      'Delete the post "{title}" permanently? This action cannot be undone.',
+  },
+  filters: {
+    searchPlaceholder: "Search by title, slug, or excerpt...",
+    status: "Status",
+    visibility: "Visibility",
+    department: "Department",
+    category: "Category",
+    allStatuses: "All statuses",
+    allVisibility: "All visibility",
+    allDepartments: "All departments",
+    allCategories: "All categories",
+  },
+  actions: {
+    edit: "Edit",
+    viewDetail: "View detail",
+    publish: "Publish",
+    moveToDraft: "Move to draft",
+    archive: "Archive",
+    delete: "Delete",
+  },
   toast: {
     createSuccess: "Post created successfully",
     createFailure: "Unable to create a new post",
+    updateSuccess: "Post updated successfully",
+    updateFailure: "Unable to update this post",
+    deleteSuccess: "Post deleted successfully",
+    deleteSuccessDescription: '"{title}" has been removed.',
+    deleteFailure: "Unable to delete this post",
+    deleteFailureDescription: "Please try deleting the post again.",
+    bulkDeleteSuccessDescription: "{count} posts have been removed.",
+    statusUpdateSuccess: "Status updated successfully",
+    statusUpdateSuccessDescription: '"{title}" is now "{status}".',
+    bulkStatusUpdateSuccessDescription:
+      "{count} selected posts were moved to {status}.",
+    statusUpdateFailure: "Unable to update post status",
+    statusUpdateFailureDescription:
+      "Please try updating the post status again.",
   },
 } as const;

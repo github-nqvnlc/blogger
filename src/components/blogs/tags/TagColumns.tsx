@@ -2,7 +2,7 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import {
-  BookOpen,
+  Eye,
   MoreHorizontal,
   Pencil,
   ToggleLeft,
@@ -169,7 +169,7 @@ export function getTagColumns(t: Dictionary): ColumnDef<Tag, unknown>[] {
                 {t.blogTags.table.edit}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => meta.onView(tag)}>
-                <BookOpen className="mr-2 h-4 w-4" />
+                <Eye className="mr-2 h-4 w-4" />
                 {t.blogTags.table.viewDetail}
               </DropdownMenuItem>
               <DropdownMenuItem

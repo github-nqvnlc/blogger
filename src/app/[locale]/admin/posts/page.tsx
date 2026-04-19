@@ -1,7 +1,5 @@
-import React from "react";
+import { PostList } from "@/components/blogs/posts";
 
-function page() {
-  return <div>page</div>;
+export default function PostsPage() {
+  return <PostList />;
 }
-
-export default page;

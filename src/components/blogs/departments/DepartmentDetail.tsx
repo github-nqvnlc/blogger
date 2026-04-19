@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
-  BookOpen,
+  Eye,
   FolderTree,
   Hash,
   Layers3,
@@ -257,7 +257,7 @@ export function DepartmentDetail({ departmentId }: DepartmentDetailProps) {
           icon={FolderTree}
         />
         <StatCard title={copy.totalTopics} value={totalTopics} icon={Hash} />
-        <StatCard title={copy.totalPosts} value={totalPosts} icon={BookOpen} />
+        <StatCard title={copy.totalPosts} value={totalPosts} icon={Eye} />
       </div>
 
       <Card>

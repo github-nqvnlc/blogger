@@ -3,12 +3,17 @@ export const blogPosts = {
   createTitle: "Tạo bài viết mới",
   createDescription:
     "Soạn bài viết blog theo từng bước với đầy đủ metadata, nội dung và phần xem trước.",
+  editTitle: "Chỉnh sửa bài viết",
+  editDescription:
+    "Cập nhật metadata, nội dung, ảnh bìa và các liên kết của bài viết trước khi lưu.",
   cancel: "Hủy",
   continue: "Tiếp tục",
   back: "Quay lại",
   preview: "Xem trước",
   create: "Tạo bài viết",
   creating: "Đang tạo...",
+  save: "Lưu thay đổi",
+  saving: "Đang lưu...",
   stepCounter: "Bước {current}/3",
   steps: {
     metadata: {
@@ -22,7 +27,7 @@ export const blogPosts = {
     },
     review: {
       title: "Xem trước",
-      description: "Kiểm tra lại toàn bộ nội dung trước khi tạo bài viết.",
+      description: "Kiểm tra lại toàn bộ nội dung trước khi lưu bài viết.",
     },
   },
   status: {
@@ -151,8 +156,88 @@ export const blogPosts = {
     coverBusy:
       "Ảnh bìa đang được tải lên. Vui lòng chờ quá trình này hoàn tất.",
   },
+  list: {
+    title: "Quản lý bài viết",
+    description:
+      "Theo dõi quy trình xuất bản, cập nhật trạng thái và quản trị dữ liệu bài viết.",
+    addPost: "Thêm bài viết",
+    emptyTitle: "Chưa có bài viết nào",
+    emptyDescription:
+      "Hãy tạo bài viết mới hoặc điều chỉnh bộ lọc để xem nội dung phù hợp.",
+    deleteConfirmDescription:
+      'Xóa vĩnh viễn bài viết "{title}"? Hành động này không thể hoàn tác.',
+    bulkDeleteConfirmDescription:
+      "Xóa vĩnh viễn {count} bài viết đã chọn? Hành động này không thể hoàn tác.",
+  },
+  table: {
+    thumb: "Ảnh bìa",
+    title: "Bài viết",
+    department: "Bộ phận",
+    category: "Danh mục",
+    status: "Trạng thái",
+    visibility: "Hiển thị",
+    views: "Lượt xem",
+    publishedAt: "Ngày tạo",
+    noPublishedDate: "Chưa xuất bản",
+    actions: "Thao tác",
+    unknownDepartment: "Chưa rõ bộ phận",
+    unknownCategory: "Chưa rõ danh mục",
+  },
+  detail: {
+    backToList: "Quay lại danh sách bài viết",
+    department: "Bộ phận",
+    category: "Danh mục",
+    views: "Lượt xem",
+    summary: "Tóm tắt",
+    noExcerpt: "Chưa có phần tóm tắt.",
+    topics: "Chủ đề",
+    noTopics: "Chưa liên kết chủ đề",
+    tags: "Nhãn",
+    noTags: "Chưa liên kết nhãn",
+    content: "Nội dung",
+    contentDescription: "Bản dựng nội dung của bài viết.",
+    noContent: "Chưa có nội dung.",
+    noDepartment: "Chưa gán bộ phận",
+    noCategory: "Chưa gán danh mục",
+    noPublishedDate: "Chưa xuất bản",
+    deleteConfirmDescription:
+      'Xóa vĩnh viễn bài viết "{title}"? Hành động này không thể hoàn tác.',
+  },
+  filters: {
+    searchPlaceholder: "Tìm theo tiêu đề, slug hoặc tóm tắt...",
+    status: "Trạng thái",
+    visibility: "Hiển thị",
+    department: "Bộ phận",
+    category: "Danh mục",
+    allStatuses: "Tất cả trạng thái",
+    allVisibility: "Tất cả phạm vi",
+    allDepartments: "Tất cả bộ phận",
+    allCategories: "Tất cả danh mục",
+  },
+  actions: {
+    edit: "Chỉnh sửa",
+    viewDetail: "Xem chi tiết",
+    publish: "Xuất bản",
+    moveToDraft: "Chuyển về nháp",
+    archive: "Lưu trữ",
+    delete: "Xóa",
+  },
   toast: {
     createSuccess: "Tạo bài viết thành công",
     createFailure: "Không thể tạo bài viết mới",
+    updateSuccess: "Cập nhật bài viết thành công",
+    updateFailure: "Không thể cập nhật bài viết này",
+    deleteSuccess: "Xóa bài viết thành công",
+    deleteSuccessDescription: '"{title}" đã được xóa.',
+    deleteFailure: "Không thể xóa bài viết này",
+    deleteFailureDescription: "Vui lòng thử xóa bài viết lại.",
+    bulkDeleteSuccessDescription: "Đã xóa {count} bài viết.",
+    statusUpdateSuccess: "Cập nhật trạng thái thành công",
+    statusUpdateSuccessDescription: '"{title}" hiện ở trạng thái "{status}".',
+    bulkStatusUpdateSuccessDescription:
+      "Đã chuyển {count} bài viết đã chọn sang trạng thái {status}.",
+    statusUpdateFailure: "Không thể cập nhật trạng thái bài viết",
+    statusUpdateFailureDescription:
+      "Vui lòng thử cập nhật trạng thái bài viết lại.",
   },
 } as const;
