@@ -318,11 +318,17 @@ export function TopicList() {
 
   const getDepartmentLabel = React.useCallback(
     (topic: Topic) => {
-      if (typeof topic.department !== "string") {
-        return topic.department.department_name;
+      const department = topic.department;
+
+      if (!department) {
+        return "-";
       }
 
-      return departmentMap.get(topic.department) ?? topic.department;
+      if (typeof department !== "string") {
+        return department.department_name ?? department.name;
+      }
+
+      return departmentMap.get(department) ?? department;
     },
     [departmentMap],
   );

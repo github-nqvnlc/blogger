@@ -25,7 +25,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { Dictionary } from "@/i18n";
-import { cn } from "@/lib/utils";
+import { cn, getBaseUrl } from "@/lib/utils";
 import {
   formatPostStatusLabel,
   formatPostVisibilityLabel,
@@ -109,7 +109,7 @@ export function getPostColumns(t: Dictionary): ColumnDef<Post, unknown>[] {
             onClick={() => meta.onView(post)}
           >
             <img
-              src={post.thumb}
+              src={`${getBaseUrl()}${post.thumb}`}
               alt={post.title}
               className="w-auto h-30 rounded-sm aspect-video object-cover"
             />

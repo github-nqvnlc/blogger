@@ -97,7 +97,7 @@ export function CoverImageField({
         value={source ?? "url"}
         onValueChange={(nextValue) => onSourceChange(nextValue as CoverSource)}
       >
-        <TabsList>
+        <TabsList className="border border-primary w-full">
           <TabsTrigger value="url">{copy.urlTab}</TabsTrigger>
           <TabsTrigger value="upload">{copy.uploadTab}</TabsTrigger>
         </TabsList>
@@ -126,7 +126,7 @@ export function CoverImageField({
         </TabsContent>
 
         <TabsContent value="upload" className="space-y-3">
-          <div className="rounded-xl border border-dashed p-4">
+          <div className="rounded-xl border border-dashed border-primary p-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="space-y-1">
                 <p className="font-medium">{copy.uploadTab}</p>
@@ -139,6 +139,7 @@ export function CoverImageField({
                 variant="outline"
                 disabled={disabled || loading}
                 onClick={() => fileInputRef.current?.click()}
+                className="bg-primary text-primary-foreground dark:bg-primary/90 dark:text-primary-foreground/90 border-0"
               >
                 <ImagePlus className="mr-2 size-4" />
                 {fileMeta ? copy.changeFile : copy.chooseFile}
@@ -162,7 +163,7 @@ export function CoverImageField({
                   </p>
                 </>
               ) : (
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-primary dark:text-primary/80">
                   {fileMeta?.file_name || copy.uploadIdle}
                 </p>
               )}
