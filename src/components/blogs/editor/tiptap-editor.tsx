@@ -855,7 +855,7 @@ export function TiptapEditor({ value, onChange, disabled }: BlogEditorProps) {
           <IndentIncrease />
         </ToolbarButton>
 
-        <label className="flex items-center gap-2 rounded-md border bg-background px-2 py-1 text-sm text-muted-foreground">
+        <label className="flex items-center gap-2 rounded-md border bg-background px-2 py-1.5 text-sm text-muted-foreground">
           <Type className="size-4" />
           <select
             className="bg-transparent text-sm outline-none"
@@ -884,7 +884,7 @@ export function TiptapEditor({ value, onChange, disabled }: BlogEditorProps) {
           </select>
         </label>
 
-        <label className="flex items-center gap-2 rounded-md border bg-background px-2 py-1 text-sm text-muted-foreground">
+        <label className="flex items-center gap-2 rounded-md border bg-background px-2 py-0 text-sm text-muted-foreground">
           <Palette className="size-4" />
           <input
             type="color"
@@ -898,7 +898,7 @@ export function TiptapEditor({ value, onChange, disabled }: BlogEditorProps) {
           />
         </label>
 
-        <label className="flex items-center gap-2 rounded-md border bg-background px-2 py-1 text-sm text-muted-foreground">
+        <label className="flex items-center gap-2 rounded-md border bg-background px-2 py-0 text-sm text-muted-foreground">
           <Highlighter className="size-4" />
           <input
             type="color"
