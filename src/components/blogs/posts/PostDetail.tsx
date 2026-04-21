@@ -367,97 +367,112 @@ export function PostDetail({ postId }: PostDetailProps) {
         </p>
       </div>
 
-      {coverSrc ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={coverSrc}
-          alt={post.title}
-          className="max-h-[420px] w-full rounded-2xl border object-cover"
-        />
-      ) : null}
-
       <div className="grid gap-4 md:grid-cols-3">
-        <StatCard
-          title={copy.department}
-          value={departmentName ?? copy.noDepartment}
-          icon={FolderTree}
-          href={
-            departmentId
-              ? buildLocalePath(
-                  locale,
-                  `/admin/blog-departments/${departmentId}`,
-                )
-              : undefined
-          }
-        />
-        <StatCard
-          title={copy.category}
-          value={categoryName ?? copy.noCategory}
-          icon={FolderTree}
-          href={
-            categoryId
-              ? buildLocalePath(locale, `/admin/categories/${categoryId}`)
-              : undefined
-          }
-        />
-        <StatCard title={copy.views} value={post.view_count ?? 0} icon={Eye} />
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>{copy.summary}</CardTitle>
-          <CardDescription>{post.excerpt || copy.noExcerpt}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="space-y-3">
-            <div className="space-y-2">
-              <p className="text-sm font-medium">{copy.topics}</p>
-              <div className="flex flex-wrap gap-2">
-                {topics?.length ? (
-                  topics.map((topic) => (
-                    <Badge key={topic.name} variant="outline">
-                      {topic.topic}
-                    </Badge>
-                  ))
-                ) : (
-                  <Badge variant="outline">{copy.noTopics}</Badge>
-                )}
+        <div className="col-span-2 space-y-4">
+          {coverSrc ? (
+            <figure className="space-y-2">
+              <div className="aspect-video w-full overflow-hidden rounded-2xl border">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={coverSrc}
+                  alt={post.thumb_desc || post.title}
+                  className="h-full w-full object-cover"
+                />
               </div>
-            </div>
-
-            <div className="space-y-2">
-              <p className="text-sm font-medium">{copy.tags}</p>
-              <div className="flex flex-wrap gap-2">
-                {tags?.length ? (
-                  tags.map((tag) => (
-                    <Badge key={tag.name} variant="outline">
-                      {tag.tag_name}
-                    </Badge>
-                  ))
-                ) : (
-                  <Badge variant="outline">{copy.noTags}</Badge>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {post.thumb_desc ? (
-            <div className="rounded-xl border bg-muted/30 p-4 text-sm text-muted-foreground">
-              {post.thumb_desc}
-            </div>
+              {post.thumb_desc ? (
+                <figcaption className="text-center text-xs text-muted-foreground italic">
+                  {post.thumb_desc}
+                </figcaption>
+              ) : null}
+            </figure>
           ) : null}
-        </CardContent>
-      </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{copy.content}</CardTitle>
-          <CardDescription>{copy.contentDescription}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <RichContent value={post.content} emptyText={copy.noContent} />
-        </CardContent>
-      </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>{copy.summary}</CardTitle>
+              <CardDescription>
+                {post.excerpt || copy.noExcerpt}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  <p className="text-sm font-medium">{copy.topics}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {topics?.length ? (
+                      topics.map((topic) => (
+                        <Badge key={topic.name} variant="outline">
+                          {topic.topic}
+                        </Badge>
+                      ))
+                    ) : (
+                      <Badge variant="outline">{copy.noTopics}</Badge>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-sm font-medium">{copy.tags}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {tags?.length ? (
+                      tags.map((tag) => (
+                        <Badge key={tag.name} variant="outline">
+                          {tag.tag_name}
+                        </Badge>
+                      ))
+                    ) : (
+                      <Badge variant="outline">{copy.noTags}</Badge>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>{copy.content}</CardTitle>
+              <CardDescription>{copy.contentDescription}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <RichContent value={post.content} emptyText={copy.noContent} />
+            </CardContent>
+          </Card>
+        </div>
+
+        <div>
+          <div className="space-y-4">
+            <StatCard
+              title={copy.department}
+              value={departmentName ?? copy.noDepartment}
+              icon={FolderTree}
+              href={
+                departmentId
+                  ? buildLocalePath(
+                      locale,
+                      `/admin/blog-departments/${departmentId}`,
+                    )
+                  : undefined
+              }
+            />
+            <StatCard
+              title={copy.category}
+              value={categoryName ?? copy.noCategory}
+              icon={FolderTree}
+              href={
+                categoryId
+                  ? buildLocalePath(locale, `/admin/categories/${categoryId}`)
+                  : undefined
+              }
+            />
+            <StatCard
+              title={copy.views}
+              value={post.view_count ?? 0}
+              icon={Eye}
+            />
+          </div>
+        </div>
+      </div>
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
