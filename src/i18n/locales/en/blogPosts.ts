@@ -183,6 +183,8 @@ export const blogPosts = {
     actions: "Actions",
     unknownDepartment: "Unknown department",
     unknownCategory: "Unknown category",
+    unknownTopic: "Unknown topic",
+    unknownTag: "Unknown tag",
   },
   detail: {
     backToList: "Back to posts",
@@ -210,10 +212,14 @@ export const blogPosts = {
     visibility: "Visibility",
     department: "Department",
     category: "Category",
+    topic: "Topic",
+    tag: "Tag",
     allStatuses: "All statuses",
     allVisibility: "All visibility",
     allDepartments: "All departments",
     allCategories: "All categories",
+    allTopics: "All topics",
+    allTags: "All tags",
   },
   actions: {
     edit: "Edit",

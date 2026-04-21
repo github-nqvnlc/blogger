@@ -75,6 +75,7 @@ export const blogCategories = {
     activate: "Activate",
     delete: "Delete",
     empty: "No data available",
+    unknownDepartment: "Unknown department",
   },
   detail: {
     pageTitle: "Category detail",
