@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { flushSync } from "react-dom";
 import { useRouter } from "next/navigation";
 import { useGetList, useDeleteDoc, useGetCount } from "@/hooks";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -236,9 +237,17 @@ export function DepartmentList() {
     ],
   );
 
+  const resetPagination = React.useCallback(() => {
+    setPagination((prev) =>
+      prev.pageIndex === 0 ? { ...prev } : { ...prev, pageIndex: 0 },
+    );
+  }, []);
+
   React.useEffect(() => {
-    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
-  }, [apiFilters, orderBy]);
+    flushSync(() => {
+      resetPagination();
+    });
+  }, [apiFilters, orderBy, resetPagination]);
 
   const statusCode = (error as { response?: { status?: number } } | null)
     ?.response?.status;

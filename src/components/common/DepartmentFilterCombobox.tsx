@@ -69,16 +69,17 @@ export function DepartmentFilterCombobox({
     setSearch("");
   };
 
-  React.useEffect(() => {
-    if (!open) {
+  const handleOpenChange = (isOpen: boolean) => {
+    setOpen(isOpen);
+    if (!isOpen) {
       setSearch("");
     } else {
       searchInputRef.current?.focus();
     }
-  }, [open]);
+  };
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
