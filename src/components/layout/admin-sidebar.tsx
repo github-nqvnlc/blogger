@@ -18,8 +18,6 @@ import {
   User,
   Loader2,
   Lightbulb,
-  FilePenLine,
-  FileCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {

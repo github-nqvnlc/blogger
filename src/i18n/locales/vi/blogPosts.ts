@@ -182,6 +182,8 @@ export const blogPosts = {
     actions: "Thao tác",
     unknownDepartment: "Chưa rõ bộ phận",
     unknownCategory: "Chưa rõ danh mục",
+    unknownTopic: "Chưa rõ chủ đề",
+    unknownTag: "Chưa rõ nhãn",
   },
   detail: {
     backToList: "Quay lại danh sách bài viết",
@@ -209,10 +211,14 @@ export const blogPosts = {
     visibility: "Hiển thị",
     department: "Bộ phận",
     category: "Danh mục",
+    topic: "Chủ đề",
+    tag: "Nhãn",
     allStatuses: "Tất cả trạng thái",
     allVisibility: "Tất cả phạm vi",
     allDepartments: "Tất cả bộ phận",
     allCategories: "Tất cả danh mục",
+    allTopics: "Tất cả chủ đề",
+    allTags: "Tất cả nhãn",
   },
   actions: {
     edit: "Chỉnh sửa",

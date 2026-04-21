@@ -73,6 +73,7 @@ export const blogCategories = {
     activate: "Kích hoạt",
     delete: "Xóa",
     empty: "Không có dữ liệu",
+    unknownDepartment: "Chưa rõ bộ phận",
   },
   detail: {
     pageTitle: "Chi tiết danh mục",

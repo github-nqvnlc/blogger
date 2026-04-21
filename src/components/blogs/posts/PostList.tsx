@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
 import * as React from "react";
@@ -50,7 +51,10 @@ import {
 } from "@/components/ui/select";
 import { showCrudError, showCrudSuccess } from "@/lib/crud-toast";
 import { formatFrappeDatetime } from "@/lib/blog-posts";
-
+import { DepartmentFilterCombobox } from "@/components/common/DepartmentFilterCombobox";
+import { CategoryFilterCombobox } from "@/components/common/CategoryFilterCombobox";
+import { TopicFilterCombobox } from "@/components/common/TopicFilterCombobox";
+import { TagFilterCombobox } from "@/components/common/TagFilterCombobox";
 const PAGE_SIZE = 20;
 
 function mapQueryStatus(value: string | null): "all" | PostStatus {
@@ -87,6 +91,8 @@ export function PostList() {
   >("all");
   const [departmentFilter, setDepartmentFilter] = React.useState("all");
   const [categoryFilter, setCategoryFilter] = React.useState("all");
+  const [topicFilter, setTopicFilter] = React.useState<string>("all");
+  const [tagFilter, setTagFilter] = React.useState<string>("all");
   const [search, setSearch] = React.useState("");
   const [deletingPost, setDeletingPost] = React.useState<Post | null>(null);
   const [bulkDeletingPosts, setBulkDeletingPosts] = React.useState<Post[]>([]);
@@ -114,8 +120,23 @@ export function PostList() {
       result.push(["category", "=", categoryFilter]);
     }
 
+    if (topicFilter !== "all") {
+      result.push(["topic", "=", topicFilter]);
+    }
+
+    if (tagFilter !== "all") {
+      result.push(["tag", "=", tagFilter]);
+    }
+
     return result;
-  }, [categoryFilter, departmentFilter, statusFilter, visibilityFilter]);
+  }, [
+    categoryFilter,
+    departmentFilter,
+    statusFilter,
+    topicFilter,
+    tagFilter,
+    visibilityFilter,
+  ]);
 
   const searchOrFilters = React.useMemo<Filter[]>(() => {
     const keyword = search.trim();
@@ -175,34 +196,17 @@ export function PostList() {
     searchOrFilters,
   );
 
-  const { data: departments } = useGetList<BlogDepartment>("blog_departments", {
-    fields: ["name", "department_name", "department_code"],
-    orderBy: { field: "department_name", order: "asc" },
-    limit: 200,
-  });
-
-  const { data: categories } = useGetList<Category>("categories", {
-    fields: ["name", "category", "department", "slug"],
-    filters:
-      departmentFilter !== "all"
-        ? [["department", "=", departmentFilter]]
-        : undefined,
-    orderBy: { field: "category", order: "asc" },
-    limit: 200,
-  });
-
+  const [departments, setDepartments] = React.useState<BlogDepartment[]>([]);
+  const [categories, setCategories] = React.useState<Category[]>([]);
   const { updateDoc: updatePost } = useUpdateDoc<Post>("posts");
   const { deleteDoc: deletePost } = useDeleteDoc("posts");
 
   const departmentLabelMap = React.useMemo(
-    () =>
-      new Map(
-        (departments ?? []).map((item) => [item.name, item.department_name]),
-      ),
+    () => new Map(departments.map((item) => [item.name, item.department_name])),
     [departments],
   );
   const categoryLabelMap = React.useMemo(
-    () => new Map((categories ?? []).map((item) => [item.name, item.category])),
+    () => new Map(categories.map((item) => [item.name, item.category])),
     [categories],
   );
 
@@ -419,7 +423,7 @@ export function PostList() {
       return;
     }
 
-    const categoryExists = (categories ?? []).some(
+    const categoryExists = categories.some(
       (item) => item.name === categoryFilter,
     );
     if (!categoryExists) {
@@ -460,8 +464,8 @@ export function PostList() {
         </Button>
       </div>
 
-      <div className="flex flex-col gap-3 lg:flex-row lg:flex-wrap">
-        <div className="relative w-full lg:max-w-sm">
+      <div className="flex gap-3">
+        <div className="relative w-full lg:w-1/2">
           <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder={copy.filters.searchPlaceholder}
@@ -470,67 +474,80 @@ export function PostList() {
             className="pl-9"
           />
         </div>
+        <div className="flex gap-3 lg:w-1/2">
+          <Select
+            value={statusFilter}
+            onValueChange={(value) =>
+              setStatusFilter(value as typeof statusFilter)
+            }
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder={copy.filters.status} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{copy.filters.allStatuses}</SelectItem>
+              <SelectItem value="Draft">{copy.status.Draft}</SelectItem>
+              <SelectItem value="Published">{copy.status.Published}</SelectItem>
+              <SelectItem value="Archived">{copy.status.Archived}</SelectItem>
+            </SelectContent>
+          </Select>
 
-        <Select
-          value={statusFilter}
-          onValueChange={(value) =>
-            setStatusFilter(value as typeof statusFilter)
-          }
-        >
-          <SelectTrigger className="w-full lg:w-[180px]">
-            <SelectValue placeholder={copy.filters.status} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{copy.filters.allStatuses}</SelectItem>
-            <SelectItem value="Draft">{copy.status.Draft}</SelectItem>
-            <SelectItem value="Published">{copy.status.Published}</SelectItem>
-            <SelectItem value="Archived">{copy.status.Archived}</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Select
-          value={visibilityFilter}
-          onValueChange={(value) =>
-            setVisibilityFilter(value as typeof visibilityFilter)
-          }
-        >
-          <SelectTrigger className="w-full lg:w-[180px]">
-            <SelectValue placeholder={copy.filters.visibility} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{copy.filters.allVisibility}</SelectItem>
-            <SelectItem value="Public">{copy.visibility.Public}</SelectItem>
-            <SelectItem value="Internal">{copy.visibility.Internal}</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
-          <SelectTrigger className="w-full lg:w-[220px]">
-            <SelectValue placeholder={copy.filters.department} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{copy.filters.allDepartments}</SelectItem>
-            {(departments ?? []).map((department) => (
-              <SelectItem key={department.name} value={department.name}>
-                {department.department_name}
+          <Select
+            value={visibilityFilter}
+            onValueChange={(value) =>
+              setVisibilityFilter(value as typeof visibilityFilter)
+            }
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder={copy.filters.visibility} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{copy.filters.allVisibility}</SelectItem>
+              <SelectItem value="Public">{copy.visibility.Public}</SelectItem>
+              <SelectItem value="Internal">
+                {copy.visibility.Internal}
               </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
 
-        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-          <SelectTrigger className="w-full lg:w-[220px]">
-            <SelectValue placeholder={copy.filters.category} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{copy.filters.allCategories}</SelectItem>
-            {(categories ?? []).map((category) => (
-              <SelectItem key={category.name} value={category.name}>
-                {category.category}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <div className="grid grid-cols-4 gap-3">
+        <DepartmentFilterCombobox
+          value={departmentFilter}
+          onChange={setDepartmentFilter}
+          onDepartmentsChange={setDepartments}
+          isLoading={isLoading}
+          placeholder={copy.filters.department}
+          allLabel={copy.filters.allDepartments}
+        />
+
+        <CategoryFilterCombobox
+          departmentValue={departmentFilter}
+          value={categoryFilter}
+          onChange={setCategoryFilter}
+          onCategoriesChange={setCategories}
+          isLoading={isLoading}
+          placeholder={copy.filters.category}
+          allLabel={copy.filters.allCategories}
+        />
+
+        <TopicFilterCombobox
+          departmentValue={departmentFilter}
+          value={topicFilter}
+          onChange={setTopicFilter}
+          isLoading={isLoading}
+          placeholder={copy.filters.topic}
+          allLabel={copy.filters.allTopics}
+        />
+
+        <TagFilterCombobox
+          value={tagFilter}
+          onChange={setTagFilter}
+          isLoading={isLoading}
+          placeholder={copy.filters.tag}
+          allLabel={copy.filters.allTags}
+        />
       </div>
 
       {Object.keys(rowSelection).length > 0 ? (
