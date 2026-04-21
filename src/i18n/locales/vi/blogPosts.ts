@@ -14,7 +14,7 @@ export const blogPosts = {
   creating: "Đang tạo...",
   save: "Lưu thay đổi",
   saving: "Đang lưu...",
-  stepCounter: "Bước {current}/3",
+  stepCounter: "Bước {current}/{total}",
   steps: {
     metadata: {
       title: "Thông tin bài viết",

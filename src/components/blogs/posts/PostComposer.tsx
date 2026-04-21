@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { notFound, useRouter } from "next/navigation";
-import { flushSync } from "react-dom";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
@@ -49,6 +48,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -74,6 +80,29 @@ import { AdminAccessDenied } from "@/components/layout/admin-access-denied";
 
 type StepNumber = 1 | 2 | 3;
 type FieldName = keyof PostFormValues | "topics" | "tags";
+type StepTitleKey = "metadata" | "content" | "review";
+type StepConfig = {
+  step: StepNumber;
+  titleKey: StepTitleKey;
+};
+type CategoryDraftField = "category" | "slug" | "description";
+type CategoryDraftValues = {
+  category: string;
+  slug: string;
+  description: string;
+};
+type TopicDraftField = "topic" | "slug" | "desc";
+type TopicDraftValues = {
+  topic: string;
+  slug: string;
+  desc: string;
+};
+type TagDraftField = "tag_name" | "slug" | "description";
+type TagDraftValues = {
+  tag_name: string;
+  slug: string;
+  description: string;
+};
 
 const INITIAL_FORM_STATE: PostFormValues = {
   title: "",
@@ -88,13 +117,33 @@ const INITIAL_FORM_STATE: PostFormValues = {
   content: "",
 };
 
-const STEPS: Array<{
-  step: StepNumber;
-  titleKey: "metadata" | "content" | "review";
-}> = [
+const INITIAL_CATEGORY_DRAFT: CategoryDraftValues = {
+  category: "",
+  slug: "",
+  description: "",
+};
+
+const INITIAL_TOPIC_DRAFT: TopicDraftValues = {
+  topic: "",
+  slug: "",
+  desc: "",
+};
+
+const INITIAL_TAG_DRAFT: TagDraftValues = {
+  tag_name: "",
+  slug: "",
+  description: "",
+};
+
+const CREATE_STEPS: StepConfig[] = [
   { step: 1, titleKey: "metadata" },
   { step: 2, titleKey: "content" },
   { step: 3, titleKey: "review" },
+];
+
+const EDIT_STEPS: StepConfig[] = [
+  { step: 1, titleKey: "metadata" },
+  { step: 2, titleKey: "content" },
 ];
 
 function getTrimmedLength(value: string): number {
@@ -139,10 +188,44 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
   const { locale, t } = useLanguage();
   const { currentUser, isLoading: isAuthLoading } = useAuth();
   const copy = t.blogPosts ?? getDictionary(locale).blogPosts;
+  const categoryCopy = t.blogCategories ?? getDictionary(locale).blogCategories;
+  const categoryFormCopy = categoryCopy.form;
+  const topicCopy = t.blogTopics ?? getDictionary(locale).blogTopics;
+  const topicFormCopy = topicCopy.form;
+  const tagCopy = t.blogTags ?? getDictionary(locale).blogTags;
+  const tagFormCopy = tagCopy.form;
   const statusLabels = copy.status;
   const visibilityLabels = copy.visibility;
   const [currentStep, setCurrentStep] = useState<StepNumber>(1);
   const [form, setForm] = useState<PostFormValues>(INITIAL_FORM_STATE);
+  const [createdCategoryOption, setCreatedCategoryOption] =
+    useState<SelectOption | null>(null);
+  const [createdTopicOptions, setCreatedTopicOptions] = useState<SelectOption[]>(
+    [],
+  );
+  const [createdTagOptions, setCreatedTagOptions] = useState<SelectOption[]>([]);
+  const [isCreateCategoryDialogOpen, setIsCreateCategoryDialogOpen] =
+    useState(false);
+  const [isCreateTopicDialogOpen, setIsCreateTopicDialogOpen] = useState(false);
+  const [isCreateTagDialogOpen, setIsCreateTagDialogOpen] = useState(false);
+  const [categoryDraft, setCategoryDraft] =
+    useState<CategoryDraftValues>(INITIAL_CATEGORY_DRAFT);
+  const [topicDraft, setTopicDraft] = useState<TopicDraftValues>(
+    INITIAL_TOPIC_DRAFT,
+  );
+  const [tagDraft, setTagDraft] = useState<TagDraftValues>(INITIAL_TAG_DRAFT);
+  const [categoryDraftErrors, setCategoryDraftErrors] = useState<
+    Partial<Record<CategoryDraftField, string>>
+  >({});
+  const [topicDraftErrors, setTopicDraftErrors] = useState<
+    Partial<Record<TopicDraftField, string>>
+  >({});
+  const [tagDraftErrors, setTagDraftErrors] = useState<
+    Partial<Record<TagDraftField, string>>
+  >({});
+  const [categorySlugEdited, setCategorySlugEdited] = useState(false);
+  const [topicSlugEdited, setTopicSlugEdited] = useState(false);
+  const [tagSlugEdited, setTagSlugEdited] = useState(false);
   const [selectedTopicIds, setSelectedTopicIds] = useState<string[]>([]);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [coverSource, setCoverSource] = useState<CoverSource>("url");
@@ -260,6 +343,9 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
   const createPost = useCreateDoc<Post>("posts");
   const createPostTopic = useCreateDoc<PostTopic>("post_topics");
   const createPostTag = useCreateDoc<PostTag>("post_tags");
+  const createCategory = useCreateDoc<Category>("categories");
+  const createTopic = useCreateDoc<Topic>("topics");
+  const createTag = useCreateDoc<Tag>("tags");
   const deletePostTopic = useDeleteDoc("post_topics");
   const deletePostTag = useDeleteDoc("post_tags");
   const updateFile = useUpdateDoc<PostFileDoc>("File");
@@ -269,14 +355,14 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
     () =>
       selectedDepartment
         ? {
-            value: selectedDepartment.name,
-            label: selectedDepartment.department_name,
-            description: selectedDepartment.department_code,
-            keywords: [
-              selectedDepartment.department_code,
-              selectedDepartment.description,
-            ].filter(Boolean),
-          }
+          value: selectedDepartment.name,
+          label: selectedDepartment.department_name,
+          description: selectedDepartment.department_code,
+          keywords: [
+            selectedDepartment.department_code,
+            selectedDepartment.description,
+          ].filter(Boolean),
+        }
         : null,
     [selectedDepartment],
   );
@@ -285,17 +371,34 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
     () =>
       selectedCategory
         ? {
-            value: selectedCategory.name,
-            label: getCategoryName(selectedCategory),
-            description: selectedCategory.slug || selectedCategory.description,
-            keywords: [
-              selectedCategory.slug,
-              selectedCategory.description,
-            ].filter(Boolean),
-          }
+          value: selectedCategory.name,
+          label: getCategoryName(selectedCategory),
+          description: selectedCategory.slug || selectedCategory.description,
+          keywords: [
+            selectedCategory.slug,
+            selectedCategory.description,
+          ].filter(Boolean),
+        }
         : null,
     [selectedCategory],
   );
+
+  const selectedDepartmentLabel =
+    selectedDepartment?.department_name ??
+    selectedDepartmentOption?.label ??
+    form.department;
+
+  const effectiveSelectedCategoryOption = useMemo<SelectOption | null>(() => {
+    if (selectedCategoryOption) {
+      return selectedCategoryOption;
+    }
+
+    if (createdCategoryOption?.value === form.category) {
+      return createdCategoryOption;
+    }
+
+    return null;
+  }, [createdCategoryOption, form.category, selectedCategoryOption]);
 
   const selectedTopicOptions = useMemo<SelectOption[]>(() => {
     const topicMap = new Map<string, SelectOption>(
@@ -316,6 +419,22 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
       .filter((option): option is SelectOption => Boolean(option));
   }, [selectedTopicIds, selectedTopicsData]);
 
+  const effectiveSelectedTopicOptions = useMemo(() => {
+    const optionMap = new Map<string, SelectOption>();
+
+    for (const option of createdTopicOptions) {
+      if (selectedTopicIds.includes(option.value)) {
+        optionMap.set(option.value, option);
+      }
+    }
+
+    for (const option of selectedTopicOptions) {
+      optionMap.set(option.value, option);
+    }
+
+    return Array.from(optionMap.values());
+  }, [createdTopicOptions, selectedTopicIds, selectedTopicOptions]);
+
   const selectedTagOptions = useMemo<SelectOption[]>(() => {
     const tagMap = new Map<string, SelectOption>(
       (selectedTagsData ?? []).map((tag) => {
@@ -334,6 +453,22 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
       .map((tagId) => tagMap.get(tagId))
       .filter((option): option is SelectOption => Boolean(option));
   }, [selectedTagIds, selectedTagsData]);
+
+  const effectiveSelectedTagOptions = useMemo(() => {
+    const optionMap = new Map<string, SelectOption>();
+
+    for (const option of createdTagOptions) {
+      if (selectedTagIds.includes(option.value)) {
+        optionMap.set(option.value, option);
+      }
+    }
+
+    for (const option of selectedTagOptions) {
+      optionMap.set(option.value, option);
+    }
+
+    return Array.from(optionMap.values());
+  }, [createdTagOptions, selectedTagIds, selectedTagOptions]);
 
   const selectedTopics = useMemo(() => {
     const topicMap = new Map(
@@ -365,34 +500,36 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
       return;
     }
 
-    flushSync(() => {
-      setForm({
-        title: existingPost.title ?? "",
-        department:
-          typeof existingPost.department === "string"
-            ? existingPost.department
-            : (existingPost.department?.name ?? ""),
-        category:
-          typeof existingPost.category === "string"
-            ? existingPost.category
-            : (existingPost.category?.name ?? ""),
-        slug: existingPost.slug ?? "",
-        thumb: existingPost.thumb ?? "",
-        thumb_desc: existingPost.thumb_desc ?? "",
-        excerpt: existingPost.excerpt ?? "",
-        status: existingPost.status ?? "Draft",
-        visibility: existingPost.visibility ?? "Public",
-        content: existingPost.content ?? "",
-      });
-      setSelectedTopicIds((existingPostTopics ?? []).map((item) => item.topic));
-      setSelectedTagIds((existingPostTags ?? []).map((item) => item.tag));
-      setCoverSource(existingCoverFile ? "upload" : "url");
-      setCoverFileMeta(existingCoverFile);
-      setFieldErrors({});
-      setCurrentStep(1);
-      setSlugEdited(Boolean(existingPost.slug?.trim()));
-      setHasInitializedEdit(true);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setForm({
+      title: existingPost.title ?? "",
+      department:
+        typeof existingPost.department === "string"
+          ? existingPost.department
+          : (existingPost.department?.name ?? ""),
+      category:
+        typeof existingPost.category === "string"
+          ? existingPost.category
+          : (existingPost.category?.name ?? ""),
+      slug: existingPost.slug ?? "",
+      thumb: existingPost.thumb ?? "",
+      thumb_desc: existingPost.thumb_desc ?? "",
+      excerpt: existingPost.excerpt ?? "",
+      status: existingPost.status ?? "Draft",
+      visibility: existingPost.visibility ?? "Public",
+      content: existingPost.content ?? "",
     });
+    setSelectedTopicIds((existingPostTopics ?? []).map((item) => item.topic));
+    setSelectedTagIds((existingPostTags ?? []).map((item) => item.tag));
+    setCoverSource(existingCoverFile ? "upload" : "url");
+    setCoverFileMeta(existingCoverFile);
+    setCreatedCategoryOption(null);
+    setCreatedTopicOptions([]);
+    setCreatedTagOptions([]);
+    setFieldErrors({});
+    setCurrentStep(1);
+    setSlugEdited(Boolean(existingPost.slug?.trim()));
+    setHasInitializedEdit(true);
   }, [
     existingCoverFile,
     existingPost,
@@ -432,12 +569,403 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
       if (!slugEdited && value.trim()) {
         const nextSlug = slugify(value);
         if (form.slug !== nextSlug) {
-          flushSync(() => updateField("slug", nextSlug));
+          updateField("slug", nextSlug);
         }
       }
     },
     [slugEdited, form.slug, updateField],
   );
+
+  const clearCategoryDraftError = useCallback((field: CategoryDraftField) => {
+    setCategoryDraftErrors((currentErrors) => {
+      if (!currentErrors[field]) {
+        return currentErrors;
+      }
+
+      const nextErrors = { ...currentErrors };
+      delete nextErrors[field];
+      return nextErrors;
+    });
+  }, []);
+
+  const openCreateCategoryDialog = useCallback(
+    (initialName = "") => {
+      if (!form.department) {
+        toast.error(copy.validation.departmentRequired);
+        return;
+      }
+
+      const normalizedName = initialName.trim();
+      setCategoryDraft({
+        category: normalizedName,
+        slug: normalizedName ? slugify(normalizedName) : "",
+        description: "",
+      });
+      setCategorySlugEdited(false);
+      setCategoryDraftErrors({});
+      setIsCreateCategoryDialogOpen(true);
+    },
+    [copy.validation.departmentRequired, form.department],
+  );
+
+  const handleCategoryDraftChange = useCallback(
+    <K extends keyof CategoryDraftValues>(
+      field: K,
+      value: CategoryDraftValues[K],
+    ) => {
+      setCategoryDraft((currentDraft) => ({ ...currentDraft, [field]: value }));
+      clearCategoryDraftError(field);
+    },
+    [clearCategoryDraftError],
+  );
+
+  const handleCategoryNameChange = useCallback(
+    (value: string) => {
+      handleCategoryDraftChange("category", value);
+      if (!categorySlugEdited) {
+        handleCategoryDraftChange("slug", slugify(value));
+      }
+    },
+    [categorySlugEdited, handleCategoryDraftChange],
+  );
+
+  function validateCategoryDraft() {
+    const nextErrors: Partial<Record<CategoryDraftField, string>> = {};
+    const nameLength = getTrimmedLength(categoryDraft.category);
+
+    if (!nameLength) {
+      nextErrors.category = categoryFormCopy.nameRequired;
+    } else if (nameLength < 2) {
+      nextErrors.category = categoryFormCopy.nameMin;
+    } else if (nameLength > 100) {
+      nextErrors.category = categoryFormCopy.nameMax;
+    }
+
+    if (
+      categoryDraft.slug.trim() &&
+      !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(categoryDraft.slug.trim())
+    ) {
+      nextErrors.slug = categoryFormCopy.slugPattern;
+    } else if (categoryDraft.slug.trim().length > 140) {
+      nextErrors.slug = categoryFormCopy.slugMax;
+    }
+
+    if (getTrimmedLength(categoryDraft.description) > 500) {
+      nextErrors.description = categoryFormCopy.descriptionMax;
+    }
+
+    setCategoryDraftErrors(nextErrors);
+    return {
+      isValid: Object.keys(nextErrors).length === 0,
+      firstError:
+        nextErrors.category ?? nextErrors.slug ?? nextErrors.description,
+    };
+  }
+
+  async function handleCreateCategory() {
+    if (!form.department) {
+      toast.error(copy.validation.departmentRequired);
+      return;
+    }
+
+    const { isValid, firstError } = validateCategoryDraft();
+
+    if (!isValid) {
+      toast.error(firstError ?? categoryFormCopy.createFailure);
+      return;
+    }
+
+    try {
+      const createdCategory = await createCategory.createDoc({
+        category: categoryDraft.category.trim(),
+        department: form.department,
+        description: categoryDraft.description.trim(),
+        slug: categoryDraft.slug.trim(),
+        is_active: 1,
+      });
+
+      const nextOption: SelectOption = {
+        value: createdCategory.name,
+        label: getCategoryName(createdCategory),
+        description:
+          createdCategory.slug || createdCategory.description || undefined,
+        keywords: [
+          createdCategory.slug,
+          createdCategory.description,
+        ].filter(Boolean),
+      };
+
+      setCreatedCategoryOption(nextOption);
+      updateField("category", createdCategory.name);
+      clearFieldError("category");
+      setCategoryDraft(INITIAL_CATEGORY_DRAFT);
+      setCategoryDraftErrors({});
+      setCategorySlugEdited(false);
+      setIsCreateCategoryDialogOpen(false);
+      toast.success(categoryFormCopy.createSuccess);
+    } catch (error) {
+      toast.error(
+        error instanceof Error && error.message
+          ? error.message
+          : categoryFormCopy.createFailure,
+      );
+    }
+  }
+
+  const clearTopicDraftError = useCallback((field: TopicDraftField) => {
+    setTopicDraftErrors((currentErrors) => {
+      if (!currentErrors[field]) {
+        return currentErrors;
+      }
+
+      const nextErrors = { ...currentErrors };
+      delete nextErrors[field];
+      return nextErrors;
+    });
+  }, []);
+
+  const openCreateTopicDialog = useCallback(
+    (initialName = "") => {
+      if (!form.department) {
+        toast.error(copy.validation.departmentRequired);
+        return;
+      }
+
+      const normalizedName = initialName.trim();
+      setTopicDraft({
+        topic: normalizedName,
+        slug: normalizedName ? slugify(normalizedName) : "",
+        desc: "",
+      });
+      setTopicSlugEdited(false);
+      setTopicDraftErrors({});
+      setIsCreateTopicDialogOpen(true);
+    },
+    [copy.validation.departmentRequired, form.department],
+  );
+
+  const handleTopicDraftChange = useCallback(
+    <K extends keyof TopicDraftValues>(field: K, value: TopicDraftValues[K]) => {
+      setTopicDraft((currentDraft) => ({ ...currentDraft, [field]: value }));
+      clearTopicDraftError(field);
+    },
+    [clearTopicDraftError],
+  );
+
+  const handleTopicNameChange = useCallback(
+    (value: string) => {
+      handleTopicDraftChange("topic", value);
+      if (!topicSlugEdited) {
+        handleTopicDraftChange("slug", slugify(value));
+      }
+    },
+    [handleTopicDraftChange, topicSlugEdited],
+  );
+
+  function validateTopicDraft() {
+    const nextErrors: Partial<Record<TopicDraftField, string>> = {};
+    const nameLength = getTrimmedLength(topicDraft.topic);
+
+    if (!nameLength) {
+      nextErrors.topic = topicFormCopy.nameRequired;
+    } else if (nameLength < 2) {
+      nextErrors.topic = topicFormCopy.nameMin;
+    } else if (nameLength > 100) {
+      nextErrors.topic = topicFormCopy.nameMax;
+    }
+
+    if (
+      topicDraft.slug.trim() &&
+      !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(topicDraft.slug.trim())
+    ) {
+      nextErrors.slug = topicFormCopy.slugPattern;
+    } else if (topicDraft.slug.trim().length > 140) {
+      nextErrors.slug = topicFormCopy.slugMax;
+    }
+
+    if (getTrimmedLength(topicDraft.desc) > 500) {
+      nextErrors.desc = topicFormCopy.descriptionMax;
+    }
+
+    setTopicDraftErrors(nextErrors);
+    return {
+      isValid: Object.keys(nextErrors).length === 0,
+      firstError: nextErrors.topic ?? nextErrors.slug ?? nextErrors.desc,
+    };
+  }
+
+  async function handleCreateTopic() {
+    if (!form.department) {
+      toast.error(copy.validation.departmentRequired);
+      return;
+    }
+
+    const { isValid, firstError } = validateTopicDraft();
+
+    if (!isValid) {
+      toast.error(firstError ?? topicFormCopy.createFailure);
+      return;
+    }
+
+    try {
+      const createdTopic = await createTopic.createDoc({
+        topic: topicDraft.topic.trim(),
+        department: form.department,
+        desc: topicDraft.desc.trim(),
+        slug: topicDraft.slug.trim(),
+        is_active: 1,
+      });
+
+      const nextOption: SelectOption = {
+        value: createdTopic.name,
+        label: createdTopic.topic,
+        description: createdTopic.slug || createdTopic.desc || undefined,
+        keywords: [createdTopic.slug, createdTopic.desc].filter(Boolean),
+      };
+
+      setCreatedTopicOptions((current) => [
+        ...current.filter((item) => item.value !== nextOption.value),
+        nextOption,
+      ]);
+      setSelectedTopicIds((current) =>
+        current.includes(createdTopic.name)
+          ? current
+          : [...current, createdTopic.name],
+      );
+      clearFieldError("topics");
+      setTopicDraft(INITIAL_TOPIC_DRAFT);
+      setTopicDraftErrors({});
+      setTopicSlugEdited(false);
+      setIsCreateTopicDialogOpen(false);
+      toast.success(topicFormCopy.createSuccess);
+    } catch (error) {
+      toast.error(
+        error instanceof Error && error.message
+          ? error.message
+          : topicFormCopy.createFailure,
+      );
+    }
+  }
+
+  const clearTagDraftError = useCallback((field: TagDraftField) => {
+    setTagDraftErrors((currentErrors) => {
+      if (!currentErrors[field]) {
+        return currentErrors;
+      }
+
+      const nextErrors = { ...currentErrors };
+      delete nextErrors[field];
+      return nextErrors;
+    });
+  }, []);
+
+  const openCreateTagDialog = useCallback((initialName = "") => {
+    const normalizedName = initialName.trim();
+    setTagDraft({
+      tag_name: normalizedName,
+      slug: normalizedName ? slugify(normalizedName) : "",
+      description: "",
+    });
+    setTagSlugEdited(false);
+    setTagDraftErrors({});
+    setIsCreateTagDialogOpen(true);
+  }, []);
+
+  const handleTagDraftChange = useCallback(
+    <K extends keyof TagDraftValues>(field: K, value: TagDraftValues[K]) => {
+      setTagDraft((currentDraft) => ({ ...currentDraft, [field]: value }));
+      clearTagDraftError(field);
+    },
+    [clearTagDraftError],
+  );
+
+  const handleTagNameChange = useCallback(
+    (value: string) => {
+      handleTagDraftChange("tag_name", value);
+      if (!tagSlugEdited) {
+        handleTagDraftChange("slug", slugify(value));
+      }
+    },
+    [handleTagDraftChange, tagSlugEdited],
+  );
+
+  function validateTagDraft() {
+    const nextErrors: Partial<Record<TagDraftField, string>> = {};
+    const nameLength = getTrimmedLength(tagDraft.tag_name);
+
+    if (!nameLength) {
+      nextErrors.tag_name = tagFormCopy.nameRequired;
+    } else if (nameLength < 2) {
+      nextErrors.tag_name = tagFormCopy.nameMin;
+    } else if (nameLength > 100) {
+      nextErrors.tag_name = tagFormCopy.nameMax;
+    }
+
+    if (
+      tagDraft.slug.trim() &&
+      !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(tagDraft.slug.trim())
+    ) {
+      nextErrors.slug = tagFormCopy.slugPattern;
+    } else if (tagDraft.slug.trim().length > 140) {
+      nextErrors.slug = tagFormCopy.slugMax;
+    }
+
+    if (getTrimmedLength(tagDraft.description) > 500) {
+      nextErrors.description = tagFormCopy.descriptionMax;
+    }
+
+    setTagDraftErrors(nextErrors);
+    return {
+      isValid: Object.keys(nextErrors).length === 0,
+      firstError:
+        nextErrors.tag_name ?? nextErrors.slug ?? nextErrors.description,
+    };
+  }
+
+  async function handleCreateTag() {
+    const { isValid, firstError } = validateTagDraft();
+
+    if (!isValid) {
+      toast.error(firstError ?? tagFormCopy.createFailure);
+      return;
+    }
+
+    try {
+      const createdTag = await createTag.createDoc({
+        tag_name: tagDraft.tag_name.trim(),
+        description: tagDraft.description.trim(),
+        slug: tagDraft.slug.trim(),
+        is_active: 1,
+      });
+
+      const nextOption: SelectOption = {
+        value: createdTag.name,
+        label: createdTag.tag_name,
+        description: createdTag.slug || createdTag.description || undefined,
+        keywords: [createdTag.slug, createdTag.description].filter(Boolean),
+      };
+
+      setCreatedTagOptions((current) => [
+        ...current.filter((item) => item.value !== nextOption.value),
+        nextOption,
+      ]);
+      setSelectedTagIds((current) =>
+        current.includes(createdTag.name) ? current : [...current, createdTag.name],
+      );
+      clearFieldError("tags");
+      setTagDraft(INITIAL_TAG_DRAFT);
+      setTagDraftErrors({});
+      setTagSlugEdited(false);
+      setIsCreateTagDialogOpen(false);
+      toast.success(tagFormCopy.createSuccess);
+    } catch (error) {
+      toast.error(
+        error instanceof Error && error.message
+          ? error.message
+          : tagFormCopy.createFailure,
+      );
+    }
+  }
 
   function applyValidationErrors(
     nextErrors: Partial<Record<FieldName, string>>,
@@ -726,6 +1254,11 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
   const pageDescription = isEditMode
     ? copy.editDescription
     : copy.createDescription;
+  const steps = isEditMode ? EDIT_STEPS : CREATE_STEPS;
+  const totalSteps = steps.length;
+  const stepCounterText = copy.stepCounter
+    .replace("{current}", String(currentStep))
+    .replace("{total}", String(totalSteps));
   const submitLabel = isSubmitting
     ? isEditMode
       ? copy.saving
@@ -773,8 +1306,13 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
             </Button>
           </div>
 
-          <div className="grid gap-2 md:grid-cols-3">
-            {STEPS.map((stepItem) => {
+          <div
+            className={cn(
+              "grid gap-2",
+              isEditMode ? "md:grid-cols-2" : "md:grid-cols-3",
+            )}
+          >
+            {steps.map((stepItem) => {
               const stepCopy = copy.steps[stepItem.titleKey];
               const isActive = currentStep === stepItem.step;
               const isCompleted = currentStep > stepItem.step;
@@ -793,9 +1331,9 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
                       className={cn(
                         "flex size-6 shrink-0 items-center justify-center rounded-full border text-xs font-semibold",
                         isActive &&
-                          "border-primary bg-primary text-primary-foreground",
+                        "border-primary bg-primary text-primary-foreground",
                         isCompleted &&
-                          "border-emerald-500 bg-emerald-500 text-white",
+                        "border-emerald-500 bg-emerald-500 text-white",
                       )}
                     >
                       {stepItem.step}
@@ -922,6 +1460,8 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
                     onChange={(value) => {
                       updateField("department", value);
                       updateField("category", "");
+                      setCreatedCategoryOption(null);
+                      setCreatedTopicOptions([]);
                       setSelectedTopicIds([]);
                       clearFieldError("department");
                       clearFieldError("category");
@@ -955,9 +1495,9 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
                     filters={
                       form.department
                         ? [
-                            ["is_active", "=", 1],
-                            ["department", "=", form.department],
-                          ]
+                          ["is_active", "=", 1],
+                          ["department", "=", form.department],
+                        ]
                         : undefined
                     }
                     searchFields={["category", "slug", "description"]}
@@ -967,6 +1507,9 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
                     keywordFields={["slug", "description"]}
                     onChange={(value) => {
                       updateField("category", value);
+                      if (createdCategoryOption?.value !== value) {
+                        setCreatedCategoryOption(null);
+                      }
                       clearFieldError("category");
                     }}
                     placeholder={
@@ -983,7 +1526,9 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
                     invalid={Boolean(fieldErrors.category)}
                     disabled={isSubmitting || !form.department}
                     enabled={!!form.department}
-                    selectedOption={selectedCategoryOption}
+                    selectedOption={effectiveSelectedCategoryOption}
+                    emptyActionLabel={categoryCopy.addCategory}
+                    onEmptyAction={openCreateCategoryDialog}
                   />
                 </div>
               </div>
@@ -1006,9 +1551,9 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
                     filters={
                       form.department
                         ? [
-                            ["is_active", "=", 1],
-                            ["department", "=", form.department],
-                          ]
+                          ["is_active", "=", 1],
+                          ["department", "=", form.department],
+                        ]
                         : undefined
                     }
                     searchFields={["topic", "slug", "desc"]}
@@ -1030,7 +1575,9 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
                     emptySelectionText={copy.previewSection.emptyTopics}
                     disabled={isSubmitting || !form.department}
                     enabled={!!form.department}
-                    selectedOptions={selectedTopicOptions}
+                    selectedOptions={effectiveSelectedTopicOptions}
+                    emptyActionLabel={topicCopy.addTopic}
+                    onEmptyAction={openCreateTopicDialog}
                   />
                 </div>
               </div>
@@ -1065,7 +1612,9 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
                     emptyText={copy.selector.noTag}
                     emptySelectionText={copy.previewSection.emptyTags}
                     disabled={isSubmitting}
-                    selectedOptions={selectedTagOptions}
+                    selectedOptions={effectiveSelectedTagOptions}
+                    emptyActionLabel={tagCopy.addTag}
+                    onEmptyAction={openCreateTagDialog}
                   />
                 </div>
               </div>
@@ -1186,22 +1735,24 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
             <CardDescription>{copy.steps.content.description}</CardDescription>
           </CardHeader>
 
-          <CardContent className="space-y-4">
-            <BlogContentComposer
-              id="post-content-editor"
-              value={form.content}
-              onChange={(value) => {
-                updateField("content", value);
-                clearFieldError("content");
-              }}
-              disabled={isSubmitting}
-              invalid={Boolean(fieldErrors.content)}
-            />
+          <CardContent className="grid grid-cols-3 space-y-4">
+            <div className="col-span-2">
+              <BlogContentComposer
+                id="post-content-editor"
+                value={form.content}
+                onChange={(value) => {
+                  updateField("content", value);
+                  clearFieldError("content");
+                }}
+                disabled={isSubmitting}
+                invalid={Boolean(fieldErrors.content)}
+              />
+            </div>
           </CardContent>
         </Card>
       ) : null}
 
-      {currentStep === 3 ? (
+      {!isEditMode && currentStep === 3 ? (
         <Card>
           <CardHeader>
             <CardTitle>{copy.previewSection.title}</CardTitle>
@@ -1314,7 +1865,7 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="text-sm text-muted-foreground">
-          {copy.stepCounter.replace("{current}", String(currentStep))}
+          {stepCounterText}
         </div>
 
         <div className="flex flex-wrap gap-2">
@@ -1341,16 +1892,26 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
               >
                 {copy.back}
               </Button>
-              <Button
-                type="button"
-                onClick={() => validateStepTwo() && setCurrentStep(3)}
-              >
-                {copy.preview}
-              </Button>
+              {isEditMode ? (
+                <Button
+                  type="button"
+                  onClick={handleSubmitPost}
+                  disabled={isSubmitting || isCoverBusy}
+                >
+                  {submitLabel}
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  onClick={() => validateStepTwo() && setCurrentStep(3)}
+                >
+                  {copy.preview}
+                </Button>
+              )}
             </>
           ) : null}
 
-          {currentStep === 3 ? (
+          {!isEditMode && currentStep === 3 ? (
             <>
               <Button
                 type="button"
@@ -1370,6 +1931,404 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
           ) : null}
         </div>
       </div>
+
+      <Dialog
+        open={isCreateCategoryDialogOpen}
+        onOpenChange={(nextOpen) => {
+          setIsCreateCategoryDialogOpen(nextOpen);
+          if (!nextOpen) {
+            setCategoryDraftErrors({});
+            setCategorySlugEdited(false);
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-[560px]">
+          <DialogHeader>
+            <DialogTitle>{categoryCopy.addCategoryTitle}</DialogTitle>
+            <DialogDescription>
+              {categoryCopy.addCategoryDescription}
+            </DialogDescription>
+          </DialogHeader>
+
+          <form
+            className="space-y-5"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void handleCreateCategory();
+            }}
+          >
+            <div className="space-y-2">
+              <Label>{categoryFormCopy.department}</Label>
+              <Input value={selectedDepartmentLabel} disabled />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="inline-category-name">
+                {categoryFormCopy.name}
+              </Label>
+              <Input
+                id="inline-category-name"
+                value={categoryDraft.category}
+                onChange={(event) => handleCategoryNameChange(event.target.value)}
+                placeholder={categoryFormCopy.namePlaceholder}
+                disabled={createCategory.loading}
+                aria-invalid={Boolean(categoryDraftErrors.category)}
+                className={cn(
+                  categoryDraftErrors.category && "border-destructive",
+                )}
+                autoFocus
+              />
+              {categoryDraftErrors.category ? (
+                <p className="text-sm text-destructive">
+                  {categoryDraftErrors.category}
+                </p>
+              ) : null}
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-3">
+                <Label htmlFor="inline-category-slug">{categoryFormCopy.slug}</Label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setCategorySlugEdited(true);
+                    handleCategoryDraftChange(
+                      "slug",
+                      slugify(categoryDraft.category),
+                    );
+                  }}
+                  disabled={!categoryDraft.category.trim() || createCategory.loading}
+                  className="h-7 text-xs"
+                >
+                  {categoryFormCopy.generateSlug}
+                </Button>
+              </div>
+              <Input
+                id="inline-category-slug"
+                value={categoryDraft.slug}
+                onChange={(event) => {
+                  setCategorySlugEdited(true);
+                  handleCategoryDraftChange(
+                    "slug",
+                    slugify(event.target.value),
+                  );
+                }}
+                placeholder={categoryFormCopy.slugPlaceholder}
+                disabled={createCategory.loading}
+                aria-invalid={Boolean(categoryDraftErrors.slug)}
+                className={cn(categoryDraftErrors.slug && "border-destructive")}
+              />
+              {categoryDraftErrors.slug ? (
+                <p className="text-sm text-destructive">
+                  {categoryDraftErrors.slug}
+                </p>
+              ) : null}
+              <p className="text-xs text-muted-foreground">
+                {categoryFormCopy.slugHelp}
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="inline-category-description">
+                {categoryFormCopy.description}
+              </Label>
+              <Textarea
+                id="inline-category-description"
+                rows={4}
+                value={categoryDraft.description}
+                onChange={(event) =>
+                  handleCategoryDraftChange("description", event.target.value)
+                }
+                placeholder={categoryFormCopy.descriptionPlaceholder}
+                disabled={createCategory.loading}
+                aria-invalid={Boolean(categoryDraftErrors.description)}
+                className={cn(
+                  categoryDraftErrors.description && "border-destructive",
+                )}
+              />
+              {categoryDraftErrors.description ? (
+                <p className="text-sm text-destructive">
+                  {categoryDraftErrors.description}
+                </p>
+              ) : null}
+              <p className="text-sm text-muted-foreground">
+                {getTrimmedLength(categoryDraft.description)}/500
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsCreateCategoryDialogOpen(false)}
+                disabled={createCategory.loading}
+              >
+                {categoryFormCopy.cancel}
+              </Button>
+              <Button type="submit" disabled={createCategory.loading}>
+                {categoryFormCopy.submitCreate}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={isCreateTopicDialogOpen}
+        onOpenChange={(nextOpen) => {
+          setIsCreateTopicDialogOpen(nextOpen);
+          if (!nextOpen) {
+            setTopicDraftErrors({});
+            setTopicSlugEdited(false);
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-[560px]">
+          <DialogHeader>
+            <DialogTitle>{topicCopy.addTopicTitle}</DialogTitle>
+            <DialogDescription>{topicCopy.addTopicDescription}</DialogDescription>
+          </DialogHeader>
+
+          <form
+            className="space-y-5"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void handleCreateTopic();
+            }}
+          >
+            <div className="space-y-2">
+              <Label>{topicFormCopy.department}</Label>
+              <Input value={selectedDepartmentLabel} disabled />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="inline-topic-name">{topicFormCopy.name}</Label>
+              <Input
+                id="inline-topic-name"
+                value={topicDraft.topic}
+                onChange={(event) => handleTopicNameChange(event.target.value)}
+                placeholder={topicFormCopy.namePlaceholder}
+                disabled={createTopic.loading}
+                aria-invalid={Boolean(topicDraftErrors.topic)}
+                className={cn(topicDraftErrors.topic && "border-destructive")}
+                autoFocus
+              />
+              {topicDraftErrors.topic ? (
+                <p className="text-sm text-destructive">
+                  {topicDraftErrors.topic}
+                </p>
+              ) : null}
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-3">
+                <Label htmlFor="inline-topic-slug">{topicFormCopy.slug}</Label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setTopicSlugEdited(true);
+                    handleTopicDraftChange("slug", slugify(topicDraft.topic));
+                  }}
+                  disabled={!topicDraft.topic.trim() || createTopic.loading}
+                  className="h-7 text-xs"
+                >
+                  {topicFormCopy.generateSlug}
+                </Button>
+              </div>
+              <Input
+                id="inline-topic-slug"
+                value={topicDraft.slug}
+                onChange={(event) => {
+                  setTopicSlugEdited(true);
+                  handleTopicDraftChange("slug", slugify(event.target.value));
+                }}
+                placeholder={topicFormCopy.slugPlaceholder}
+                disabled={createTopic.loading}
+                aria-invalid={Boolean(topicDraftErrors.slug)}
+                className={cn(topicDraftErrors.slug && "border-destructive")}
+              />
+              {topicDraftErrors.slug ? (
+                <p className="text-sm text-destructive">
+                  {topicDraftErrors.slug}
+                </p>
+              ) : null}
+              <p className="text-xs text-muted-foreground">
+                {topicFormCopy.slugHelp}
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="inline-topic-description">
+                {topicFormCopy.description}
+              </Label>
+              <Textarea
+                id="inline-topic-description"
+                rows={4}
+                value={topicDraft.desc}
+                onChange={(event) =>
+                  handleTopicDraftChange("desc", event.target.value)
+                }
+                placeholder={topicFormCopy.descriptionPlaceholder}
+                disabled={createTopic.loading}
+                aria-invalid={Boolean(topicDraftErrors.desc)}
+                className={cn(topicDraftErrors.desc && "border-destructive")}
+              />
+              {topicDraftErrors.desc ? (
+                <p className="text-sm text-destructive">
+                  {topicDraftErrors.desc}
+                </p>
+              ) : null}
+              <p className="text-sm text-muted-foreground">
+                {getTrimmedLength(topicDraft.desc)}/500
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsCreateTopicDialogOpen(false)}
+                disabled={createTopic.loading}
+              >
+                {topicFormCopy.cancel}
+              </Button>
+              <Button type="submit" disabled={createTopic.loading}>
+                {topicFormCopy.submitCreate}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={isCreateTagDialogOpen}
+        onOpenChange={(nextOpen) => {
+          setIsCreateTagDialogOpen(nextOpen);
+          if (!nextOpen) {
+            setTagDraftErrors({});
+            setTagSlugEdited(false);
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-[560px]">
+          <DialogHeader>
+            <DialogTitle>{tagCopy.addTagTitle}</DialogTitle>
+            <DialogDescription>{tagCopy.addTagDescription}</DialogDescription>
+          </DialogHeader>
+
+          <form
+            className="space-y-5"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void handleCreateTag();
+            }}
+          >
+            <div className="space-y-2">
+              <Label htmlFor="inline-tag-name">{tagFormCopy.name}</Label>
+              <Input
+                id="inline-tag-name"
+                value={tagDraft.tag_name}
+                onChange={(event) => handleTagNameChange(event.target.value)}
+                placeholder={tagFormCopy.namePlaceholder}
+                disabled={createTag.loading}
+                aria-invalid={Boolean(tagDraftErrors.tag_name)}
+                className={cn(tagDraftErrors.tag_name && "border-destructive")}
+                autoFocus
+              />
+              {tagDraftErrors.tag_name ? (
+                <p className="text-sm text-destructive">
+                  {tagDraftErrors.tag_name}
+                </p>
+              ) : null}
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-3">
+                <Label htmlFor="inline-tag-slug">{tagFormCopy.slug}</Label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setTagSlugEdited(true);
+                    handleTagDraftChange("slug", slugify(tagDraft.tag_name));
+                  }}
+                  disabled={!tagDraft.tag_name.trim() || createTag.loading}
+                  className="h-7 text-xs"
+                >
+                  {tagFormCopy.generateSlug}
+                </Button>
+              </div>
+              <Input
+                id="inline-tag-slug"
+                value={tagDraft.slug}
+                onChange={(event) => {
+                  setTagSlugEdited(true);
+                  handleTagDraftChange("slug", slugify(event.target.value));
+                }}
+                placeholder={tagFormCopy.slugPlaceholder}
+                disabled={createTag.loading}
+                aria-invalid={Boolean(tagDraftErrors.slug)}
+                className={cn(tagDraftErrors.slug && "border-destructive")}
+              />
+              {tagDraftErrors.slug ? (
+                <p className="text-sm text-destructive">
+                  {tagDraftErrors.slug}
+                </p>
+              ) : null}
+              <p className="text-xs text-muted-foreground">
+                {tagFormCopy.slugHelp}
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="inline-tag-description">
+                {tagFormCopy.description}
+              </Label>
+              <Textarea
+                id="inline-tag-description"
+                rows={4}
+                value={tagDraft.description}
+                onChange={(event) =>
+                  handleTagDraftChange("description", event.target.value)
+                }
+                placeholder={tagFormCopy.descriptionPlaceholder}
+                disabled={createTag.loading}
+                aria-invalid={Boolean(tagDraftErrors.description)}
+                className={cn(
+                  tagDraftErrors.description && "border-destructive",
+                )}
+              />
+              {tagDraftErrors.description ? (
+                <p className="text-sm text-destructive">
+                  {tagDraftErrors.description}
+                </p>
+              ) : null}
+              <p className="text-sm text-muted-foreground">
+                {getTrimmedLength(tagDraft.description)}/500
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsCreateTagDialogOpen(false)}
+                disabled={createTag.loading}
+              >
+                {tagFormCopy.cancel}
+              </Button>
+              <Button type="submit" disabled={createTag.loading}>
+                {tagFormCopy.submitCreate}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }
