@@ -8,7 +8,9 @@ export const blogTopics = {
   emptyTitle: "Không tìm thấy chủ đề nào",
   emptyDescription: "Thử thay đổi bộ lọc hoặc tạo mới",
   addTopicTitle: "Thêm chủ đề mới",
+  addTopicDescription: "Điền thông tin bên dưới để tạo chủ đề blog mới.",
   editTopicTitle: "Chỉnh sửa chủ đề",
+  editTopicDescription: "Cập nhật thông tin cho chủ đề blog này.",
   deleteTitle: "Xác nhận xóa",
   deleteDescriptionStart: "Bạn có chắc chắn muốn xóa chủ đề",
   deleteDescriptionEnd:

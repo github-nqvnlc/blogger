@@ -8,7 +8,9 @@ export const blogCategories = {
   emptyTitle: "Không tìm thấy danh mục nào",
   emptyDescription: "Thử thay đổi bộ lọc hoặc tạo mới",
   addCategoryTitle: "Thêm danh mục mới",
+  addCategoryDescription: "Điền thông tin bên dưới để tạo danh mục blog mới.",
   editCategoryTitle: "Chỉnh sửa danh mục",
+  editCategoryDescription: "Cập nhật thông tin cho danh mục blog này.",
   deleteTitle: "Xác nhận xóa",
   deleteDescriptionStart: "Bạn có chắc chắn muốn xóa danh mục",
   deleteDescriptionEnd:

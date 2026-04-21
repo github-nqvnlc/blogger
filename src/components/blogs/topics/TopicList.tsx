@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { flushSync } from "react-dom";
 import { useRouter } from "next/navigation";
 import {
   ColumnDef,
@@ -37,6 +36,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -274,18 +274,6 @@ export function TopicList() {
     ],
   );
 
-  const resetPagination = React.useCallback(() => {
-    setPagination((prev) =>
-      prev.pageIndex === 0 ? { ...prev } : { ...prev, pageIndex: 0 },
-    );
-  }, []);
-
-  React.useEffect(() => {
-    flushSync(() => {
-      resetPagination();
-    });
-  }, [apiFilters, departmentFilter, orderBy, resetPagination]);
-
   const statusCode = (error as { response?: { status?: number } } | null)
     ?.response?.status;
 
@@ -346,7 +334,12 @@ export function TopicList() {
 
           <DepartmentFilterCombobox
             value={departmentFilter}
-            onChange={setDepartmentFilter}
+            onChange={(v) => {
+              setDepartmentFilter(v);
+              setPagination((prev) =>
+                prev.pageIndex === 0 ? { ...prev } : { ...prev, pageIndex: 0 },
+              );
+            }}
             onDepartmentsChange={setDepartments}
             isLoading={isLoading}
             placeholder={copy.filterByDepartment}
@@ -380,9 +373,21 @@ export function TopicList() {
           isLoading={isLoading}
           totalCount={totalCount ?? 0}
           pagination={pagination}
-          onPaginationChange={setPagination}
+          onPaginationChange={(updater) => {
+            setPagination((prev) => {
+              const next =
+                typeof updater === "function" ? updater(prev) : updater;
+              if (next.pageIndex === 0) return next;
+              return { ...next, pageIndex: 0 };
+            });
+          }}
           sorting={sorting}
-          onSortingChange={setSorting}
+          onSortingChange={(updater) => {
+            setSorting(updater);
+            setPagination((prev) =>
+              prev.pageIndex === 0 ? { ...prev } : { ...prev, pageIndex: 0 },
+            );
+          }}
           rowSelection={rowSelection}
           onRowSelectionChange={setRowSelection}
           meta={columnMeta as unknown as Record<string, unknown>}
@@ -416,6 +421,9 @@ export function TopicList() {
             <DialogTitle>
               {editingTopic ? copy.editTopicTitle : copy.addTopicTitle}
             </DialogTitle>
+            <DialogDescription>
+              {editingTopic ? copy.editTopicDescription : copy.addTopicDescription}
+            </DialogDescription>
           </DialogHeader>
           <TopicForm
             topic={editingTopic}

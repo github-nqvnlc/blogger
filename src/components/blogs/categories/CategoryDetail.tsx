@@ -23,6 +23,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -318,6 +319,7 @@ export function CategoryDetail({ categoryId }: CategoryDetailProps) {
         <DialogContent className="max-w-xl">
           <DialogHeader>
             <DialogTitle>{t.blogCategories.editCategoryTitle}</DialogTitle>
+            <DialogDescription>{t.blogCategories.editCategoryDescription}</DialogDescription>
           </DialogHeader>
           <CategoryForm
             category={category}

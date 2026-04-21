@@ -23,6 +23,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -343,6 +344,7 @@ export function TopicDetail({ topicId }: TopicDetailProps) {
         <DialogContent className="max-w-xl">
           <DialogHeader>
             <DialogTitle>{t.blogTopics.editTopicTitle}</DialogTitle>
+            <DialogDescription>{t.blogTopics.editTopicDescription}</DialogDescription>
           </DialogHeader>
           <TopicForm
             topic={topic}

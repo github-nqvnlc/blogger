@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { flushSync } from "react-dom";
 import { useRouter } from "next/navigation";
 import {
   ColumnDef,
@@ -37,6 +36,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -281,18 +281,6 @@ export function CategoryList() {
     ],
   );
 
-  const resetPagination = React.useCallback(() => {
-    setPagination((prev) =>
-      prev.pageIndex === 0 ? { ...prev } : { ...prev, pageIndex: 0 },
-    );
-  }, []);
-
-  React.useEffect(() => {
-    flushSync(() => {
-      resetPagination();
-    });
-  }, [apiFilters, departmentFilter, orderBy, resetPagination]);
-
   const statusCode = (error as { response?: { status?: number } } | null)
     ?.response?.status;
 
@@ -341,7 +329,12 @@ export function CategoryList() {
 
           <Select
             value={statusFilter}
-            onValueChange={(v) => setStatusFilter(v as typeof statusFilter)}
+            onValueChange={(v) => {
+              setStatusFilter(v as typeof statusFilter);
+              setPagination((prev) =>
+                prev.pageIndex === 0 ? { ...prev } : { ...prev, pageIndex: 0 },
+              );
+            }}
           >
             <SelectTrigger className="w-full sm:w-[180px]">
               <SelectValue placeholder={t.common.status} />
@@ -355,7 +348,12 @@ export function CategoryList() {
 
           <DepartmentFilterCombobox
             value={departmentFilter}
-            onChange={setDepartmentFilter}
+            onChange={(v) => {
+              setDepartmentFilter(v);
+              setPagination((prev) =>
+                prev.pageIndex === 0 ? { ...prev } : { ...prev, pageIndex: 0 },
+              );
+            }}
             onDepartmentsChange={setDepartments}
             isLoading={isLoading}
             placeholder={copy.filterByDepartment}
@@ -389,9 +387,21 @@ export function CategoryList() {
           isLoading={isLoading}
           totalCount={totalCount ?? 0}
           pagination={pagination}
-          onPaginationChange={setPagination}
+          onPaginationChange={(updater) => {
+            setPagination((prev) => {
+              const next =
+                typeof updater === "function" ? updater(prev) : updater;
+              if (next.pageIndex === 0) return next;
+              return { ...next, pageIndex: 0 };
+            });
+          }}
           sorting={sorting}
-          onSortingChange={setSorting}
+          onSortingChange={(updater) => {
+            setSorting(updater);
+            setPagination((prev) =>
+              prev.pageIndex === 0 ? { ...prev } : { ...prev, pageIndex: 0 },
+            );
+          }}
           rowSelection={rowSelection}
           onRowSelectionChange={setRowSelection}
           meta={columnMeta as unknown as Record<string, unknown>}
@@ -425,6 +435,11 @@ export function CategoryList() {
             <DialogTitle>
               {editingCategory ? copy.editCategoryTitle : copy.addCategoryTitle}
             </DialogTitle>
+            <DialogDescription>
+              {editingCategory
+                ? copy.editCategoryDescription
+                : copy.addCategoryDescription}
+            </DialogDescription>
           </DialogHeader>
           <CategoryForm
             category={editingCategory}

@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { flushSync } from "react-dom";
 import { useRouter } from "next/navigation";
 import { useGetList, useDeleteDoc, useGetCount } from "@/hooks";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -28,6 +27,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -237,18 +237,6 @@ export function DepartmentList() {
     ],
   );
 
-  const resetPagination = React.useCallback(() => {
-    setPagination((prev) =>
-      prev.pageIndex === 0 ? { ...prev } : { ...prev, pageIndex: 0 },
-    );
-  }, []);
-
-  React.useEffect(() => {
-    flushSync(() => {
-      resetPagination();
-    });
-  }, [apiFilters, orderBy, resetPagination]);
-
   const statusCode = (error as { response?: { status?: number } } | null)
     ?.response?.status;
   const isForbidden = statusCode === 403;
@@ -298,7 +286,12 @@ export function DepartmentList() {
 
           <Select
             value={statusFilter}
-            onValueChange={(v) => setStatusFilter(v as typeof statusFilter)}
+            onValueChange={(v) => {
+              setStatusFilter(v as typeof statusFilter);
+              setPagination((prev) =>
+                prev.pageIndex === 0 ? { ...prev } : { ...prev, pageIndex: 0 },
+              );
+            }}
           >
             <SelectTrigger className="w-full sm:w-[180px]">
               <SelectValue placeholder={t.common.status} />
@@ -337,9 +330,21 @@ export function DepartmentList() {
           isLoading={isLoading}
           totalCount={totalCount ?? 0}
           pagination={pagination}
-          onPaginationChange={setPagination}
+          onPaginationChange={(updater) => {
+            setPagination((prev) => {
+              const next =
+                typeof updater === "function" ? updater(prev) : updater;
+              if (next.pageIndex === 0) return next;
+              return { ...next, pageIndex: 0 };
+            });
+          }}
           sorting={sorting}
-          onSortingChange={setSorting}
+          onSortingChange={(updater) => {
+            setSorting(updater);
+            setPagination((prev) =>
+              prev.pageIndex === 0 ? { ...prev } : { ...prev, pageIndex: 0 },
+            );
+          }}
           rowSelection={rowSelection}
           onRowSelectionChange={setRowSelection}
           meta={columnMeta}
@@ -375,6 +380,11 @@ export function DepartmentList() {
                 ? copy.editDepartmentTitle
                 : copy.addDepartmentTitle}
             </DialogTitle>
+            <DialogDescription>
+              {editingDepartment
+                ? copy.editDepartmentDescription
+                : copy.addDepartmentDescription}
+            </DialogDescription>
           </DialogHeader>
           <DepartmentForm
             department={editingDepartment}

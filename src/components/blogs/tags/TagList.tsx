@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { flushSync } from "react-dom";
 import { useRouter } from "next/navigation";
 import {
   ColumnDef,
@@ -37,6 +36,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -240,18 +240,6 @@ export function TagList() {
     ],
   );
 
-  const resetPagination = React.useCallback(() => {
-    setPagination((prev) =>
-      prev.pageIndex === 0 ? { ...prev } : { ...prev, pageIndex: 0 },
-    );
-  }, []);
-
-  React.useEffect(() => {
-    flushSync(() => {
-      resetPagination();
-    });
-  }, [apiFilters, orderBy, resetPagination]);
-
   const statusCode = (error as { response?: { status?: number } } | null)
     ?.response?.status;
 
@@ -337,9 +325,21 @@ export function TagList() {
           isLoading={isLoading}
           totalCount={totalCount ?? 0}
           pagination={pagination}
-          onPaginationChange={setPagination}
+          onPaginationChange={(updater) => {
+            setPagination((prev) => {
+              const next =
+                typeof updater === "function" ? updater(prev) : updater;
+              if (next.pageIndex === 0) return next;
+              return { ...next, pageIndex: 0 };
+            });
+          }}
           sorting={sorting}
-          onSortingChange={setSorting}
+          onSortingChange={(updater) => {
+            setSorting(updater);
+            setPagination((prev) =>
+              prev.pageIndex === 0 ? { ...prev } : { ...prev, pageIndex: 0 },
+            );
+          }}
           rowSelection={rowSelection}
           onRowSelectionChange={setRowSelection}
           meta={columnMeta as unknown as Record<string, unknown>}
@@ -373,6 +373,9 @@ export function TagList() {
             <DialogTitle>
               {editingTag ? copy.editTagTitle : copy.addTagTitle}
             </DialogTitle>
+            <DialogDescription>
+              {editingTag ? copy.editTagDescription : copy.addTagDescription}
+            </DialogDescription>
           </DialogHeader>
           <TagForm
             tag={editingTag}

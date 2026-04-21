@@ -23,6 +23,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -314,6 +315,7 @@ export function TagDetail({ tagId }: TagDetailProps) {
         <DialogContent className="max-w-xl">
           <DialogHeader>
             <DialogTitle>{t.blogTags.editTagTitle}</DialogTitle>
+            <DialogDescription>{t.blogTags.editTagDescription}</DialogDescription>
           </DialogHeader>
           <TagForm
             tag={tag}

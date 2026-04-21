@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -462,6 +463,7 @@ export function CategoryForm({
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>{t.blogDepartments.addDepartmentTitle}</DialogTitle>
+            <DialogDescription>{t.blogDepartments.addDepartmentDescription}</DialogDescription>
           </DialogHeader>
           <DepartmentForm
             department={null}
