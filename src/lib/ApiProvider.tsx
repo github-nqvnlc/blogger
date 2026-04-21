@@ -52,7 +52,7 @@ export function ApiProvider({
         <QueryClientProvider client={queryClient}>
           <LanguageProvider locale={locale} dictionary={dictionary}>
             {children}
-            <Toaster position="top-right" />
+            <Toaster position="top-center" />
           </LanguageProvider>
         </QueryClientProvider>
       </ApiContext.Provider>

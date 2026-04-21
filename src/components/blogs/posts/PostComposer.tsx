@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { notFound, useRouter } from "next/navigation";
+import { flushSync } from "react-dom";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
@@ -364,32 +365,34 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
       return;
     }
 
-    setForm({
-      title: existingPost.title ?? "",
-      department:
-        typeof existingPost.department === "string"
-          ? existingPost.department
-          : (existingPost.department?.name ?? ""),
-      category:
-        typeof existingPost.category === "string"
-          ? existingPost.category
-          : (existingPost.category?.name ?? ""),
-      slug: existingPost.slug ?? "",
-      thumb: existingPost.thumb ?? "",
-      thumb_desc: existingPost.thumb_desc ?? "",
-      excerpt: existingPost.excerpt ?? "",
-      status: existingPost.status ?? "Draft",
-      visibility: existingPost.visibility ?? "Public",
-      content: existingPost.content ?? "",
+    flushSync(() => {
+      setForm({
+        title: existingPost.title ?? "",
+        department:
+          typeof existingPost.department === "string"
+            ? existingPost.department
+            : (existingPost.department?.name ?? ""),
+        category:
+          typeof existingPost.category === "string"
+            ? existingPost.category
+            : (existingPost.category?.name ?? ""),
+        slug: existingPost.slug ?? "",
+        thumb: existingPost.thumb ?? "",
+        thumb_desc: existingPost.thumb_desc ?? "",
+        excerpt: existingPost.excerpt ?? "",
+        status: existingPost.status ?? "Draft",
+        visibility: existingPost.visibility ?? "Public",
+        content: existingPost.content ?? "",
+      });
+      setSelectedTopicIds((existingPostTopics ?? []).map((item) => item.topic));
+      setSelectedTagIds((existingPostTags ?? []).map((item) => item.tag));
+      setCoverSource(existingCoverFile ? "upload" : "url");
+      setCoverFileMeta(existingCoverFile);
+      setFieldErrors({});
+      setCurrentStep(1);
+      setSlugEdited(Boolean(existingPost.slug?.trim()));
+      setHasInitializedEdit(true);
     });
-    setSelectedTopicIds((existingPostTopics ?? []).map((item) => item.topic));
-    setSelectedTagIds((existingPostTags ?? []).map((item) => item.tag));
-    setCoverSource(existingCoverFile ? "upload" : "url");
-    setCoverFileMeta(existingCoverFile);
-    setFieldErrors({});
-    setCurrentStep(1);
-    setSlugEdited(Boolean(existingPost.slug?.trim()));
-    setHasInitializedEdit(true);
   }, [
     existingCoverFile,
     existingPost,
@@ -422,27 +425,19 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
     [clearFieldError],
   );
 
-  useEffect(() => {
-    if (slugEdited) {
-      return;
-    }
-
-    setForm((currentForm) => {
-      if (currentForm.slug.trim()) {
-        return currentForm;
+  // Auto-generate slug from title unless user manually edited it
+  const handleTitleChange = useCallback(
+    (value: string) => {
+      updateField("title", value);
+      if (!slugEdited && value.trim()) {
+        const nextSlug = slugify(value);
+        if (form.slug !== nextSlug) {
+          flushSync(() => updateField("slug", nextSlug));
+        }
       }
-
-      const nextSlug = slugify(currentForm.title);
-      if (currentForm.slug === nextSlug) {
-        return currentForm;
-      }
-
-      return {
-        ...currentForm,
-        slug: nextSlug,
-      };
-    });
-  }, [form.title, slugEdited]);
+    },
+    [slugEdited, form.slug, updateField],
+  );
 
   function applyValidationErrors(
     nextErrors: Partial<Record<FieldName, string>>,
@@ -836,7 +831,7 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
                 <Input
                   id="post-title"
                   value={form.title}
-                  onChange={(event) => updateField("title", event.target.value)}
+                  onChange={(event) => handleTitleChange(event.target.value)}
                   placeholder={copy.form.titlePlaceholder}
                   aria-invalid={Boolean(fieldErrors.title)}
                   className={cn(fieldErrors.title && "border-destructive")}
