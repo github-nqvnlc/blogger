@@ -453,7 +453,9 @@ export function TopicForm({ topic, onSuccess, onCancel }: TopicFormProps) {
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>{t.blogDepartments.addDepartmentTitle}</DialogTitle>
-            <DialogDescription>{t.blogDepartments.addDepartmentDescription}</DialogDescription>
+            <DialogDescription>
+              {t.blogDepartments.addDepartmentDescription}
+            </DialogDescription>
           </DialogHeader>
           <DepartmentForm
             department={null}

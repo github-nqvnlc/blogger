@@ -422,7 +422,9 @@ export function TopicList() {
               {editingTopic ? copy.editTopicTitle : copy.addTopicTitle}
             </DialogTitle>
             <DialogDescription>
-              {editingTopic ? copy.editTopicDescription : copy.addTopicDescription}
+              {editingTopic
+                ? copy.editTopicDescription
+                : copy.addTopicDescription}
             </DialogDescription>
           </DialogHeader>
           <TopicForm

@@ -200,19 +200,21 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
   const [form, setForm] = useState<PostFormValues>(INITIAL_FORM_STATE);
   const [createdCategoryOption, setCreatedCategoryOption] =
     useState<SelectOption | null>(null);
-  const [createdTopicOptions, setCreatedTopicOptions] = useState<SelectOption[]>(
+  const [createdTopicOptions, setCreatedTopicOptions] = useState<
+    SelectOption[]
+  >([]);
+  const [createdTagOptions, setCreatedTagOptions] = useState<SelectOption[]>(
     [],
   );
-  const [createdTagOptions, setCreatedTagOptions] = useState<SelectOption[]>([]);
   const [isCreateCategoryDialogOpen, setIsCreateCategoryDialogOpen] =
     useState(false);
   const [isCreateTopicDialogOpen, setIsCreateTopicDialogOpen] = useState(false);
   const [isCreateTagDialogOpen, setIsCreateTagDialogOpen] = useState(false);
-  const [categoryDraft, setCategoryDraft] =
-    useState<CategoryDraftValues>(INITIAL_CATEGORY_DRAFT);
-  const [topicDraft, setTopicDraft] = useState<TopicDraftValues>(
-    INITIAL_TOPIC_DRAFT,
+  const [categoryDraft, setCategoryDraft] = useState<CategoryDraftValues>(
+    INITIAL_CATEGORY_DRAFT,
   );
+  const [topicDraft, setTopicDraft] =
+    useState<TopicDraftValues>(INITIAL_TOPIC_DRAFT);
   const [tagDraft, setTagDraft] = useState<TagDraftValues>(INITIAL_TAG_DRAFT);
   const [categoryDraftErrors, setCategoryDraftErrors] = useState<
     Partial<Record<CategoryDraftField, string>>
@@ -355,14 +357,14 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
     () =>
       selectedDepartment
         ? {
-          value: selectedDepartment.name,
-          label: selectedDepartment.department_name,
-          description: selectedDepartment.department_code,
-          keywords: [
-            selectedDepartment.department_code,
-            selectedDepartment.description,
-          ].filter(Boolean),
-        }
+            value: selectedDepartment.name,
+            label: selectedDepartment.department_name,
+            description: selectedDepartment.department_code,
+            keywords: [
+              selectedDepartment.department_code,
+              selectedDepartment.description,
+            ].filter(Boolean),
+          }
         : null,
     [selectedDepartment],
   );
@@ -371,14 +373,14 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
     () =>
       selectedCategory
         ? {
-          value: selectedCategory.name,
-          label: getCategoryName(selectedCategory),
-          description: selectedCategory.slug || selectedCategory.description,
-          keywords: [
-            selectedCategory.slug,
-            selectedCategory.description,
-          ].filter(Boolean),
-        }
+            value: selectedCategory.name,
+            label: getCategoryName(selectedCategory),
+            description: selectedCategory.slug || selectedCategory.description,
+            keywords: [
+              selectedCategory.slug,
+              selectedCategory.description,
+            ].filter(Boolean),
+          }
         : null,
     [selectedCategory],
   );
@@ -689,10 +691,9 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
         label: getCategoryName(createdCategory),
         description:
           createdCategory.slug || createdCategory.description || undefined,
-        keywords: [
-          createdCategory.slug,
-          createdCategory.description,
-        ].filter(Boolean),
+        keywords: [createdCategory.slug, createdCategory.description].filter(
+          Boolean,
+        ),
       };
 
       setCreatedCategoryOption(nextOption);
@@ -745,7 +746,10 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
   );
 
   const handleTopicDraftChange = useCallback(
-    <K extends keyof TopicDraftValues>(field: K, value: TopicDraftValues[K]) => {
+    <K extends keyof TopicDraftValues>(
+      field: K,
+      value: TopicDraftValues[K],
+    ) => {
       setTopicDraft((currentDraft) => ({ ...currentDraft, [field]: value }));
       clearTopicDraftError(field);
     },
@@ -950,7 +954,9 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
         nextOption,
       ]);
       setSelectedTagIds((current) =>
-        current.includes(createdTag.name) ? current : [...current, createdTag.name],
+        current.includes(createdTag.name)
+          ? current
+          : [...current, createdTag.name],
       );
       clearFieldError("tags");
       setTagDraft(INITIAL_TAG_DRAFT);
@@ -1331,9 +1337,9 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
                       className={cn(
                         "flex size-6 shrink-0 items-center justify-center rounded-full border text-xs font-semibold",
                         isActive &&
-                        "border-primary bg-primary text-primary-foreground",
+                          "border-primary bg-primary text-primary-foreground",
                         isCompleted &&
-                        "border-emerald-500 bg-emerald-500 text-white",
+                          "border-emerald-500 bg-emerald-500 text-white",
                       )}
                     >
                       {stepItem.step}
@@ -1495,9 +1501,9 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
                     filters={
                       form.department
                         ? [
-                          ["is_active", "=", 1],
-                          ["department", "=", form.department],
-                        ]
+                            ["is_active", "=", 1],
+                            ["department", "=", form.department],
+                          ]
                         : undefined
                     }
                     searchFields={["category", "slug", "description"]}
@@ -1551,9 +1557,9 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
                     filters={
                       form.department
                         ? [
-                          ["is_active", "=", 1],
-                          ["department", "=", form.department],
-                        ]
+                            ["is_active", "=", 1],
+                            ["department", "=", form.department],
+                          ]
                         : undefined
                     }
                     searchFields={["topic", "slug", "desc"]}
@@ -1864,9 +1870,7 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
       ) : null}
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="text-sm text-muted-foreground">
-          {stepCounterText}
-        </div>
+        <div className="text-sm text-muted-foreground">{stepCounterText}</div>
 
         <div className="flex flex-wrap gap-2">
           {currentStep === 1 ? (
@@ -1969,7 +1973,9 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
               <Input
                 id="inline-category-name"
                 value={categoryDraft.category}
-                onChange={(event) => handleCategoryNameChange(event.target.value)}
+                onChange={(event) =>
+                  handleCategoryNameChange(event.target.value)
+                }
                 placeholder={categoryFormCopy.namePlaceholder}
                 disabled={createCategory.loading}
                 aria-invalid={Boolean(categoryDraftErrors.category)}
@@ -1987,7 +1993,9 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
 
             <div className="space-y-2">
               <div className="flex items-center justify-between gap-3">
-                <Label htmlFor="inline-category-slug">{categoryFormCopy.slug}</Label>
+                <Label htmlFor="inline-category-slug">
+                  {categoryFormCopy.slug}
+                </Label>
                 <Button
                   type="button"
                   variant="ghost"
@@ -1999,7 +2007,9 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
                       slugify(categoryDraft.category),
                     );
                   }}
-                  disabled={!categoryDraft.category.trim() || createCategory.loading}
+                  disabled={
+                    !categoryDraft.category.trim() || createCategory.loading
+                  }
                   className="h-7 text-xs"
                 >
                   {categoryFormCopy.generateSlug}
@@ -2088,7 +2098,9 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
         <DialogContent className="sm:max-w-[560px]">
           <DialogHeader>
             <DialogTitle>{topicCopy.addTopicTitle}</DialogTitle>
-            <DialogDescription>{topicCopy.addTopicDescription}</DialogDescription>
+            <DialogDescription>
+              {topicCopy.addTopicDescription}
+            </DialogDescription>
           </DialogHeader>
 
           <form

@@ -6,9 +6,11 @@ export const blogDepartments = {
   emptyTitle: "No content departments found",
   emptyDescription: "Try adjusting the filters or creating a new department",
   addDepartmentTitle: "Add a new content department",
-  addDepartmentDescription: "Fill in the information below to create a new content department.",
+  addDepartmentDescription:
+    "Fill in the information below to create a new content department.",
   editDepartmentTitle: "Edit content department",
-  editDepartmentDescription: "Update the information for this content department.",
+  editDepartmentDescription:
+    "Update the information for this content department.",
   deleteTitle: "Confirm deletion",
   deleteDescriptionStart:
     "Are you sure you want to delete the content department",

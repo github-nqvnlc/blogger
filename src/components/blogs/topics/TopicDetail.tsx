@@ -344,7 +344,9 @@ export function TopicDetail({ topicId }: TopicDetailProps) {
         <DialogContent className="max-w-xl">
           <DialogHeader>
             <DialogTitle>{t.blogTopics.editTopicTitle}</DialogTitle>
-            <DialogDescription>{t.blogTopics.editTopicDescription}</DialogDescription>
+            <DialogDescription>
+              {t.blogTopics.editTopicDescription}
+            </DialogDescription>
           </DialogHeader>
           <TopicForm
             topic={topic}

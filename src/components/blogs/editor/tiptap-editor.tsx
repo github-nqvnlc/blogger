@@ -70,6 +70,10 @@ type TextAlignValue = "left" | "center" | "right" | "justify";
 
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
+    fontFamily: {
+      setFontFamily: (fontFamily: string) => ReturnType;
+      unsetFontFamily: () => ReturnType;
+    };
     fontSize: {
       setFontSize: (fontSize: string) => ReturnType;
       unsetFontSize: () => ReturnType;
@@ -95,12 +99,20 @@ const DEFAULT_EDITOR_STATE = {
   canUndo: false,
   canRedo: false,
   textAlign: "left" as TextAlignValue,
+  fontFamily: "",
   fontSize: "",
   textColor: "",
   highlightColor: "",
   indent: 0,
 };
 
+const FONT_FAMILY_OPTIONS = [
+  { label: "Sans", value: "Arial, Helvetica, sans-serif" },
+  { label: "Serif", value: "Georgia, 'Times New Roman', serif" },
+  { label: "Monospace", value: "'Courier New', monospace" },
+  { label: "Verdana", value: "Verdana, Geneva, sans-serif" },
+  { label: "Trebuchet", value: "'Trebuchet MS', sans-serif" },
+];
 const FONT_SIZE_OPTIONS = ["12px", "14px", "16px", "18px", "24px", "32px"];
 const INDENT_NODE_TYPES = ["paragraph", "heading", "blockquote", "codeBlock"];
 const DEFAULT_TEXT_COLOR = "#111827";
@@ -167,6 +179,50 @@ const FontSize = Extension.create({
         ({ chain }) =>
           chain()
             .setMark("textStyle", { fontSize: null })
+            .removeEmptyTextStyle()
+            .run(),
+    };
+  },
+});
+
+const FontFamily = Extension.create({
+  name: "fontFamily",
+
+  addGlobalAttributes() {
+    return [
+      {
+        types: ["textStyle"],
+        attributes: {
+          fontFamily: {
+            default: null,
+            parseHTML: (element) =>
+              (element as HTMLElement).style.fontFamily || null,
+            renderHTML: (attributes) => {
+              if (!attributes.fontFamily) {
+                return {};
+              }
+
+              return {
+                style: `font-family: ${attributes.fontFamily}`,
+              };
+            },
+          },
+        },
+      },
+    ];
+  },
+
+  addCommands() {
+    return {
+      setFontFamily:
+        (fontFamily: string) =>
+        ({ chain }) =>
+          chain().setMark("textStyle", { fontFamily }).run(),
+      unsetFontFamily:
+        () =>
+        ({ chain }) =>
+          chain()
+            .setMark("textStyle", { fontFamily: null })
             .removeEmptyTextStyle()
             .run(),
     };
@@ -427,6 +483,7 @@ export function TiptapEditor({ value, onChange, disabled }: BlogEditorProps) {
       }),
       TextStyle,
       Color,
+      FontFamily,
       Highlight.configure({
         multicolor: true,
       }),
@@ -503,6 +560,7 @@ export function TiptapEditor({ value, onChange, disabled }: BlogEditorProps) {
           canUndo: currentEditor.can().undo(),
           canRedo: currentEditor.can().redo(),
           textAlign: (blockAttributes.textAlign as TextAlignValue) || "left",
+          fontFamily: (textStyleAttributes.fontFamily as string) || "",
           fontSize: (textStyleAttributes.fontSize as string) || "",
           textColor: (textStyleAttributes.color as string) || "",
           highlightColor: (highlightAttributes.color as string) || "",
@@ -854,6 +912,35 @@ export function TiptapEditor({ value, onChange, disabled }: BlogEditorProps) {
         >
           <IndentIncrease />
         </ToolbarButton>
+
+        <label className="flex items-center gap-2 rounded-md border bg-background px-2 py-1.5 text-sm text-muted-foreground">
+          <Type className="size-4" />
+          <select
+            className="max-w-28 bg-transparent text-sm outline-none"
+            disabled={!editor || disabled}
+            value={editorState.fontFamily}
+            onChange={(event) => {
+              const nextValue = event.target.value;
+              if (!editor) {
+                return;
+              }
+
+              if (!nextValue) {
+                editor.chain().focus().unsetFontFamily().run();
+                return;
+              }
+
+              editor.chain().focus().setFontFamily(nextValue).run();
+            }}
+          >
+            <option value="">{msg.toolbar.fontFamily}</option>
+            {FONT_FAMILY_OPTIONS.map((fontFamily) => (
+              <option key={fontFamily.value} value={fontFamily.value}>
+                {fontFamily.label}
+              </option>
+            ))}
+          </select>
+        </label>
 
         <label className="flex items-center gap-2 rounded-md border bg-background px-2 py-1.5 text-sm text-muted-foreground">
           <Type className="size-4" />

@@ -319,7 +319,9 @@ export function CategoryDetail({ categoryId }: CategoryDetailProps) {
         <DialogContent className="max-w-xl">
           <DialogHeader>
             <DialogTitle>{t.blogCategories.editCategoryTitle}</DialogTitle>
-            <DialogDescription>{t.blogCategories.editCategoryDescription}</DialogDescription>
+            <DialogDescription>
+              {t.blogCategories.editCategoryDescription}
+            </DialogDescription>
           </DialogHeader>
           <CategoryForm
             category={category}

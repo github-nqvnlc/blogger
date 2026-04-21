@@ -30,6 +30,7 @@ export const blogEditor = {
       alignJustify: "Justify",
       outdent: "Outdent",
       indent: "Indent",
+      fontFamily: "Font family",
       fontSize: "Font size",
       textColor: "Text color",
       highlightColor: "Highlight color",

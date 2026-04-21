@@ -315,7 +315,9 @@ export function TagDetail({ tagId }: TagDetailProps) {
         <DialogContent className="max-w-xl">
           <DialogHeader>
             <DialogTitle>{t.blogTags.editTagTitle}</DialogTitle>
-            <DialogDescription>{t.blogTags.editTagDescription}</DialogDescription>
+            <DialogDescription>
+              {t.blogTags.editTagDescription}
+            </DialogDescription>
           </DialogHeader>
           <TagForm
             tag={tag}
