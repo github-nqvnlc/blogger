@@ -16,6 +16,7 @@ import { blogTags } from "./blogTags";
 import { blogPosts } from "./blogPosts";
 import { blogEditor } from "./blogEditor";
 import { devDoc } from "./devDoc";
+import { users } from "./users";
 
 export const vi = {
   metadata,
@@ -36,4 +37,5 @@ export const vi = {
   blogPosts,
   blogEditor,
   devDoc,
+  users,
 } as const;
