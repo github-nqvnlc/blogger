@@ -71,6 +71,7 @@ export const blogTags = {
   },
   detail: {
     pageTitle: "Tag detail",
+    createdAt: "Created at",
     backToList: "Back to list",
     slug: "Slug",
     noSlug: "No slug",

@@ -93,5 +93,6 @@ export const blogCategories = {
     totalPosts: "Tổng bài viết",
     noPosts: "Không có bài viết",
     visibility: "Phạm vi hiển thị",
+    creation: "Ngày tạo",
   },
 } as const;

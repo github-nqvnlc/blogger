@@ -78,6 +78,7 @@ export const blogTopics = {
   detail: {
     pageTitle: "Topic detail",
     backToList: "Back to list",
+    createdAt: "Created at",
     department: "Department",
     slug: "Slug",
     noSlug: "No slug",

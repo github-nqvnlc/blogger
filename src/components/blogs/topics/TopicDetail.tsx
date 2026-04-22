@@ -27,9 +27,10 @@ import { Filter } from "@/types/hooks";
 import { formatDate } from "date-fns";
 import { ArrowLeft, BookOpen, FolderOpen, Newspaper, Pencil } from "lucide-react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, useRouter } from "next/navigation";
 import * as React from "react";
 import { TopicForm } from "./TopicForm";
+import { StatusBadge as StatusBadgePost } from "@/components/ui/badge-status";
 
 interface TopicDetailProps {
   topicId: string;
@@ -83,6 +84,7 @@ function EmptyState({ icon: Icon, label }: { icon: React.ElementType; label: str
 }
 
 export function TopicDetail({ topicId }: TopicDetailProps) {
+  const router = useRouter();
   const PAGE_SIZE = 5;
   const { locale, t } = useLanguage();
   const copy = t.blogTopics.detail;
@@ -195,10 +197,11 @@ export function TopicDetail({ topicId }: TopicDetailProps) {
             <span className="text-sm font-bold">{totalPosts}</span>
           </div>
         </div>
-        <div className="flex flex-row items-center gap-2">
+        <div className="flex flex-row items-center gap-3">
           <p className="text-sm font-semibold italic text-muted-foreground">
             {topic.creation ? formatDate(new Date(topic.creation), " HH:mm - dd/MM/yyyy") : "-"}
           </p>
+          <div className="h-4 w-px bg-border" />
           <StatusBadge
             active={topic.is_active === 1}
             activeLabel={t.blogTopics.table.active}
@@ -223,25 +226,31 @@ export function TopicDetail({ topicId }: TopicDetailProps) {
                 <TableHead>{copy.posts}</TableHead>
                 <TableHead>{common.status}</TableHead>
                 <TableHead>{copy.visibility}</TableHead>
+                <TableHead>{copy.createdAt}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {(loadedPosts ?? []).map((post: Post) => (
                 <TableRow key={post.name}>
-                  <TableCell>
-                    <div className="space-y-1">
-                      <p className="font-medium">{post.title}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {post.published_at
-                          ? formatDate(new Date(post.published_at), " HH:mm dd/MM/yyyy")
-                          : formatDate(new Date(post.creation ?? new Date()), " HH:mm dd/MM/yyyy")}
-                      </p>
-                    </div>
+                  <TableCell
+                    onClick={() =>
+                      router.push(buildLocalePath(locale, `/admin/posts/${post.name}`))
+                    }
+                    className="cursor-pointer"
+                  >
+                    <p className="font-medium">{post.title}</p>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline">{post.status}</Badge>
+                    <StatusBadgePost status={post.status} t={t} />
                   </TableCell>
                   <TableCell className="text-muted-foreground">{post.visibility}</TableCell>
+                  <TableCell>
+                    <p className="text-sm italic text-muted-foreground">
+                      {post.creation
+                        ? formatDate(new Date(post.creation), " HH:mm - dd/MM/yyyy")
+                        : "-"}
+                    </p>
+                  </TableCell>
                 </TableRow>
               ))}
               {isLoadingPostTopics && loadedPosts.length > 0 && (

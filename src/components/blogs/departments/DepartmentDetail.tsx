@@ -37,9 +37,10 @@ import {
   Pencil,
 } from "lucide-react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, useRouter } from "next/navigation";
 import * as React from "react";
 import { DepartmentForm } from "./DepartmentForm";
+import { StatusBadge as StatusBadgePost } from "@/components/ui/badge-status";
 
 interface DepartmentDetailProps {
   departmentId: string;
@@ -93,6 +94,7 @@ function EmptyState({ icon: Icon, label }: { icon: React.ElementType; label: str
 }
 
 export function DepartmentDetail({ departmentId }: DepartmentDetailProps) {
+  const router = useRouter();
   const PAGE_SIZE = 10;
   const { locale, t } = useLanguage();
   const copy = t.blogDepartments.detail;
@@ -211,12 +213,13 @@ export function DepartmentDetail({ departmentId }: DepartmentDetailProps) {
           </div>
         </div>
         <div>
-          <div className="flex flex-row items-center gap-2 ">
+          <div className="flex flex-row items-center gap-3 ">
             <p className="font-semibold text-sm italic text-muted-foreground">
               {department.creation
                 ? formatDate(new Date(department.creation), " HH:mm - dd/MM/yyyy")
                 : "-"}
             </p>
+            <div className="h-4 w-px bg-border" />
             <StatusBadge
               active={department.is_active === 1}
               activeLabel={t.blogDepartments.table.active}
@@ -233,19 +236,19 @@ export function DepartmentDetail({ departmentId }: DepartmentDetailProps) {
         <TabsList variant="line" className="w-full justify-start">
           <TabsTrigger
             value="categories"
-            className="data-[state=active]:text-primary font-bold after:bg-primary"
+            className="data-[state=active]:text-primary font-bold after:bg-primary cursor-pointer"
           >
             {copy.categories}
           </TabsTrigger>
           <TabsTrigger
             value="topics"
-            className="data-[state=active]:text-primary font-bold after:bg-primary"
+            className="data-[state=active]:text-primary font-bold after:bg-primary cursor-pointer"
           >
             {copy.topics}
           </TabsTrigger>
           <TabsTrigger
             value="posts"
-            className="data-[state=active]:text-primary font-bold after:bg-primary"
+            className="data-[state=active]:text-primary font-bold after:bg-primary cursor-pointer"
           >
             {copy.posts}
           </TabsTrigger>
@@ -272,7 +275,13 @@ export function DepartmentDetail({ departmentId }: DepartmentDetailProps) {
                 </TableHeader>
                 <TableBody>
                   {loadedCategories.map(category => (
-                    <TableRow key={category.name}>
+                    <TableRow
+                      key={category.name}
+                      onClick={() =>
+                        router.push(buildLocalePath(locale, `/admin/categories/${category.name}`))
+                      }
+                      className="cursor-pointer"
+                    >
                       <TableCell>
                         <div className="space-y-1">
                           <p className="font-medium">{category.category}</p>
@@ -324,7 +333,13 @@ export function DepartmentDetail({ departmentId }: DepartmentDetailProps) {
                 </TableHeader>
                 <TableBody>
                   {loadedTopics.map(topic => (
-                    <TableRow key={topic.name}>
+                    <TableRow
+                      key={topic.name}
+                      onClick={() =>
+                        router.push(buildLocalePath(locale, `/admin/topics/${topic.name}`))
+                      }
+                      className="cursor-pointer"
+                    >
                       <TableCell>
                         <div className="space-y-1">
                           <p className="font-medium">{topic.topic}</p>
@@ -372,22 +387,30 @@ export function DepartmentDetail({ departmentId }: DepartmentDetailProps) {
                     <TableHead>{copy.posts}</TableHead>
                     <TableHead>{copy.categories}</TableHead>
                     <TableHead>{common.status}</TableHead>
+                    <TableHead>{copy.createdAt}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {loadedPosts.map(post => (
                     <TableRow key={post.name}>
-                      <TableCell>
-                        <div className="space-y-1">
-                          <p className="font-medium">{post.title}</p>
-                          <p className="text-xs text-muted-foreground">{post.visibility}</p>
-                        </div>
+                      <TableCell
+                        onClick={() =>
+                          router.push(buildLocalePath(locale, `/admin/posts/${post.name}`))
+                        }
+                        className="cursor-pointer"
+                      >
+                        <p className="font-medium">{post.title}</p>
                       </TableCell>
                       <TableCell className="text-muted-foreground">
                         {typeof post.category === "string" ? post.category : post.category.category}
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline">{post.status}</Badge>
+                        <StatusBadgePost status={post.status} t={t} />
+                      </TableCell>
+                      <TableCell className="text-sm italic text-muted-foreground">
+                        {post.creation
+                          ? formatDate(new Date(post.creation), " HH:mm - dd/MM/yyyy")
+                          : "-"}
                       </TableCell>
                     </TableRow>
                   ))}

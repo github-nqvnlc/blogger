@@ -25,11 +25,12 @@ import { buildLocalePath } from "@/i18n";
 import { Post, PostTag, Tag } from "@/types/blogs";
 import { Filter } from "@/types/hooks";
 import { formatDate } from "date-fns";
-import { ArrowLeft, BookOpen, FolderOpen, Hash, Pencil } from "lucide-react";
+import { ArrowLeft, BookOpen, FolderOpen, Pencil } from "lucide-react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, useRouter } from "next/navigation";
 import * as React from "react";
 import { TagForm } from "./TagForm";
+import { StatusBadge as StatusBadgePost } from "@/components/ui/badge-status";
 
 interface TagDetailProps {
   tagId: string;
@@ -83,6 +84,7 @@ function EmptyState({ icon: Icon, label }: { icon: React.ElementType; label: str
 }
 
 export function TagDetail({ tagId }: TagDetailProps) {
+  const router = useRouter();
   const PAGE_SIZE = 5;
   const { locale, t } = useLanguage();
   const copy = t.blogTags.detail;
@@ -167,23 +169,16 @@ export function TagDetail({ tagId }: TagDetailProps) {
       </div>
 
       <div className="flex flex-wrap justify-between items-center gap-4 rounded-lg border px-4 py-3">
-        <div className="flex flex-wrap justify-between items-center gap-2">
-          <div className="flex items-center gap-2">
-            <BookOpen className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm font-medium">{copy.totalPosts}:</span>
-            <span className="text-sm font-bold">{totalPosts}</span>
-          </div>
-          <div className="h-4 w-px bg-border" />
-          <div className="flex items-center gap-2">
-            <Hash className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm font-medium">{copy.slug}:</span>
-            <span className="text-sm font-bold">{tag.slug || copy.noSlug}</span>
-          </div>
+        <div className="flex justify-between items-center gap-2">
+          <BookOpen className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm font-medium">{copy.totalPosts}:</span>
+          <span className="text-sm font-bold">{totalPosts}</span>
         </div>
-        <div className="flex flex-row items-center gap-2">
+        <div className="flex flex-row items-center gap-3">
           <p className="text-sm font-semibold italic text-muted-foreground">
             {tag.creation ? formatDate(new Date(tag.creation), " HH:mm - dd/MM/yyyy") : "-"}
           </p>
+          <div className="h-4 w-px bg-border" />
           <StatusBadge
             active={tag.is_active === 1}
             activeLabel={t.blogTags.table.active}
@@ -208,25 +203,31 @@ export function TagDetail({ tagId }: TagDetailProps) {
                 <TableHead>{copy.posts}</TableHead>
                 <TableHead>{common.status}</TableHead>
                 <TableHead>{copy.visibility}</TableHead>
+                <TableHead>{copy.createdAt}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {(loadedPosts ?? []).map((post: Post) => (
                 <TableRow key={post.name}>
-                  <TableCell>
-                    <div className="space-y-1">
-                      <p className="font-medium">{post.title}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {post.published_at
-                          ? formatDate(new Date(post.published_at), " HH:mm dd/MM/yyyy")
-                          : formatDate(new Date(post.creation ?? new Date()), " HH:mm dd/MM/yyyy")}
-                      </p>
-                    </div>
+                  <TableCell
+                    onClick={() =>
+                      router.push(buildLocalePath(locale, `/admin/posts/${post.name}`))
+                    }
+                    className="cursor-pointer"
+                  >
+                    <p className="font-medium">{post.title}</p>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline">{post.status}</Badge>
+                    <StatusBadgePost status={post.status} t={t} />
                   </TableCell>
                   <TableCell className="text-muted-foreground">{post.visibility}</TableCell>
+                  <TableCell>
+                    <p className="text-sm italic text-muted-foreground">
+                      {post.creation
+                        ? formatDate(new Date(post.creation), " HH:mm - dd/MM/yyyy")
+                        : "-"}
+                    </p>
+                  </TableCell>
                 </TableRow>
               ))}
               {isLoadingPostTags && loadedPosts.length > 0 && (
