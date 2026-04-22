@@ -40,7 +40,7 @@ export function LanguageProvider({
       document.cookie = `${LOCALE_COOKIE_KEY}=${lang}; path=/; max-age=31536000; samesite=lax`;
       router.push(nextPath);
     },
-    [pathname, router],
+    [pathname, router]
   );
 
   const value = useMemo<LanguageContextValue>(
@@ -51,14 +51,10 @@ export function LanguageProvider({
       t: dictionary,
       supportedLanguages: SUPPORTED_LANGUAGES,
     }),
-    [dictionary, locale, setLanguage],
+    [dictionary, locale, setLanguage]
   );
 
-  return (
-    <LanguageContext.Provider value={value}>
-      {children}
-    </LanguageContext.Provider>
-  );
+  return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
 }
 
 export function useLanguageContext() {

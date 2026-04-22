@@ -16,7 +16,7 @@ export function useDocSearch<T = Record<string, unknown>>(
   /** Từ khoá tìm kiếm */
   searchText: string,
   /** Options bổ sung: filters, limit, fields, debounceMs */
-  args?: UseDocSearchArgs<T>,
+  args?: UseDocSearchArgs<T>
 ) {
   const { debounceMs = 300, ...listArgs } = args ?? {};
   const [debouncedText, setDebouncedText] = useState(searchText);
@@ -37,10 +37,7 @@ export function useDocSearch<T = Record<string, unknown>>(
     ? [["name", "like", `%${debouncedText.trim()}%`]]
     : [];
 
-  const combinedFilters: Filter[] = [
-    ...searchFilter,
-    ...(listArgs.filters ?? []),
-  ];
+  const combinedFilters: Filter[] = [...searchFilter, ...(listArgs.filters ?? [])];
 
   const result = useGetList<T>(
     resource,
@@ -49,7 +46,7 @@ export function useDocSearch<T = Record<string, unknown>>(
       filters: combinedFilters.length ? combinedFilters : undefined,
     },
     // Không fetch khi searchText rỗng
-    { enabled: !!debouncedText.trim() },
+    { enabled: !!debouncedText.trim() }
   );
 
   return {

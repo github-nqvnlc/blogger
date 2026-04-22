@@ -42,12 +42,8 @@ function renderToastDescription(description: string): React.ReactNode {
       parts.push(description.slice(lastIndex, matchIndex));
     }
 
-    const relMatch = `${beforeHrefAttrs} ${afterHrefAttrs}`.match(
-      /\brel="([^"]*)"/i,
-    );
-    const targetMatch = `${beforeHrefAttrs} ${afterHrefAttrs}`.match(
-      /\btarget="([^"]*)"/i,
-    );
+    const relMatch = `${beforeHrefAttrs} ${afterHrefAttrs}`.match(/\brel="([^"]*)"/i);
+    const targetMatch = `${beforeHrefAttrs} ${afterHrefAttrs}`.match(/\btarget="([^"]*)"/i);
 
     parts.push(
       React.createElement(
@@ -59,8 +55,8 @@ function renderToastDescription(description: string): React.ReactNode {
           target: targetMatch?.[1] || "_blank",
           className: "font-medium underline underline-offset-4",
         },
-        label,
-      ),
+        label
+      )
     );
 
     lastIndex = matchIndex + fullMatch.length;
@@ -80,16 +76,11 @@ export function showCrudSuccess(title: string, description?: string) {
   });
 }
 
-export function showCrudError(
-  title: string,
-  error: unknown,
-  fallbackDescription: string,
-) {
+export function showCrudError(title: string, error: unknown, fallbackDescription: string) {
   const description = extractErrorMessage(error, fallbackDescription);
 
   toast.error(title, {
     description: renderToastDescription(description),
-    className:
-      "[&>svg]:!text-red-600 dark:[&>svg]:!text-red-400 [&>.bg-error]:!bg-red-500",
+    className: "[&>svg]:!text-red-600 dark:[&>svg]:!text-red-400 [&>.bg-error]:!bg-red-500",
   });
 }

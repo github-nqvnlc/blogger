@@ -15,8 +15,7 @@ export const blogCategories = {
     "This action cannot be undone and may affect posts that currently use this category.",
   deleteSuccess: "Category deleted successfully",
   deleteFailure: "Failed to delete category",
-  deleteFailureDescription:
-    "This category could not be deleted. Please try again.",
+  deleteFailureDescription: "This category could not be deleted. Please try again.",
   deleteSuccessDescriptionPrefix: "Deleted category",
   bulkDeleteTitle: "Confirm bulk deletion",
   bulkDeleteSuccessDescription: "Successfully deleted {count} categories",
@@ -42,11 +41,9 @@ export const blogCategories = {
     slugPlaceholder: "official-announcement",
     slugHelp: "Optional. Use lowercase letters, numbers, and hyphens only.",
     slugMax: "Slug must not exceed 140 characters",
-    slugPattern:
-      "Slug may only contain lowercase letters, numbers, and hyphens",
+    slugPattern: "Slug may only contain lowercase letters, numbers, and hyphens",
     description: "Description",
-    descriptionPlaceholder:
-      "Short description for this category (up to 500 characters)",
+    descriptionPlaceholder: "Short description for this category (up to 500 characters)",
     descriptionMax: "Description must not exceed 500 characters",
     activeStatus: "Active status",
     activeDescription: "This category can be used in posts",
@@ -84,8 +81,7 @@ export const blogCategories = {
     overviewDescription: "General information about this category",
     department: "Department",
     departmentOwner: "Department owner",
-    departmentOwnerDescription:
-      "This category belongs to the following content department",
+    departmentOwnerDescription: "This category belongs to the following content department",
     viewDepartment: "View department",
     slug: "Slug",
     noSlug: "No slug",

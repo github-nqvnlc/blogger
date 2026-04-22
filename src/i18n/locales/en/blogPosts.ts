@@ -4,8 +4,7 @@ export const blogPosts = {
   createDescription:
     "Compose a blog post step by step with metadata, content, and a final preview.",
   editTitle: "Edit post",
-  editDescription:
-    "Update the metadata, content, cover image, and post relations before saving.",
+  editDescription: "Update the metadata, content, cover image, and post relations before saving.",
   cancel: "Cancel",
   continue: "Continue",
   back: "Back",
@@ -59,8 +58,7 @@ export const blogPosts = {
     visibility: "Visibility",
     visibilityPlaceholder: "Select a visibility",
     topics: "Topics",
-    topicsDescription:
-      "Choose one or more topics from the selected content department.",
+    topicsDescription: "Choose one or more topics from the selected content department.",
     tags: "Tags",
     tagsDescription: "Choose one or more shared tags for this post.",
     content: "Content",
@@ -149,22 +147,18 @@ export const blogPosts = {
     excerptMax: "The excerpt must not exceed 500 characters.",
     statusRequired: "Please select the post status.",
     visibilityRequired: "Please select the post visibility.",
-    slugPattern:
-      "The slug may only contain lowercase letters, numbers, and hyphens.",
+    slugPattern: "The slug may only contain lowercase letters, numbers, and hyphens.",
     slugMax: "The slug must not exceed 140 characters.",
     contentRequired: "Please enter the post content.",
     generic: "Please review the entered information.",
-    coverBusy:
-      "The cover image is still uploading. Please wait until it finishes.",
+    coverBusy: "The cover image is still uploading. Please wait until it finishes.",
   },
   list: {
     title: "Manage posts",
-    description:
-      "Review published workflow, update content status, and manage post records.",
+    description: "Review published workflow, update content status, and manage post records.",
     addPost: "Add post",
     emptyTitle: "No posts found",
-    emptyDescription:
-      "Create a new post or adjust the current filters to see matching content.",
+    emptyDescription: "Create a new post or adjust the current filters to see matching content.",
     deleteConfirmDescription:
       'Delete the post "{title}" permanently? This action cannot be undone.',
     bulkDeleteConfirmDescription:
@@ -241,10 +235,8 @@ export const blogPosts = {
     bulkDeleteSuccessDescription: "{count} posts have been removed.",
     statusUpdateSuccess: "Status updated successfully",
     statusUpdateSuccessDescription: '"{title}" is now "{status}".',
-    bulkStatusUpdateSuccessDescription:
-      "{count} selected posts were moved to {status}.",
+    bulkStatusUpdateSuccessDescription: "{count} selected posts were moved to {status}.",
     statusUpdateFailure: "Unable to update post status",
-    statusUpdateFailureDescription:
-      "Please try updating the post status again.",
+    statusUpdateFailureDescription: "Please try updating the post status again.",
   },
 } as const;

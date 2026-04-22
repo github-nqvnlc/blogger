@@ -3,39 +3,17 @@
 import * as React from "react";
 import Link from "next/link";
 import { formatDate } from "date-fns";
-import {
-  ArrowLeft,
-  Archive,
-  Eye,
-  FolderTree,
-  Pencil,
-  Send,
-  Trash2,
-} from "lucide-react";
+import { ArrowLeft, Archive, Eye, FolderTree, Pencil, Send, Trash2 } from "lucide-react";
 import { notFound, useRouter } from "next/navigation";
 import { useDeleteDoc, useGetDoc, useGetList, useUpdateDoc } from "@/hooks";
 import { useLanguage } from "@/hooks/useLanguage";
 import { buildLocalePath } from "@/i18n";
-import {
-  BlogDepartment,
-  Category,
-  Post,
-  PostTag,
-  PostTopic,
-  Tag,
-  Topic,
-} from "@/types/blogs";
+import { BlogDepartment, Category, Post, PostTag, PostTopic, Tag, Topic } from "@/types/blogs";
 import { AdminAccessDenied } from "@/components/layout/admin-access-denied";
 import { RichContent } from "@/components/blogs/editor/rich-content";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   AlertDialog,
@@ -91,9 +69,7 @@ function StatCard({
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">
-          {title}
-        </CardTitle>
+        <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
         <Icon className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
       <CardContent>
@@ -126,17 +102,12 @@ export function PostDetail({ postId }: PostDetailProps) {
   } = useGetDoc<Post>("posts", postId);
 
   const departmentId =
-    typeof post?.department === "string"
-      ? post.department
-      : post?.department?.name;
-  const categoryId =
-    typeof post?.category === "string" ? post.category : post?.category?.name;
+    typeof post?.department === "string" ? post.department : post?.department?.name;
+  const categoryId = typeof post?.category === "string" ? post.category : post?.category?.name;
 
-  const { data: department } = useGetDoc<BlogDepartment>(
-    "blog_departments",
-    departmentId,
-    { enabled: !!departmentId },
-  );
+  const { data: department } = useGetDoc<BlogDepartment>("blog_departments", departmentId, {
+    enabled: !!departmentId,
+  });
   const { data: category } = useGetDoc<Category>("categories", categoryId, {
     enabled: !!categoryId,
   });
@@ -148,7 +119,7 @@ export function PostDetail({ postId }: PostDetailProps) {
       filters: [["post", "=", postId]],
       limit: 100,
     },
-    { enabled: !!post },
+    { enabled: !!post }
   );
 
   const { data: postTags } = useGetList<PostTag>(
@@ -158,16 +129,16 @@ export function PostDetail({ postId }: PostDetailProps) {
       filters: [["post", "=", postId]],
       limit: 100,
     },
-    { enabled: !!post },
+    { enabled: !!post }
   );
 
   const topicIds = React.useMemo(
-    () => Array.from(new Set((postTopics ?? []).map((item) => item.topic))),
-    [postTopics],
+    () => Array.from(new Set((postTopics ?? []).map(item => item.topic))),
+    [postTopics]
   );
   const tagIds = React.useMemo(
-    () => Array.from(new Set((postTags ?? []).map((item) => item.tag))),
-    [postTags],
+    () => Array.from(new Set((postTags ?? []).map(item => item.tag))),
+    [postTags]
   );
 
   const { data: topics } = useGetList<Topic>(
@@ -177,7 +148,7 @@ export function PostDetail({ postId }: PostDetailProps) {
       filters: topicIds.length ? [["name", "in", topicIds]] : undefined,
       limit: topicIds.length || 50,
     },
-    { enabled: topicIds.length > 0 },
+    { enabled: topicIds.length > 0 }
   );
 
   const { data: tags } = useGetList<Tag>(
@@ -187,7 +158,7 @@ export function PostDetail({ postId }: PostDetailProps) {
       filters: tagIds.length ? [["name", "in", tagIds]] : undefined,
       limit: tagIds.length || 50,
     },
-    { enabled: tagIds.length > 0 },
+    { enabled: tagIds.length > 0 }
   );
 
   const { updateDoc: updatePost } = useUpdateDoc<Post>("posts");
@@ -209,18 +180,18 @@ export function PostDetail({ postId }: PostDetailProps) {
           t.blogPosts.toast.statusUpdateSuccess,
           t.blogPosts.toast.statusUpdateSuccessDescription
             .replace("{title}", post.title)
-            .replace("{status}", t.blogPosts.status[nextStatus]),
+            .replace("{status}", t.blogPosts.status[nextStatus])
         );
         refetchPost();
       } catch (err) {
         showCrudError(
           t.blogPosts.toast.statusUpdateFailure,
           err,
-          t.blogPosts.toast.statusUpdateFailureDescription,
+          t.blogPosts.toast.statusUpdateFailureDescription
         );
       }
     },
-    [post, refetchPost, t.blogPosts.status, t.blogPosts.toast, updatePost],
+    [post, refetchPost, t.blogPosts.status, t.blogPosts.toast, updatePost]
   );
 
   const handleDelete = React.useCallback(async () => {
@@ -230,28 +201,22 @@ export function PostDetail({ postId }: PostDetailProps) {
       await deletePost(post.name);
       showCrudSuccess(
         t.blogPosts.toast.deleteSuccess,
-        t.blogPosts.toast.deleteSuccessDescription.replace(
-          "{title}",
-          post.title,
-        ),
+        t.blogPosts.toast.deleteSuccessDescription.replace("{title}", post.title)
       );
       router.push(buildLocalePath(locale, "/admin/posts"));
     } catch (err) {
       showCrudError(
         t.blogPosts.toast.deleteFailure,
         err,
-        t.blogPosts.toast.deleteFailureDescription,
+        t.blogPosts.toast.deleteFailureDescription
       );
     }
   }, [deletePost, locale, post, router, t.blogPosts.toast]);
 
-  const statusCode = (postError as { response?: { status?: number } } | null)
-    ?.response?.status;
+  const statusCode = (postError as { response?: { status?: number } } | null)?.response?.status;
 
   if (statusCode === 403) {
-    return (
-      <AdminAccessDenied description={t.errors.postAccessDeniedDescription} />
-    );
+    return <AdminAccessDenied description={t.errors.postAccessDeniedDescription} />;
   }
 
   if (isLoadingPost) {
@@ -263,19 +228,13 @@ export function PostDetail({ postId }: PostDetailProps) {
   }
 
   const coverSrc =
-    post.thumb && !post.thumb.startsWith("http")
-      ? `${getBaseUrl()}${post.thumb}`
-      : post.thumb;
+    post.thumb && !post.thumb.startsWith("http") ? `${getBaseUrl()}${post.thumb}` : post.thumb;
   const departmentName =
     department?.department_name ??
-    (typeof post.department === "string"
-      ? post.department
-      : post.department?.department_name);
+    (typeof post.department === "string" ? post.department : post.department?.department_name);
   const categoryName =
     category?.category ??
-    (typeof post.category === "string"
-      ? post.category
-      : post.category?.category);
+    (typeof post.category === "string" ? post.category : post.category?.category);
 
   return (
     <div className="space-y-6">
@@ -289,69 +248,42 @@ export function PostDetail({ postId }: PostDetailProps) {
               </Link>
             </Button>
             <div className="space-y-2">
-              <h1 className="text-3xl font-bold tracking-tight">
-                {post.title}
-              </h1>
+              <h1 className="text-3xl font-bold tracking-tight">{post.title}</h1>
               <div className="flex flex-wrap items-center gap-2">
-                <Badge>
-                  {formatPostStatusLabel(post.status, t.blogPosts.status)}
-                </Badge>
+                <Badge>{formatPostStatusLabel(post.status, t.blogPosts.status)}</Badge>
                 <Badge variant="secondary">
-                  {formatPostVisibilityLabel(
-                    post.visibility,
-                    t.blogPosts.visibility,
-                  )}
+                  {formatPostVisibilityLabel(post.visibility, t.blogPosts.visibility)}
                 </Badge>
-                {post.slug ? (
-                  <Badge variant="outline">/{post.slug}</Badge>
-                ) : null}
+                {post.slug ? <Badge variant="outline">/{post.slug}</Badge> : null}
               </div>
             </div>
           </div>
 
           <div className="flex flex-wrap gap-2">
             <Button asChild variant="outline" size="sm">
-              <Link
-                href={buildLocalePath(locale, `/admin/posts/${post.name}/edit`)}
-              >
+              <Link href={buildLocalePath(locale, `/admin/posts/${post.name}/edit`)}>
                 <Pencil className="mr-2 h-4 w-4" />
                 {t.blogPosts.actions.edit}
               </Link>
             </Button>
             {post.status !== "Published" ? (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => handleStatusUpdate("Published")}
-              >
+              <Button size="sm" variant="outline" onClick={() => handleStatusUpdate("Published")}>
                 <Send className="mr-2 h-4 w-4" />
                 {t.blogPosts.actions.publish}
               </Button>
             ) : null}
             {post.status !== "Draft" ? (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => handleStatusUpdate("Draft")}
-              >
+              <Button size="sm" variant="outline" onClick={() => handleStatusUpdate("Draft")}>
                 {t.blogPosts.actions.moveToDraft}
               </Button>
             ) : null}
             {post.status !== "Archived" ? (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => handleStatusUpdate("Archived")}
-              >
+              <Button size="sm" variant="outline" onClick={() => handleStatusUpdate("Archived")}>
                 <Archive className="mr-2 h-4 w-4" />
                 {t.blogPosts.actions.archive}
               </Button>
             ) : null}
-            <Button
-              size="sm"
-              variant="destructive"
-              onClick={() => setDeleteDialogOpen(true)}
-            >
+            <Button size="sm" variant="destructive" onClick={() => setDeleteDialogOpen(true)}>
               <Trash2 className="mr-2 h-4 w-4" />
               {t.blogPosts.actions.delete}
             </Button>
@@ -390,9 +322,7 @@ export function PostDetail({ postId }: PostDetailProps) {
           <Card>
             <CardHeader>
               <CardTitle>{copy.summary}</CardTitle>
-              <CardDescription>
-                {post.excerpt || copy.noExcerpt}
-              </CardDescription>
+              <CardDescription>{post.excerpt || copy.noExcerpt}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-3">
@@ -400,7 +330,7 @@ export function PostDetail({ postId }: PostDetailProps) {
                   <p className="text-sm font-medium">{copy.topics}</p>
                   <div className="flex flex-wrap gap-2">
                     {topics?.length ? (
-                      topics.map((topic) => (
+                      topics.map(topic => (
                         <Badge key={topic.name} variant="outline">
                           {topic.topic}
                         </Badge>
@@ -415,7 +345,7 @@ export function PostDetail({ postId }: PostDetailProps) {
                   <p className="text-sm font-medium">{copy.tags}</p>
                   <div className="flex flex-wrap gap-2">
                     {tags?.length ? (
-                      tags.map((tag) => (
+                      tags.map(tag => (
                         <Badge key={tag.name} variant="outline">
                           {tag.tag_name}
                         </Badge>
@@ -448,10 +378,7 @@ export function PostDetail({ postId }: PostDetailProps) {
               icon={FolderTree}
               href={
                 departmentId
-                  ? buildLocalePath(
-                      locale,
-                      `/admin/blog-departments/${departmentId}`,
-                    )
+                  ? buildLocalePath(locale, `/admin/blog-departments/${departmentId}`)
                   : undefined
               }
             />
@@ -460,16 +387,10 @@ export function PostDetail({ postId }: PostDetailProps) {
               value={categoryName ?? copy.noCategory}
               icon={FolderTree}
               href={
-                categoryId
-                  ? buildLocalePath(locale, `/admin/categories/${categoryId}`)
-                  : undefined
+                categoryId ? buildLocalePath(locale, `/admin/categories/${categoryId}`) : undefined
               }
             />
-            <StatCard
-              title={copy.views}
-              value={post.view_count ?? 0}
-              icon={Eye}
-            />
+            <StatCard title={copy.views} value={post.view_count ?? 0} icon={Eye} />
           </div>
         </div>
       </div>
@@ -484,9 +405,7 @@ export function PostDetail({ postId }: PostDetailProps) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{common.cancel}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>
-              {common.delete}
-            </AlertDialogAction>
+            <AlertDialogAction onClick={handleDelete}>{common.delete}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

@@ -2,15 +2,7 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import {
-  Archive,
-  Eye,
-  MoreHorizontal,
-  Pencil,
-  Send,
-  SquarePen,
-  Trash2,
-} from "lucide-react";
+import { Archive, Eye, MoreHorizontal, Pencil, Send, SquarePen, Trash2 } from "lucide-react";
 import { formatDate } from "date-fns";
 import { Post } from "@/types/blogs";
 import { Badge } from "@/components/ui/badge";
@@ -26,15 +18,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { Dictionary } from "@/i18n";
 import { cn, getBaseUrl } from "@/lib/utils";
-import {
-  formatPostStatusLabel,
-  formatPostVisibilityLabel,
-} from "@/lib/blog-posts";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { formatPostStatusLabel, formatPostVisibilityLabel } from "@/lib/blog-posts";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 export interface PostColumnMeta {
   onView: (post: Post) => void;
@@ -75,7 +60,7 @@ export function getPostColumns(t: Dictionary): ColumnDef<Post, unknown>[] {
                 ? "indeterminate"
                 : false
           }
-          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          onCheckedChange={value => table.toggleAllPageRowsSelected(!!value)}
           aria-label="Select all"
           className="translate-y-[2px]"
         />
@@ -83,7 +68,7 @@ export function getPostColumns(t: Dictionary): ColumnDef<Post, unknown>[] {
       cell: ({ row }) => (
         <Checkbox
           checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          onCheckedChange={value => row.toggleSelected(!!value)}
           aria-label="Select row"
           className="translate-y-[2px]"
         />
@@ -94,20 +79,14 @@ export function getPostColumns(t: Dictionary): ColumnDef<Post, unknown>[] {
     {
       accessorKey: "thumb",
       header: ({ column }) => (
-        <DataTableColumnHeader
-          column={column}
-          title={t.blogPosts.table.thumb}
-        />
+        <DataTableColumnHeader column={column} title={t.blogPosts.table.thumb} />
       ),
       cell: ({ row, table }) => {
         const meta = table.options.meta as PostColumnMeta;
         const post = row.original;
 
         return (
-          <div
-            className="max-w-[360px] cursor-pointer space-y-1"
-            onClick={() => meta.onView(post)}
-          >
+          <div className="max-w-[360px] cursor-pointer space-y-1" onClick={() => meta.onView(post)}>
             <img
               src={`${getBaseUrl()}${post.thumb}`}
               alt={post.title}
@@ -121,10 +100,7 @@ export function getPostColumns(t: Dictionary): ColumnDef<Post, unknown>[] {
     {
       accessorKey: "title",
       header: ({ column }) => (
-        <DataTableColumnHeader
-          column={column}
-          title={t.blogPosts.table.title}
-        />
+        <DataTableColumnHeader column={column} title={t.blogPosts.table.title} />
       ),
       cell: ({ row, table }) => {
         const meta = table.options.meta as PostColumnMeta;
@@ -154,44 +130,29 @@ export function getPostColumns(t: Dictionary): ColumnDef<Post, unknown>[] {
     {
       accessorKey: "department",
       header: ({ column }) => (
-        <DataTableColumnHeader
-          column={column}
-          title={t.blogPosts.table.department}
-        />
+        <DataTableColumnHeader column={column} title={t.blogPosts.table.department} />
       ),
       cell: ({ row, table }) => {
         const meta = table.options.meta as PostColumnMeta;
-        return (
-          <Badge variant="outline">
-            {meta.getDepartmentLabel(row.original)}
-          </Badge>
-        );
+        return <Badge variant="outline">{meta.getDepartmentLabel(row.original)}</Badge>;
       },
       enableSorting: true,
     },
     {
       accessorKey: "category",
       header: ({ column }) => (
-        <DataTableColumnHeader
-          column={column}
-          title={t.blogPosts.table.category}
-        />
+        <DataTableColumnHeader column={column} title={t.blogPosts.table.category} />
       ),
       cell: ({ row, table }) => {
         const meta = table.options.meta as PostColumnMeta;
-        return (
-          <Badge variant="outline">{meta.getCategoryLabel(row.original)}</Badge>
-        );
+        return <Badge variant="outline">{meta.getCategoryLabel(row.original)}</Badge>;
       },
       enableSorting: true,
     },
     {
       accessorKey: "status",
       header: ({ column }) => (
-        <DataTableColumnHeader
-          column={column}
-          title={t.blogPosts.table.status}
-        />
+        <DataTableColumnHeader column={column} title={t.blogPosts.table.status} />
       ),
       cell: ({ row }) => <StatusBadge post={row.original} t={t} />,
       enableSorting: true,
@@ -199,17 +160,11 @@ export function getPostColumns(t: Dictionary): ColumnDef<Post, unknown>[] {
     {
       accessorKey: "visibility",
       header: ({ column }) => (
-        <DataTableColumnHeader
-          column={column}
-          title={t.blogPosts.table.visibility}
-        />
+        <DataTableColumnHeader column={column} title={t.blogPosts.table.visibility} />
       ),
       cell: ({ row }) => (
         <Badge variant="secondary">
-          {formatPostVisibilityLabel(
-            row.original.visibility,
-            t.blogPosts.visibility,
-          )}
+          {formatPostVisibilityLabel(row.original.visibility, t.blogPosts.visibility)}
         </Badge>
       ),
       enableSorting: true,
@@ -217,25 +172,17 @@ export function getPostColumns(t: Dictionary): ColumnDef<Post, unknown>[] {
     {
       accessorKey: "view_count",
       header: ({ column }) => (
-        <DataTableColumnHeader
-          column={column}
-          title={t.blogPosts.table.views}
-        />
+        <DataTableColumnHeader column={column} title={t.blogPosts.table.views} />
       ),
       cell: ({ row }) => (
-        <span className="text-muted-foreground">
-          {row.original.view_count ?? 0}
-        </span>
+        <span className="text-muted-foreground">{row.original.view_count ?? 0}</span>
       ),
       enableSorting: true,
     },
     {
       accessorKey: "published_at",
       header: ({ column }) => (
-        <DataTableColumnHeader
-          column={column}
-          title={t.blogPosts.table.publishedAt}
-        />
+        <DataTableColumnHeader column={column} title={t.blogPosts.table.publishedAt} />
       ),
       cell: ({ row }) => {
         const dateValue = row.original.published_at || row.original.creation;
@@ -245,9 +192,7 @@ export function getPostColumns(t: Dictionary): ColumnDef<Post, unknown>[] {
             {formatDate(new Date(dateValue), " HH:mm dd/MM/yyyy")}
           </span>
         ) : (
-          <span className="italic text-muted-foreground">
-            {t.blogPosts.table.noPublishedDate}
-          </span>
+          <span className="italic text-muted-foreground">{t.blogPosts.table.noPublishedDate}</span>
         );
       },
       enableSorting: true,
@@ -276,10 +221,7 @@ export function getPostColumns(t: Dictionary): ColumnDef<Post, unknown>[] {
                 {t.blogPosts.actions.viewDetail}
               </DropdownMenuItem>
               {post.status !== "Published" ? (
-                <DropdownMenuItem
-                  onClick={() => meta.onPublish(post)}
-                  className="text-green-600"
-                >
+                <DropdownMenuItem onClick={() => meta.onPublish(post)} className="text-green-600">
                   <Send className="mr-2 h-4 w-4 text-green-600" />
                   {t.blogPosts.actions.publish}
                 </DropdownMenuItem>
@@ -294,10 +236,7 @@ export function getPostColumns(t: Dictionary): ColumnDef<Post, unknown>[] {
                 </DropdownMenuItem>
               ) : null}
               {post.status !== "Archived" ? (
-                <DropdownMenuItem
-                  onClick={() => meta.onArchive(post)}
-                  className="text-pink-500"
-                >
+                <DropdownMenuItem onClick={() => meta.onArchive(post)} className="text-pink-500">
                   <Archive className="mr-2 h-4 w-4 text-pink-500" />
                   {t.blogPosts.actions.archive}
                 </DropdownMenuItem>

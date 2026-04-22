@@ -1,14 +1,7 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import {
-  Eye,
-  MoreHorizontal,
-  Pencil,
-  Trash2,
-  ToggleLeft,
-  ToggleRight,
-} from "lucide-react";
+import { Eye, MoreHorizontal, Pencil, Trash2, ToggleLeft, ToggleRight } from "lucide-react";
 import { BlogDepartment } from "@/types/blogs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -32,9 +25,7 @@ export interface DepartmentColumnMeta {
   onDelete: (dept: BlogDepartment) => void;
 }
 
-export function getDepartmentColumns(
-  t: Dictionary,
-): ColumnDef<BlogDepartment, unknown>[] {
+export function getDepartmentColumns(t: Dictionary): ColumnDef<BlogDepartment, unknown>[] {
   return [
     {
       id: "select",
@@ -47,7 +38,7 @@ export function getDepartmentColumns(
                 ? "indeterminate"
                 : false
           }
-          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          onCheckedChange={value => table.toggleAllPageRowsSelected(!!value)}
           aria-label="Select all"
           className="translate-y-[2px]"
         />
@@ -55,7 +46,7 @@ export function getDepartmentColumns(
       cell: ({ row }) => (
         <Checkbox
           checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          onCheckedChange={value => row.toggleSelected(!!value)}
           aria-label="Select row"
           className="translate-y-[2px]"
         />
@@ -66,10 +57,7 @@ export function getDepartmentColumns(
     {
       accessorKey: "department_name",
       header: ({ column }) => (
-        <DataTableColumnHeader
-          column={column}
-          title={t.blogDepartments.table.name}
-        />
+        <DataTableColumnHeader column={column} title={t.blogDepartments.table.name} />
       ),
       cell: ({ row, table }) => {
         const meta = table.options.meta as DepartmentColumnMeta;
@@ -88,14 +76,9 @@ export function getDepartmentColumns(
     {
       accessorKey: "department_code",
       header: ({ column }) => (
-        <DataTableColumnHeader
-          column={column}
-          title={t.blogDepartments.table.codeShort}
-        />
+        <DataTableColumnHeader column={column} title={t.blogDepartments.table.codeShort} />
       ),
-      cell: ({ row }) => (
-        <Badge variant="outline">{row.original.department_code}</Badge>
-      ),
+      cell: ({ row }) => <Badge variant="outline">{row.original.department_code}</Badge>,
       enableSorting: true,
     },
     {
@@ -120,9 +103,7 @@ export function getDepartmentColumns(
         <Badge
           variant={row.original.is_active === 1 ? "default" : "secondary"}
           className={cn(
-            row.original.is_active === 1
-              ? "bg-green-500 text-white"
-              : "bg-gray-500 text-white",
+            row.original.is_active === 1 ? "bg-green-500 text-white" : "bg-gray-500 text-white"
           )}
         >
           {row.original.is_active === 1
@@ -135,10 +116,7 @@ export function getDepartmentColumns(
     {
       accessorKey: "creation",
       header: ({ column }) => (
-        <DataTableColumnHeader
-          column={column}
-          title={t.blogDepartments.table.creation}
-        />
+        <DataTableColumnHeader column={column} title={t.blogDepartments.table.creation} />
       ),
       cell: ({ row }) => (
         <span className="text-muted-foreground">
@@ -172,9 +150,7 @@ export function getDepartmentColumns(
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => meta.onToggle(dept)}
-                className={cn(
-                  dept.is_active === 1 ? "text-amber-600" : "text-green-600",
-                )}
+                className={cn(dept.is_active === 1 ? "text-amber-600" : "text-green-600")}
               >
                 {dept.is_active === 1 ? (
                   <>

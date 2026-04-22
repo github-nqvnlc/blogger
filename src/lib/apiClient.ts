@@ -62,9 +62,7 @@ function parseServerMessages(raw: unknown): string | null {
   return null;
 }
 
-function getFrappeErrorMessage(
-  payload: FrappeErrorPayload | undefined,
-): string | null {
+function getFrappeErrorMessage(payload: FrappeErrorPayload | undefined): string | null {
   if (!payload) return null;
 
   const serverMessage = parseServerMessages(payload._server_messages);
@@ -78,10 +76,7 @@ function getFrappeErrorMessage(
     return stripFrappeExceptionPrefix(payload.exception);
   }
 
-  if (
-    typeof payload._error_message === "string" &&
-    payload._error_message.trim()
-  ) {
+  if (typeof payload._error_message === "string" && payload._error_message.trim()) {
     return payload._error_message.trim();
   }
 
@@ -112,8 +107,8 @@ export function createApiClient() {
   // ── Response Interceptor ─────────────────────────────────────────
   // Không auto-redirect ở đây — để hook tự xử lý (tránh vòng lặp /login)
   _apiClient.interceptors.response.use(
-    (response) => response,
-    (error) => {
+    response => response,
+    error => {
       const payload = error.response?.data as FrappeErrorPayload | undefined;
       const message =
         getFrappeErrorMessage(payload) ??
@@ -121,7 +116,7 @@ export function createApiClient() {
           ? error.message.trim()
           : "Unknown error");
       return Promise.reject(new Error(message));
-    },
+    }
   );
 
   return _apiClient;

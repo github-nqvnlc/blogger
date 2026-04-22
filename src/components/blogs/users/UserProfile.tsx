@@ -6,13 +6,7 @@ import { useAuth, useGetDoc } from "@/hooks";
 import { useLanguage } from "@/hooks/useLanguage";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
 type UserRole = {
@@ -59,7 +53,7 @@ function getInitials(value: string | undefined) {
   return text
     .split(/\s+/)
     .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? "")
+    .map(part => part[0]?.toUpperCase() ?? "")
     .join("");
 }
 
@@ -82,7 +76,7 @@ export function UserProfile() {
   const { currentUser } = useAuth();
   const { data: userProfile, isLoading } = useGetDoc<UserProfileDoc>(
     "User",
-    currentUser ?? undefined,
+    currentUser ?? undefined
   );
 
   if (isLoading) {
@@ -165,27 +159,17 @@ export function UserProfile() {
     },
   ];
 
-  const sortedSessions = [...(userProfile.active_sessions ?? [])].sort(
-    (a, b) => {
-      const timeA = a.session_created
-        ? new Date(a.session_created.replace(" ", "T")).getTime()
-        : 0;
-      const timeB = b.session_created
-        ? new Date(b.session_created.replace(" ", "T")).getTime()
-        : 0;
-      return timeB - timeA;
-    },
-  );
+  const sortedSessions = [...(userProfile.active_sessions ?? [])].sort((a, b) => {
+    const timeA = a.session_created ? new Date(a.session_created.replace(" ", "T")).getTime() : 0;
+    const timeB = b.session_created ? new Date(b.session_created.replace(" ", "T")).getTime() : 0;
+    return timeB - timeA;
+  });
 
   return (
     <div className="space-y-6">
       <div className="">
-        <h1 className="text-3xl font-bold tracking-tight">
-          {t.users.profile.title}
-        </h1>
-        <p className="mt-1 text-muted-foreground">
-          {t.users.profile.description}
-        </p>
+        <h1 className="text-3xl font-bold tracking-tight">{t.users.profile.title}</h1>
+        <p className="mt-1 text-muted-foreground">{t.users.profile.description}</p>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
@@ -199,25 +183,17 @@ export function UserProfile() {
                     src={`${process.env.NEXT_PUBLIC_FRAPPE_URL || ""}${userProfile.user_image}`}
                     alt={userProfile.full_name}
                   />
-                  <AvatarFallback>
-                    {getInitials(userProfile.full_name)}
-                  </AvatarFallback>
+                  <AvatarFallback>{getInitials(userProfile.full_name)}</AvatarFallback>
                 </Avatar>
               </div>
-              <CardTitle className="text-lg">
-                {userProfile.full_name || userProfile.name}
-              </CardTitle>
-              <CardDescription className="-mt-2">
-                {userProfile.email || "-"}
-              </CardDescription>
+              <CardTitle className="text-lg">{userProfile.full_name || userProfile.name}</CardTitle>
+              <CardDescription className="-mt-2">{userProfile.email || "-"}</CardDescription>
               <div className="pt-1">
                 <Badge
                   variant="default"
                   className="rounded-full bg-primary text-primary-foreground"
                 >
-                  {userProfile.enabled
-                    ? t.users.profile.On
-                    : t.users.profile.Off}
+                  {userProfile.enabled ? t.users.profile.On : t.users.profile.Off}
                 </Badge>
               </div>
             </CardHeader>
@@ -243,17 +219,13 @@ export function UserProfile() {
                   key={`${setting.label}-${index}`}
                   className="flex items-center justify-between rounded-xl border bg-card/70 px-3 py-2.5"
                 >
-                  <span className="text-sm text-muted-foreground">
-                    {setting.label}
-                  </span>
+                  <span className="text-sm text-muted-foreground">{setting.label}</span>
                   {setting.isToggle ? (
                     <Badge
                       variant="outline"
                       className={`rounded-full min-w-12 justify-center border-border/60 bg-muted/40 text-muted-foreground ${setting.value === "On" ? "bg-primary text-primary-foreground" : ""}`}
                     >
-                      {setting.value === "On"
-                        ? t.users.profile.On
-                        : t.users.profile.Off}
+                      {setting.value === "On" ? t.users.profile.On : t.users.profile.Off}
                     </Badge>
                   ) : (
                     <span className="text-sm font-medium">{setting.value}</span>
@@ -269,9 +241,7 @@ export function UserProfile() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle>
-                    {t.users.profile.importantInformation.title}
-                  </CardTitle>
+                  <CardTitle>{t.users.profile.importantInformation.title}</CardTitle>
                   <CardDescription className="mt-1">
                     {t.users.profile.importantInformation.description}
                   </CardDescription>
@@ -294,17 +264,13 @@ export function UserProfile() {
                 <p className="text-xs text-muted-foreground">
                   {t.users.profile.importantInformation.items.username}
                 </p>
-                <p className="mt-1 text-sm font-semibold">
-                  {userProfile.username || "-"}
-                </p>
+                <p className="mt-1 text-sm font-semibold">{userProfile.username || "-"}</p>
               </div>
               <div className="rounded-xl border bg-card/70 px-3 py-2.5">
                 <p className="text-xs text-muted-foreground">
                   {t.users.profile.importantInformation.items.email}
                 </p>
-                <p className="mt-1 text-sm font-semibold">
-                  {userProfile.email || "-"}
-                </p>
+                <p className="mt-1 text-sm font-semibold">{userProfile.email || "-"}</p>
               </div>
               <div className="rounded-xl border bg-card/70 px-3 py-2.5">
                 <p className="text-xs text-muted-foreground">
@@ -339,7 +305,7 @@ export function UserProfile() {
             <CardContent>
               <div className="flex flex-wrap gap-2.5 max-h-[150px] overflow-y-auto">
                 {userProfile.roles?.length ? (
-                  userProfile.roles.map((item) => (
+                  userProfile.roles.map(item => (
                     <Badge
                       key={item.role}
                       variant="outline"
@@ -350,9 +316,7 @@ export function UserProfile() {
                     </Badge>
                   ))
                 ) : (
-                  <Badge variant="outline">
-                    {t.users.profile.roles.no_role_assigned}
-                  </Badge>
+                  <Badge variant="outline">{t.users.profile.roles.no_role_assigned}</Badge>
                 )}
               </div>
             </CardContent>
@@ -368,7 +332,7 @@ export function UserProfile() {
             <CardContent>
               {sortedSessions.length ? (
                 <div className="grid gap-3 max-h-[300px] overflow-y-auto">
-                  {sortedSessions.map((session) => (
+                  {sortedSessions.map(session => (
                     <div
                       key={session.name}
                       className="rounded-xl border bg-card/70 p-4 shadow-sm transition-colors hover:bg-muted/20"
@@ -405,9 +369,7 @@ export function UserProfile() {
                             <Wifi className="h-3.5 w-3.5" />
                             IP Address
                           </p>
-                          <p className="font-medium">
-                            {session.ip_address || "-"}
-                          </p>
+                          <p className="font-medium">{session.ip_address || "-"}</p>
                         </div>
                         <div className="rounded-md border bg-muted/30 px-2.5 py-2">
                           <p className="mb-1 flex items-center gap-1 text-muted-foreground">
@@ -423,9 +385,7 @@ export function UserProfile() {
                             <Smartphone className="h-3.5 w-3.5" />
                             Last Updated
                           </p>
-                          <p className="font-medium">
-                            {formatSessionTime(session.last_updated)}
-                          </p>
+                          <p className="font-medium">{formatSessionTime(session.last_updated)}</p>
                         </div>
                       </div>
                     </div>

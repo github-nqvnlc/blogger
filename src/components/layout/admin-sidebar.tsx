@@ -37,11 +37,7 @@ import {
   SidebarMenuSubItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useAuth } from "@/hooks/useAuth";
 import { useGetDoc } from "@/hooks/useGetDoc";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -80,10 +76,7 @@ interface NavGroup {
 function NavBadge({ badge }: { badge?: string }) {
   if (!badge) return null;
   return (
-    <Badge
-      variant="secondary"
-      className="ml-auto h-5 w-5 items-center justify-center p-0 text-xs"
-    >
+    <Badge variant="secondary" className="ml-auto h-5 w-5 items-center justify-center p-0 text-xs">
       {badge}
     </Badge>
   );
@@ -108,7 +101,7 @@ function AdminSidebarFooter() {
   const initials =
     displayName
       .split(" ")
-      .map((n) => n[0])
+      .map(n => n[0])
       .slice(0, 2)
       .join("")
       .toUpperCase() || "U";
@@ -120,7 +113,7 @@ function AdminSidebarFooter() {
           suppressHydrationWarning
           className={cn(
             "flex w-full items-center gap-3 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground cursor-pointer",
-            state === "collapsed" && "justify-center",
+            state === "collapsed" && "justify-center"
           )}
         >
           {currentUser ? (
@@ -131,12 +124,8 @@ function AdminSidebarFooter() {
               </Avatar>
               {state === "expanded" && (
                 <div className="grid flex-1 text-left text-sm leading-tight overflow-hidden">
-                  <span className="truncate font-semibold text-foreground">
-                    {displayName}
-                  </span>
-                  <span className="truncate text-xs text-muted-foreground">
-                    {displayEmail}
-                  </span>
+                  <span className="truncate font-semibold text-foreground">{displayName}</span>
+                  <span className="truncate text-xs text-muted-foreground">{displayEmail}</span>
                 </div>
               )}
             </>
@@ -162,26 +151,18 @@ function AdminSidebarFooter() {
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium leading-none">{displayName}</p>
-            <p className="text-xs leading-none text-muted-foreground">
-              {displayEmail}
-            </p>
+            <p className="text-xs leading-none text-muted-foreground">{displayEmail}</p>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link
-            href={buildLocalePath(locale, "/admin/profile")}
-            className="cursor-pointer"
-          >
+          <Link href={buildLocalePath(locale, "/admin/profile")} className="cursor-pointer">
             <User className="mr-2 h-4 w-4" />
             <span>{t.profile.title}</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link
-            href={buildLocalePath(locale, "/admin/settings")}
-            className="cursor-pointer"
-          >
+          <Link href={buildLocalePath(locale, "/admin/settings")} className="cursor-pointer">
             <Settings className="mr-2 h-4 w-4" />
             <span>{t.sidebar.settings}</span>
           </Link>
@@ -214,9 +195,7 @@ export function AdminSidebarInset({ children }: { children: React.ReactNode }) {
           <Menu className="size-8" />
         </SidebarMenuButton>
       </div>
-      <div className="flex flex-1 flex-col gap-4 p-4 mt-14 lg:mt-0">
-        {children}
-      </div>
+      <div className="flex flex-1 flex-col gap-4 p-4 mt-14 lg:mt-0">{children}</div>
     </SidebarInset>
   );
 }
@@ -230,9 +209,7 @@ export function AdminSidebar() {
   const navItems: NavGroup[] = [
     {
       title: t.sidebar.overview,
-      items: [
-        { title: t.sidebar.dashboard, url: "/admin", icon: LayoutDashboard },
-      ],
+      items: [{ title: t.sidebar.dashboard, url: "/admin", icon: LayoutDashboard }],
     },
     {
       title: t.sidebar.blogManagement,
@@ -300,18 +277,15 @@ export function AdminSidebar() {
       const currentParams = new URLSearchParams(currentQuery ?? "");
       const urlParams = new URLSearchParams(urlQuery);
       const paramKey = urlParams.keys().next().value;
-      return (
-        isPathMatch &&
-        currentParams.get(paramKey ?? "") === urlParams.get(paramKey ?? "")
-      );
+      return isPathMatch && currentParams.get(paramKey ?? "") === urlParams.get(paramKey ?? "");
     }
 
     if (currentQuery) {
       const currentParams = new URLSearchParams(currentQuery);
       const paramKey = currentParams.keys().next().value;
       const hasParamMenu = navItems
-        .flatMap((g) => g.items)
-        .some((item) => {
+        .flatMap(g => g.items)
+        .some(item => {
           const [itemPath, itemQuery] = item.url.split("?");
           return (
             itemPath === pathnameOnly &&
@@ -340,9 +314,7 @@ export function AdminSidebar() {
                   <Newspaper className="size-4" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">
-                    {t.sidebar.blogAdmin}
-                  </span>
+                  <span className="truncate font-semibold">{t.sidebar.blogAdmin}</span>
                   <span className="truncate text-xs text-muted-foreground">
                     {t.sidebar.adminSystem}
                   </span>
@@ -356,12 +328,10 @@ export function AdminSidebar() {
       <SidebarContent>
         {navItems.map((group, idx) => (
           <SidebarGroup key={idx}>
-            {state === "expanded" && (
-              <SidebarGroupLabel>{group.title}</SidebarGroupLabel>
-            )}
+            {state === "expanded" && <SidebarGroupLabel>{group.title}</SidebarGroupLabel>}
             <SidebarGroupContent>
               <SidebarMenu>
-                {group.items.map((item) => (
+                {group.items.map(item => (
                   <SidebarMenuItem key={item.url}>
                     {item.items && item.items.length > 0 ? (
                       <Collapsible defaultOpen={isActive(item.url)}>
@@ -369,9 +339,7 @@ export function AdminSidebar() {
                           <SidebarMenuButton
                             isActive={isActive(item.url)}
                             tooltip={item.title}
-                            className={cn(
-                              isActive(item.url) && "bg-sidebar-accent",
-                            )}
+                            className={cn(isActive(item.url) && "bg-sidebar-accent")}
                           >
                             {item.icon && <item.icon className="size-4" />}
                             <span>{item.title}</span>
@@ -383,16 +351,9 @@ export function AdminSidebar() {
                           <SidebarMenuSub>
                             {item.items!.map((subItem: NavSubItem) => (
                               <SidebarMenuSubItem key={subItem.url}>
-                                <SidebarMenuSubButton
-                                  asChild
-                                  isActive={isActive(subItem.url)}
-                                >
-                                  <Link
-                                    href={buildLocalePath(locale, subItem.url)}
-                                  >
-                                    {subItem.icon && (
-                                      <subItem.icon className="size-4" />
-                                    )}
+                                <SidebarMenuSubButton asChild isActive={isActive(subItem.url)}>
+                                  <Link href={buildLocalePath(locale, subItem.url)}>
+                                    {subItem.icon && <subItem.icon className="size-4" />}
                                     <span>{subItem.title}</span>
                                   </Link>
                                 </SidebarMenuSubButton>
@@ -406,9 +367,7 @@ export function AdminSidebar() {
                         asChild
                         isActive={isActive(item.url)}
                         tooltip={item.title}
-                        className={cn(
-                          isActive(item.url) && "bg-sidebar-accent",
-                        )}
+                        className={cn(isActive(item.url) && "bg-sidebar-accent")}
                       >
                         <Link href={buildLocalePath(locale, item.url)}>
                           {item.icon && <item.icon className="size-4" />}

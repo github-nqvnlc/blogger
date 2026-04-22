@@ -5,7 +5,7 @@ import { getApiClient } from "@/lib/apiClient";
 
 export function useUpdateDoc<T = Record<string, unknown>>(
   /** Tên resource (Doctype) */
-  resource: string,
+  resource: string
 ) {
   const [loading, setLoading] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
@@ -27,10 +27,7 @@ export function useUpdateDoc<T = Record<string, unknown>>(
       try {
         const apiClient = getApiClient();
         // Frappe Resource API dùng PUT để update
-        const res = await apiClient.put<T>(
-          `/api/resource/${resource}/${id}`,
-          data,
-        );
+        const res = await apiClient.put<T>(`/api/resource/${resource}/${id}`, data);
         const updated = ((res.data as { data?: T }).data ?? res.data) as T;
         setResult(updated);
         setIsCompleted(true);
@@ -43,7 +40,7 @@ export function useUpdateDoc<T = Record<string, unknown>>(
         setLoading(false);
       }
     },
-    [resource],
+    [resource]
   );
 
   return { updateDoc, loading, isCompleted, result, error, reset };

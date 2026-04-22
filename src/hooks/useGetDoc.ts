@@ -3,10 +3,7 @@
 import { useQuery, UseQueryOptions } from "@tanstack/react-query";
 import { getApiClient } from "@/lib/apiClient";
 
-type UseGetDocOptions<T> = Omit<
-  UseQueryOptions<T, Error>,
-  "queryKey" | "queryFn"
->;
+type UseGetDocOptions<T> = Omit<UseQueryOptions<T, Error>, "queryKey" | "queryFn">;
 
 export function useGetDoc<T = Record<string, unknown>>(
   /** Tên resource, vd: 'tasks', 'users', 'boards' */
@@ -14,7 +11,7 @@ export function useGetDoc<T = Record<string, unknown>>(
   /** ID của document. Truyền undefined/null để tạm thời disable fetch */
   id: string | undefined | null,
   /** TanStack Query options (staleTime, enabled, ...) */
-  options?: UseGetDocOptions<T>,
+  options?: UseGetDocOptions<T>
 ) {
   const apiClient = getApiClient();
 

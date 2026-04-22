@@ -36,8 +36,7 @@ export const users = {
     },
     active_sessions: {
       title: "Phiên đang hoạt động",
-      description:
-        "Thiết bị và trình duyệt hiện tại được liên kết với tài khoản này.",
+      description: "Thiết bị và trình duyệt hiện tại được liên kết với tài khoản này.",
       current: "Hiện tại",
       active: "Hoạt động",
     },

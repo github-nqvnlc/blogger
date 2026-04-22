@@ -9,11 +9,7 @@ import { useCreateDoc } from "@/hooks/useCreateDoc";
 import { useUpdateDoc } from "@/hooks/useUpdateDoc";
 import { useDeleteDoc } from "@/hooks/useDeleteDoc";
 import { useGetCall } from "@/hooks/useGetCall";
-import {
-  usePostCall,
-  usePutCall,
-  useDeleteCall,
-} from "@/hooks/useMutationCall";
+import { usePostCall, usePutCall, useDeleteCall } from "@/hooks/useMutationCall";
 import { useFileUpload } from "@/hooks/useFileUpload";
 import { useDocSearch } from "@/hooks/useDocSearch";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -31,13 +27,7 @@ const btnSecondary =
 const btnDanger =
   "rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-40";
 
-type JsonValue =
-  | Record<string, unknown>
-  | unknown[]
-  | string
-  | number
-  | boolean
-  | null;
+type JsonValue = Record<string, unknown> | unknown[] | string | number | boolean | null;
 
 // ── Copy Button ──────────────────────────────────────────────────────────────
 function CopyButton({ data }: { data: JsonValue }) {
@@ -45,11 +35,7 @@ function CopyButton({ data }: { data: JsonValue }) {
   const { t } = useLanguage();
 
   function handleCopy() {
-    const text = JSON.stringify(
-      data as Parameters<typeof JSON.stringify>[0],
-      null,
-      2,
-    );
+    const text = JSON.stringify(data as Parameters<typeof JSON.stringify>[0], null, 2);
     navigator.clipboard.writeText(text).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
@@ -74,10 +60,7 @@ function buildCurl(opts: {
   body?: unknown;
   isMultipart?: boolean;
 }): string {
-  const origin =
-    typeof window !== "undefined"
-      ? window.location.origin
-      : "http://localhost:3000";
+  const origin = typeof window !== "undefined" ? window.location.origin : "http://localhost:3000";
   let url = `${origin}${opts.path}`;
   if (opts.params && Object.keys(opts.params).length > 0) {
     url += `?${new URLSearchParams(opts.params).toString()}`;
@@ -86,8 +69,7 @@ function buildCurl(opts: {
   const lines = [`curl -X ${opts.method.toUpperCase()} '${url}'`];
   if (!opts.isMultipart) lines.push(`  -H 'Content-Type: application/json'`);
   lines.push(`  -H 'Cookie: sid=<your-sid>'`);
-  if (mut && !opts.isMultipart)
-    lines.push(`  -H 'X-Frappe-CSRF-Token: <csrf-token>'`);
+  if (mut && !opts.isMultipart) lines.push(`  -H 'X-Frappe-CSRF-Token: <csrf-token>'`);
   if (opts.body != null && mut && !opts.isMultipart)
     lines.push(`  -d '${JSON.stringify(opts.body)}'`);
   if (opts.isMultipart) lines.push(`  -F 'file=@/path/to/file'`);
@@ -162,16 +144,7 @@ function ResponsePanel({ state }: { state: ResponseState | null }) {
       </div>
     );
   }
-  const {
-    hookName,
-    type,
-    isLoading,
-    isValidating,
-    error,
-    data,
-    onRefetch,
-    curlCmd,
-  } = state;
+  const { hookName, type, isLoading, isValidating, error, data, onRefetch, curlCmd } = state;
   return (
     <div className="flex h-full min-h-[320px] flex-col rounded-2xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-100 px-5 py-3 dark:border-zinc-800">
@@ -207,9 +180,7 @@ function ResponsePanel({ state }: { state: ResponseState | null }) {
               <Badge label="fetching" active={!!isValidating} color="amber" />
             </>
           )}
-          {type === "mutation" && (
-            <Badge label="running" active={isLoading} color="violet" />
-          )}
+          {type === "mutation" && <Badge label="running" active={isLoading} color="violet" />}
           <Badge label="error" active={!!error} color="red" />
           <Badge label="success" active={!!data && !isLoading} color="green" />
         </div>
@@ -218,28 +189,18 @@ function ResponsePanel({ state }: { state: ResponseState | null }) {
         {isLoading && (
           <div className="flex items-center gap-3 rounded-lg bg-blue-50 px-4 py-3 dark:bg-blue-900/20">
             <span className="h-4 w-4 animate-spin rounded-full border-2 border-blue-400 border-t-transparent" />
-            <span className="text-sm text-blue-600 dark:text-blue-300">
-              {t.devDoc.processing}
-            </span>
+            <span className="text-sm text-blue-600 dark:text-blue-300">{t.devDoc.processing}</span>
           </div>
         )}
         {!isLoading && error && (
           <div className="rounded-lg bg-red-50 px-4 py-3 dark:bg-red-900/20">
-            <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-red-500">
-              Error
-            </p>
-            <p className="text-sm text-red-700 dark:text-red-300">
-              {error.message}
-            </p>
+            <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-red-500">Error</p>
+            <p className="text-sm text-red-700 dark:text-red-300">{error.message}</p>
           </div>
         )}
         {!isLoading && !error && data != null && (
           <pre className="overflow-x-auto rounded-lg bg-zinc-950 p-4 text-xs leading-relaxed text-emerald-300 dark:bg-black">
-            {JSON.stringify(
-              data as Parameters<typeof JSON.stringify>[0],
-              null,
-              2,
-            )}
+            {JSON.stringify(data as Parameters<typeof JSON.stringify>[0], null, 2)}
           </pre>
         )}
         {!isLoading && !error && data == null && (
@@ -276,9 +237,7 @@ function HookCard({
         className="flex w-full items-center justify-between px-4 py-3 text-left"
       >
         <div>
-          <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">
-            {title}
-          </p>
+          <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">{title}</p>
           <p className="text-xs text-zinc-400">{subtitle}</p>
         </div>
         {active && <span className="h-2 w-2 rounded-full bg-green-500" />}
@@ -291,18 +250,7 @@ function HookCard({
 }
 
 // ── Filter Builder ────────────────────────────────────────────────────────────
-const OPS = [
-  "=",
-  "!=",
-  "<",
-  ">",
-  "<=",
-  ">=",
-  "like",
-  "not like",
-  "in",
-  "not in",
-];
+const OPS = ["=", "!=", "<", ">", "<=", ">=", "like", "not like", "in", "not in"];
 
 type FilterRowState = { id: number; field: string; op: string; val: string };
 let _filterId = 0;
@@ -322,38 +270,38 @@ function FilterBuilder({
 }) {
   const { t } = useLanguage();
   function update(id: number, patch: Partial<FilterRowState>) {
-    onChange(value.map((r) => (r.id === id ? { ...r, ...patch } : r)));
+    onChange(value.map(r => (r.id === id ? { ...r, ...patch } : r)));
   }
   return (
     <div className="space-y-1.5">
-      {value.map((row) => (
+      {value.map(row => (
         <div key={row.id} className="flex items-center gap-1">
           <div className="grid flex-1 grid-cols-3 gap-1">
             <input
               value={row.field}
-              onChange={(e) => update(row.id, { field: e.target.value })}
+              onChange={e => update(row.id, { field: e.target.value })}
               placeholder="field"
               className={inputCls}
             />
             <select
               value={row.op}
-              onChange={(e) => update(row.id, { op: e.target.value })}
+              onChange={e => update(row.id, { op: e.target.value })}
               className={inputCls}
             >
-              {OPS.map((o) => (
+              {OPS.map(o => (
                 <option key={o}>{o}</option>
               ))}
             </select>
             <input
               value={row.val}
-              onChange={(e) => update(row.id, { val: e.target.value })}
+              onChange={e => update(row.id, { val: e.target.value })}
               placeholder="value"
               className={inputCls}
             />
           </div>
           <button
             type="button"
-            onClick={() => onChange(value.filter((r) => r.id !== row.id))}
+            onClick={() => onChange(value.filter(r => r.id !== row.id))}
             className="shrink-0 rounded-md px-2 py-1.5 text-zinc-400 transition hover:bg-zinc-100 hover:text-red-500 dark:hover:bg-zinc-800"
           >
             ×
@@ -406,14 +354,12 @@ function JsonTextarea({
           onClick={handleFormat}
           className={`text-xs transition ${formatError ? "text-red-500" : "text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"}`}
         >
-          {formatError
-            ? `✕ ${t.devDoc.invalidJson}`
-            : `{ } ${t.devDoc.formatJson}`}
+          {formatError ? `✕ ${t.devDoc.invalidJson}` : `{ } ${t.devDoc.formatJson}`}
         </button>
       </div>
       <textarea
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={e => onChange(e.target.value)}
         rows={rows}
         spellCheck={false}
         className={`${inputCls} font-mono`}
@@ -457,8 +403,7 @@ export default function DocHookDevPage() {
   const [glLimit, setGlLimit] = useState("20");
   const [glOrder, setGlOrder] = useState("");
   const [glDir, setGlDir] = useState<"asc" | "desc">("desc");
-  const [glSubmit, setGlSubmit] =
-    useState<Parameters<typeof useGetList>[1]>(undefined);
+  const [glSubmit, setGlSubmit] = useState<Parameters<typeof useGetList>[1]>(undefined);
   const glResult = useGetList(glResource, glSubmit, {
     enabled: !!glResource && glSubmit !== undefined,
   });
@@ -495,11 +440,9 @@ export default function DocHookDevPage() {
     endpoint: string;
     params?: Record<string, unknown>;
   } | null>(null);
-  const gcCallResult = useGetCall(
-    gcCallSubmit?.endpoint ?? "",
-    gcCallSubmit?.params,
-    { enabled: !!gcCallSubmit },
-  );
+  const gcCallResult = useGetCall(gcCallSubmit?.endpoint ?? "", gcCallSubmit?.params, {
+    enabled: !!gcCallSubmit,
+  });
 
   // ── usePostCall / usePutCall ──
   const [pcEndpoint, setPcEndpoint] = useState("");
@@ -508,8 +451,7 @@ export default function DocHookDevPage() {
   const postCall = usePostCall(pcEndpoint);
   const putCall = usePutCall(pcEndpoint);
   const deleteCall = useDeleteCall(pcEndpoint);
-  const currentCall =
-    pcMethod === "post" ? postCall : pcMethod === "put" ? putCall : deleteCall;
+  const currentCall = pcMethod === "post" ? postCall : pcMethod === "put" ? putCall : deleteCall;
 
   // ── useFileUpload ──
   const [fuFile, setFuFile] = useState<File | null>(null);
@@ -526,9 +468,7 @@ export default function DocHookDevPage() {
   const [dsFields, setDsFields] = useState("");
   const [dsLimit, setDsLimit] = useState("10");
   const dsResult = useDocSearch(dsResource, dsSearch, {
-    fields: dsFields.trim()
-      ? dsFields.split(",").map((f) => f.trim())
-      : undefined,
+    fields: dsFields.trim() ? dsFields.split(",").map(f => f.trim()) : undefined,
     limit: Number(dsLimit) || 10,
   });
 
@@ -567,10 +507,8 @@ export default function DocHookDevPage() {
       const glParams: Record<string, string> = {
         limit: String(glSubmit?.limit ?? 20),
       };
-      if (glSubmit?.fields?.length)
-        glParams.fields = JSON.stringify(glSubmit.fields);
-      if (glSubmit?.filters?.length)
-        glParams.filters = JSON.stringify(glSubmit.filters);
+      if (glSubmit?.fields?.length) glParams.fields = JSON.stringify(glSubmit.fields);
+      if (glSubmit?.filters?.length) glParams.filters = JSON.stringify(glSubmit.filters);
       if (glSubmit?.orderBy)
         glParams.order_by = `${glSubmit.orderBy.field} ${glSubmit.orderBy.order}`;
       responseState = {
@@ -727,14 +665,9 @@ export default function DocHookDevPage() {
     }
     case "docSearch": {
       const dsParams: Record<string, string> = { limit: dsLimit };
-      if (dsFields.trim())
-        dsParams.fields = JSON.stringify(
-          dsFields.split(",").map((f) => f.trim()),
-        );
+      if (dsFields.trim()) dsParams.fields = JSON.stringify(dsFields.split(",").map(f => f.trim()));
       if (dsSearch.trim())
-        dsParams.filters = JSON.stringify([
-          ["name", "like", `%${dsSearch.trim()}%`],
-        ]);
+        dsParams.filters = JSON.stringify([["name", "like", `%${dsSearch.trim()}%`]]);
       responseState = {
         hookName: "useDocSearch",
         type: "query",
@@ -762,17 +695,12 @@ export default function DocHookDevPage() {
         <div className="mb-1 flex items-center gap-2">
           {/* <span className="rounded-md bg-zinc-200 px-2 py-0.5 font-mono text-xs text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">/dev/doc</span> */}
           <span className="text-xs text-zinc-400">
-            <Link
-              href={buildLocalePath(locale, "/")}
-              className="hover:underline"
-            >
+            <Link href={buildLocalePath(locale, "/")} className="hover:underline">
               ← {t.devDoc.backHome}
             </Link>
           </span>
         </div>
-        <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-50">
-          {t.devDoc.title}
-        </h1>
+        <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-50">{t.devDoc.title}</h1>
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[40vw_1fr] px-4">
@@ -784,14 +712,14 @@ export default function DocHookDevPage() {
             active={active === "getDoc"}
             title="useGetDoc<T>"
             subtitle="GET /api/resource/{Doctype}/{id}"
-            onSelect={(id) => setActive(id as HookId)}
+            onSelect={id => setActive(id as HookId)}
           >
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className={labelCls}>{t.devDoc.doctype}</label>
                 <input
                   value={gdResource}
-                  onChange={(e) => setGdResource(e.target.value)}
+                  onChange={e => setGdResource(e.target.value)}
                   placeholder="Task"
                   className={inputCls}
                 />
@@ -800,7 +728,7 @@ export default function DocHookDevPage() {
                 <label className={labelCls}>{t.devDoc.nameOrId}</label>
                 <input
                   value={gdId}
-                  onChange={(e) => setGdId(e.target.value)}
+                  onChange={e => setGdId(e.target.value)}
                   placeholder="TASK-0001"
                   className={inputCls}
                 />
@@ -818,10 +746,7 @@ export default function DocHookDevPage() {
                 {t.common.fetch}
               </button>
               {gdSubmit && (
-                <button
-                  className={btnSecondary}
-                  onClick={() => setGdSubmit(null)}
-                >
+                <button className={btnSecondary} onClick={() => setGdSubmit(null)}>
                   {t.common.reset}
                 </button>
               )}
@@ -834,14 +759,14 @@ export default function DocHookDevPage() {
             active={active === "getList"}
             title="useGetList<T>"
             subtitle="GET /api/resource/{Doctype}?fields=…&filters=…"
-            onSelect={(id) => setActive(id as HookId)}
+            onSelect={id => setActive(id as HookId)}
           >
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className={labelCls}>{t.devDoc.doctype} *</label>
                 <input
                   value={glResource}
-                  onChange={(e) => setGlResource(e.target.value)}
+                  onChange={e => setGlResource(e.target.value)}
                   placeholder="Task"
                   className={inputCls}
                 />
@@ -851,19 +776,18 @@ export default function DocHookDevPage() {
                 <input
                   type="number"
                   value={glLimit}
-                  onChange={(e) => setGlLimit(e.target.value)}
+                  onChange={e => setGlLimit(e.target.value)}
                   className={inputCls}
                 />
               </div>
             </div>
             <div>
               <label className={labelCls}>
-                {t.devDoc.fields}{" "}
-                <span className="font-normal text-zinc-400">(phẩy)</span>
+                {t.devDoc.fields} <span className="font-normal text-zinc-400">(phẩy)</span>
               </label>
               <input
                 value={glFields}
-                onChange={(e) => setGlFields(e.target.value)}
+                onChange={e => setGlFields(e.target.value)}
                 placeholder="name, subject, status"
                 className={inputCls}
               />
@@ -877,7 +801,7 @@ export default function DocHookDevPage() {
                 <label className={labelCls}>{t.devDoc.orderBy}</label>
                 <input
                   value={glOrder}
-                  onChange={(e) => setGlOrder(e.target.value)}
+                  onChange={e => setGlOrder(e.target.value)}
                   placeholder="creation"
                   className={inputCls}
                 />
@@ -886,7 +810,7 @@ export default function DocHookDevPage() {
                 <label className={labelCls}>{t.devDoc.direction}</label>
                 <select
                   value={glDir}
-                  onChange={(e) => setGlDir(e.target.value as "asc" | "desc")}
+                  onChange={e => setGlDir(e.target.value as "asc" | "desc")}
                   className={inputCls}
                 >
                   <option value="desc">desc</option>
@@ -900,15 +824,11 @@ export default function DocHookDevPage() {
                 disabled={!glResource.trim()}
                 onClick={() => {
                   const fields = glFields.trim()
-                    ? glFields.split(",").map((f) => f.trim())
+                    ? glFields.split(",").map(f => f.trim())
                     : undefined;
                   const filters: Filter[] = glFilterRows
-                    .filter((r) => r.field.trim() && r.val.trim())
-                    .map((r) => [
-                      r.field.trim(),
-                      r.op as Filter[1],
-                      r.val.trim(),
-                    ]);
+                    .filter(r => r.field.trim() && r.val.trim())
+                    .map(r => [r.field.trim(), r.op as Filter[1], r.val.trim()]);
                   const orderBy = glOrder.trim()
                     ? { field: glOrder.trim(), order: glDir }
                     : undefined;
@@ -924,10 +844,7 @@ export default function DocHookDevPage() {
                 {t.devDoc.fetchList}
               </button>
               {glSubmit !== undefined && (
-                <button
-                  className={btnSecondary}
-                  onClick={() => setGlSubmit(undefined)}
-                >
+                <button className={btnSecondary} onClick={() => setGlSubmit(undefined)}>
                   {t.common.reset}
                 </button>
               )}
@@ -940,21 +857,20 @@ export default function DocHookDevPage() {
             active={active === "getCount"}
             title="useGetCount"
             subtitle="GET /api/resource/{Doctype} → count"
-            onSelect={(id) => setActive(id as HookId)}
+            onSelect={id => setActive(id as HookId)}
           >
             <div>
               <label className={labelCls}>{t.devDoc.doctype} *</label>
               <input
                 value={gcResource}
-                onChange={(e) => setGcResource(e.target.value)}
+                onChange={e => setGcResource(e.target.value)}
                 placeholder="Task"
                 className={inputCls}
               />
             </div>
             <div>
               <label className={labelCls}>
-                {t.devDoc.filters}{" "}
-                <span className="font-normal text-zinc-400">(tuỳ chọn)</span>
+                {t.devDoc.filters} <span className="font-normal text-zinc-400">(tuỳ chọn)</span>
               </label>
               <FilterBuilder value={gcFilterRows} onChange={setGcFilterRows} />
             </div>
@@ -964,12 +880,8 @@ export default function DocHookDevPage() {
                 disabled={!gcResource.trim()}
                 onClick={() => {
                   const filters: Filter[] = gcFilterRows
-                    .filter((r) => r.field.trim() && r.val.trim())
-                    .map((r) => [
-                      r.field.trim(),
-                      r.op as Filter[1],
-                      r.val.trim(),
-                    ]);
+                    .filter(r => r.field.trim() && r.val.trim())
+                    .map(r => [r.field.trim(), r.op as Filter[1], r.val.trim()]);
                   setGcFilters(filters.length ? filters : []);
                   setGcEnabled(true);
                   setActive("getCount");
@@ -997,22 +909,18 @@ export default function DocHookDevPage() {
             active={active === "createDoc"}
             title="useCreateDoc<T>"
             subtitle="POST /api/resource/{Doctype}"
-            onSelect={(id) => setActive(id as HookId)}
+            onSelect={id => setActive(id as HookId)}
           >
             <div>
               <label className={labelCls}>{t.devDoc.doctype} *</label>
               <input
                 value={cdResource}
-                onChange={(e) => setCdResource(e.target.value)}
+                onChange={e => setCdResource(e.target.value)}
                 placeholder="Task"
                 className={inputCls}
               />
             </div>
-            <JsonTextarea
-              label={t.devDoc.bodyJson}
-              value={cdBody}
-              onChange={setCdBody}
-            />
+            <JsonTextarea label={t.devDoc.bodyJson} value={cdBody} onChange={setCdBody} />
             <div className="flex gap-2">
               <button
                 className={btnPrimary}
@@ -1043,14 +951,14 @@ export default function DocHookDevPage() {
             active={active === "updateDoc"}
             title="useUpdateDoc<T>"
             subtitle="PUT /api/resource/{Doctype}/{id}"
-            onSelect={(id) => setActive(id as HookId)}
+            onSelect={id => setActive(id as HookId)}
           >
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className={labelCls}>{t.devDoc.doctype} *</label>
                 <input
                   value={udResource}
-                  onChange={(e) => setUdResource(e.target.value)}
+                  onChange={e => setUdResource(e.target.value)}
                   placeholder="Task"
                   className={inputCls}
                 />
@@ -1059,23 +967,17 @@ export default function DocHookDevPage() {
                 <label className={labelCls}>{t.devDoc.nameOrId} *</label>
                 <input
                   value={udId}
-                  onChange={(e) => setUdId(e.target.value)}
+                  onChange={e => setUdId(e.target.value)}
                   placeholder="TASK-0001"
                   className={inputCls}
                 />
               </div>
             </div>
-            <JsonTextarea
-              label={t.devDoc.bodyJson}
-              value={udBody}
-              onChange={setUdBody}
-            />
+            <JsonTextarea label={t.devDoc.bodyJson} value={udBody} onChange={setUdBody} />
             <div className="flex gap-2">
               <button
                 className={btnPrimary}
-                disabled={
-                  !udResource.trim() || !udId.trim() || updateDoc.loading
-                }
+                disabled={!udResource.trim() || !udId.trim() || updateDoc.loading}
                 onClick={async () => {
                   setActive("updateDoc");
                   updateDoc.reset();
@@ -1102,14 +1004,14 @@ export default function DocHookDevPage() {
             active={active === "deleteDoc"}
             title="useDeleteDoc"
             subtitle="DELETE /api/resource/{Doctype}/{id}"
-            onSelect={(id) => setActive(id as HookId)}
+            onSelect={id => setActive(id as HookId)}
           >
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className={labelCls}>{t.devDoc.doctype} *</label>
                 <input
                   value={ddResource}
-                  onChange={(e) => setDdResource(e.target.value)}
+                  onChange={e => setDdResource(e.target.value)}
                   placeholder="Task"
                   className={inputCls}
                 />
@@ -1118,7 +1020,7 @@ export default function DocHookDevPage() {
                 <label className={labelCls}>{t.devDoc.nameOrId} *</label>
                 <input
                   value={ddId}
-                  onChange={(e) => setDdId(e.target.value)}
+                  onChange={e => setDdId(e.target.value)}
                   placeholder="TASK-0001"
                   className={inputCls}
                 />
@@ -1127,9 +1029,7 @@ export default function DocHookDevPage() {
             <div className="flex gap-2">
               <button
                 className={btnDanger}
-                disabled={
-                  !ddResource.trim() || !ddId.trim() || deleteDoc.loading
-                }
+                disabled={!ddResource.trim() || !ddId.trim() || deleteDoc.loading}
                 onClick={async () => {
                   setActive("deleteDoc");
                   deleteDoc.reset();
@@ -1140,9 +1040,7 @@ export default function DocHookDevPage() {
                   }
                 }}
               >
-                {deleteDoc.loading
-                  ? t.common.deleting
-                  : `🗑 ${t.common.delete}`}
+                {deleteDoc.loading ? t.common.deleting : `🗑 ${t.common.delete}`}
               </button>
               {(deleteDoc.isCompleted || deleteDoc.error) && (
                 <button className={btnSecondary} onClick={deleteDoc.reset}>
@@ -1158,13 +1056,13 @@ export default function DocHookDevPage() {
             active={active === "getCall"}
             title="useGetCall<T>"
             subtitle="GET {endpoint}?params…"
-            onSelect={(id) => setActive(id as HookId)}
+            onSelect={id => setActive(id as HookId)}
           >
             <div>
               <label className={labelCls}>{t.devDoc.endpoint} *</label>
               <input
                 value={gcEndpoint}
-                onChange={(e) => setGcEndpoint(e.target.value)}
+                onChange={e => setGcEndpoint(e.target.value)}
                 placeholder="/api/method/frappe.auth.get_logged_user"
                 className={inputCls}
               />
@@ -1180,9 +1078,7 @@ export default function DocHookDevPage() {
                 className={btnPrimary}
                 disabled={!gcEndpoint.trim()}
                 onClick={() => {
-                  const params = gcParams.trim()
-                    ? parseJson(gcParams)
-                    : undefined;
+                  const params = gcParams.trim() ? parseJson(gcParams) : undefined;
                   setGcCallSubmit({ endpoint: gcEndpoint.trim(), params });
                   setActive("getCall");
                 }}
@@ -1190,10 +1086,7 @@ export default function DocHookDevPage() {
                 {t.common.fetch}
               </button>
               {gcCallSubmit && (
-                <button
-                  className={btnSecondary}
-                  onClick={() => setGcCallSubmit(null)}
-                >
+                <button className={btnSecondary} onClick={() => setGcCallSubmit(null)}>
                   {t.common.reset}
                 </button>
               )}
@@ -1206,10 +1099,10 @@ export default function DocHookDevPage() {
             active={active === "postCall"}
             title="usePostCall / usePutCall / useDeleteCall"
             subtitle="POST, PUT or DELETE {endpoint}"
-            onSelect={(id) => setActive(id as HookId)}
+            onSelect={id => setActive(id as HookId)}
           >
             <div className="flex gap-2">
-              {(["post", "put", "delete"] as const).map((m) => (
+              {(["post", "put", "delete"] as const).map(m => (
                 <button
                   key={m}
                   onClick={() => {
@@ -1234,16 +1127,12 @@ export default function DocHookDevPage() {
               <label className={labelCls}>{t.devDoc.endpoint} *</label>
               <input
                 value={pcEndpoint}
-                onChange={(e) => setPcEndpoint(e.target.value)}
+                onChange={e => setPcEndpoint(e.target.value)}
                 placeholder="/api/method/…"
                 className={inputCls}
               />
             </div>
-            <JsonTextarea
-              label={t.devDoc.bodyJson}
-              value={pcBody}
-              onChange={setPcBody}
-            />
+            <JsonTextarea label={t.devDoc.bodyJson} value={pcBody} onChange={setPcBody} />
             <div className="flex gap-2">
               <button
                 className={btnPrimary}
@@ -1274,14 +1163,14 @@ export default function DocHookDevPage() {
             active={active === "fileUpload"}
             title="useFileUpload"
             subtitle="POST /api/method/upload_file (multipart)"
-            onSelect={(id) => setActive(id as HookId)}
+            onSelect={id => setActive(id as HookId)}
           >
             {/* File picker */}
             <div>
               <label className={labelCls}>{t.devDoc.file} *</label>
               <input
                 type="file"
-                onChange={(e) => setFuFile(e.target.files?.[0] ?? null)}
+                onChange={e => setFuFile(e.target.files?.[0] ?? null)}
                 className="w-full cursor-pointer rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 file:mr-3 file:rounded file:border-0 file:bg-zinc-200 file:px-2 file:py-1 file:text-xs dark:file:bg-zinc-700 dark:file:text-zinc-200"
               />
               {fuFile && (
@@ -1296,7 +1185,7 @@ export default function DocHookDevPage() {
                 <label className={labelCls}>{t.devDoc.doctype}</label>
                 <input
                   value={fuDoctype}
-                  onChange={(e) => setFuDoctype(e.target.value)}
+                  onChange={e => setFuDoctype(e.target.value)}
                   placeholder="Task"
                   className={inputCls}
                 />
@@ -1305,7 +1194,7 @@ export default function DocHookDevPage() {
                 <label className={labelCls}>{t.devDoc.docname}</label>
                 <input
                   value={fuDocname}
-                  onChange={(e) => setFuDocname(e.target.value)}
+                  onChange={e => setFuDocname(e.target.value)}
                   placeholder="TASK-0001"
                   className={inputCls}
                 />
@@ -1316,7 +1205,7 @@ export default function DocHookDevPage() {
                 <label className={labelCls}>{t.devDoc.fieldname}</label>
                 <input
                   value={fuFieldname}
-                  onChange={(e) => setFuFieldname(e.target.value)}
+                  onChange={e => setFuFieldname(e.target.value)}
                   placeholder="attachment"
                   className={inputCls}
                 />
@@ -1325,7 +1214,7 @@ export default function DocHookDevPage() {
                 <label className={labelCls}>{t.devDoc.folder}</label>
                 <input
                   value={fuFolder}
-                  onChange={(e) => setFuFolder(e.target.value)}
+                  onChange={e => setFuFolder(e.target.value)}
                   placeholder="Home"
                   className={inputCls}
                 />
@@ -1335,7 +1224,7 @@ export default function DocHookDevPage() {
               <input
                 type="checkbox"
                 checked={fuIsPrivate}
-                onChange={(e) => setFuIsPrivate(e.target.checked)}
+                onChange={e => setFuIsPrivate(e.target.checked)}
                 className="h-3.5 w-3.5 rounded border-zinc-300"
               />
               {t.devDoc.privateFile}
@@ -1394,7 +1283,7 @@ export default function DocHookDevPage() {
             active={active === "docSearch"}
             title="useDocSearch"
             subtitle="GET /api/resource/{Doctype}?filters=[[name,like,%…%]] (debounced)"
-            onSelect={(id) => setActive(id as HookId)}
+            onSelect={id => setActive(id as HookId)}
           >
             <p className="text-xs text-zinc-400">{t.devDoc.realtimeHint}</p>
             <div className="grid grid-cols-2 gap-2">
@@ -1402,7 +1291,7 @@ export default function DocHookDevPage() {
                 <label className={labelCls}>{t.devDoc.doctype} *</label>
                 <input
                   value={dsResource}
-                  onChange={(e) => {
+                  onChange={e => {
                     setDsResource(e.target.value);
                     setActive("docSearch");
                   }}
@@ -1415,7 +1304,7 @@ export default function DocHookDevPage() {
                 <input
                   type="number"
                   value={dsLimit}
-                  onChange={(e) => setDsLimit(e.target.value)}
+                  onChange={e => setDsLimit(e.target.value)}
                   className={inputCls}
                 />
               </div>
@@ -1424,7 +1313,7 @@ export default function DocHookDevPage() {
               <label className={labelCls}>{t.devDoc.searchKeyword} *</label>
               <input
                 value={dsSearch}
-                onChange={(e) => {
+                onChange={e => {
                   setDsSearch(e.target.value);
                   setActive("docSearch");
                 }}
@@ -1435,49 +1324,32 @@ export default function DocHookDevPage() {
             <div>
               <label className={labelCls}>
                 {t.devDoc.fields}{" "}
-                <span className="font-normal text-zinc-400">
-                  (comma-separated)
-                </span>
+                <span className="font-normal text-zinc-400">(comma-separated)</span>
               </label>
               <input
                 value={dsFields}
-                onChange={(e) => setDsFields(e.target.value)}
+                onChange={e => setDsFields(e.target.value)}
                 placeholder="name, subject"
                 className={inputCls}
               />
             </div>
             {/* Inline results preview */}
-            {dsResult.isLoading && (
-              <p className="text-xs text-blue-500">{t.common.searching}</p>
+            {dsResult.isLoading && <p className="text-xs text-blue-500">{t.common.searching}</p>}
+            {!dsResult.isLoading && dsResult.data && dsResult.data.length > 0 && (
+              <ul className="space-y-1 rounded-lg border border-zinc-100 bg-zinc-50 p-2 dark:border-zinc-800 dark:bg-zinc-800/50">
+                {(dsResult.data as Record<string, unknown>[]).slice(0, 8).map((item, i) => (
+                  <li key={i} className="truncate text-xs text-zinc-600 dark:text-zinc-300">
+                    {String(item.name ?? item.subject ?? JSON.stringify(item))}
+                  </li>
+                ))}
+                {dsResult.data.length > 8 && (
+                  <li className="text-xs text-zinc-400">+{dsResult.data.length - 8} more…</li>
+                )}
+              </ul>
             )}
-            {!dsResult.isLoading &&
-              dsResult.data &&
-              dsResult.data.length > 0 && (
-                <ul className="space-y-1 rounded-lg border border-zinc-100 bg-zinc-50 p-2 dark:border-zinc-800 dark:bg-zinc-800/50">
-                  {(dsResult.data as Record<string, unknown>[])
-                    .slice(0, 8)
-                    .map((item, i) => (
-                      <li
-                        key={i}
-                        className="truncate text-xs text-zinc-600 dark:text-zinc-300"
-                      >
-                        {String(
-                          item.name ?? item.subject ?? JSON.stringify(item),
-                        )}
-                      </li>
-                    ))}
-                  {dsResult.data.length > 8 && (
-                    <li className="text-xs text-zinc-400">
-                      +{dsResult.data.length - 8} more…
-                    </li>
-                  )}
-                </ul>
-              )}
-            {!dsResult.isLoading &&
-              dsResult.data?.length === 0 &&
-              dsSearch.trim() && (
-                <p className="text-xs text-zinc-400">{t.devDoc.noResults}</p>
-              )}
+            {!dsResult.isLoading && dsResult.data?.length === 0 && dsSearch.trim() && (
+              <p className="text-xs text-zinc-400">{t.devDoc.noResults}</p>
+            )}
           </HookCard>
         </div>
         {/* end LEFT */}

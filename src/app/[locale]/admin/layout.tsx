@@ -1,10 +1,7 @@
 import type { Metadata } from "next";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import {
-  AdminSidebar,
-  AdminSidebarInset,
-} from "@/components/layout/admin-sidebar";
+import { AdminSidebar, AdminSidebarInset } from "@/components/layout/admin-sidebar";
 import { AdminBreadcrumb } from "@/components/layout/admin-breadcrumb";
 import { getDictionary, isValidLocale, localizeMetadataPath } from "@/i18n";
 
@@ -27,11 +24,7 @@ export async function generateMetadata({
   };
 }
 
-export default function AdminLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <TooltipProvider delayDuration={0}>
       <SidebarProvider defaultOpen={true}>

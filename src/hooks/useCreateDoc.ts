@@ -5,7 +5,7 @@ import { getApiClient } from "@/lib/apiClient";
 
 export function useCreateDoc<T = Record<string, unknown>>(
   /** Tên resource (Doctype) */
-  resource: string,
+  resource: string
 ) {
   const [loading, setLoading] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
@@ -40,7 +40,7 @@ export function useCreateDoc<T = Record<string, unknown>>(
         setLoading(false);
       }
     },
-    [resource],
+    [resource]
   );
 
   return { createDoc, loading, isCompleted, result, error, reset };

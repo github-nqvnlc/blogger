@@ -57,10 +57,7 @@ export function TagTable<TData, TValue>({
   const table = useReactTable({
     data,
     columns,
-    pageCount:
-      totalCount !== undefined
-        ? Math.ceil(totalCount / pagination.pageSize)
-        : -1,
+    pageCount: totalCount !== undefined ? Math.ceil(totalCount / pagination.pageSize) : -1,
     state: {
       pagination,
       sorting,
@@ -82,16 +79,13 @@ export function TagTable<TData, TValue>({
       <div className="overflow-hidden rounded-md border">
         <TableComponent>
           <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
+            {table.getHeaderGroups().map(headerGroup => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
+                {headerGroup.headers.map(header => (
                   <TableHead key={header.id}>
                     {header.isPlaceholder
                       ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
+                      : flexRender(header.column.columnDef.header, header.getContext())}
                   </TableHead>
                 ))}
               </TableRow>
@@ -101,7 +95,7 @@ export function TagTable<TData, TValue>({
             {isLoading ? (
               Array.from({ length: 5 }).map((_, i) => (
                 <TableRow key={i}>
-                  {table.getAllColumns().map((column) => (
+                  {table.getAllColumns().map(column => (
                     <TableCell key={column.id}>
                       <div className="h-4 w-full animate-pulse rounded bg-muted" />
                     </TableCell>
@@ -109,32 +103,19 @@ export function TagTable<TData, TValue>({
                 </TableRow>
               ))
             ) : table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                >
-                  {row.getVisibleCells().map((cell) => (
+              table.getRowModel().rows.map(row => (
+                <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
+                  {row.getVisibleCells().map(cell => (
                     <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell
-                  colSpan={table.getAllColumns().length}
-                  className="h-32 text-center"
-                >
-                  {emptyMessage ?? (
-                    <span className="text-muted-foreground">
-                      {t.table.noData}
-                    </span>
-                  )}
+                <TableCell colSpan={table.getAllColumns().length} className="h-32 text-center">
+                  {emptyMessage ?? <span className="text-muted-foreground">{t.table.noData}</span>}
                 </TableCell>
               </TableRow>
             )}

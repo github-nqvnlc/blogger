@@ -36,11 +36,9 @@ export const blogTags = {
     slugPlaceholder: "workshop",
     slugHelp: "Optional. Use lowercase letters, numbers, and hyphens only.",
     slugMax: "Slug must not exceed 140 characters",
-    slugPattern:
-      "Slug may only contain lowercase letters, numbers, and hyphens",
+    slugPattern: "Slug may only contain lowercase letters, numbers, and hyphens",
     description: "Description",
-    descriptionPlaceholder:
-      "Short description for this tag (up to 500 characters)",
+    descriptionPlaceholder: "Short description for this tag (up to 500 characters)",
     descriptionMax: "Description must not exceed 500 characters",
     activeStatus: "Active status",
     activeDescription: "This tag can be used in posts",

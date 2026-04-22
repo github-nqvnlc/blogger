@@ -139,9 +139,8 @@ const FontSize = Extension.create({
         attributes: {
           fontSize: {
             default: null,
-            parseHTML: (element) =>
-              (element as HTMLElement).style.fontSize || null,
-            renderHTML: (attributes) => {
+            parseHTML: element => (element as HTMLElement).style.fontSize || null,
+            renderHTML: attributes => {
               if (!attributes.fontSize) {
                 return {};
               }
@@ -165,10 +164,7 @@ const FontSize = Extension.create({
       unsetFontSize:
         () =>
         ({ chain }) =>
-          chain()
-            .setMark("textStyle", { fontSize: null })
-            .removeEmptyTextStyle()
-            .run(),
+          chain().setMark("textStyle", { fontSize: null }).removeEmptyTextStyle().run(),
     };
   },
 });
@@ -183,18 +179,14 @@ const Indent = Extension.create({
         attributes: {
           indent: {
             default: 0,
-            parseHTML: (element) => {
-              const value = (element as HTMLElement).getAttribute(
-                "data-indent",
-              );
+            parseHTML: element => {
+              const value = (element as HTMLElement).getAttribute("data-indent");
               const parsed = value ? Number(value) : 0;
               return Number.isFinite(parsed) ? clampIndent(parsed) : 0;
             },
-            renderHTML: (attributes) => {
+            renderHTML: attributes => {
               const level =
-                typeof attributes.indent === "number"
-                  ? clampIndent(attributes.indent)
-                  : 0;
+                typeof attributes.indent === "number" ? clampIndent(attributes.indent) : 0;
 
               if (level <= 0) {
                 return {};
@@ -232,17 +224,13 @@ const Indent = Extension.create({
       indent:
         () =>
         ({ editor }) => {
-          const currentIndent = Number(
-            getActiveBlockAttributes(editor).indent ?? 0,
-          );
+          const currentIndent = Number(getActiveBlockAttributes(editor).indent ?? 0);
           return editor.commands.setIndent(currentIndent + 1);
         },
       outdent:
         () =>
         ({ editor }) => {
-          const currentIndent = Number(
-            getActiveBlockAttributes(editor).indent ?? 0,
-          );
+          const currentIndent = Number(getActiveBlockAttributes(editor).indent ?? 0);
           return editor.commands.setIndent(currentIndent - 1);
         },
     };
@@ -277,7 +265,7 @@ const EmbeddedMedia = Node.create({
     return [
       {
         tag: "figure[data-blog-media]",
-        getAttrs: (element) => {
+        getAttrs: element => {
           const figure = element as HTMLElement;
           const iframe = figure.querySelector("iframe");
           const video = figure.querySelector("video");
@@ -294,8 +282,7 @@ const EmbeddedMedia = Node.create({
           const inferredKind =
             figure.dataset.kind ??
             (iframe ? "embed" : video ? "file" : undefined) ??
-            (figure.dataset.provider === "youtube" ||
-            figure.dataset.provider === "vimeo"
+            (figure.dataset.provider === "youtube" || figure.dataset.provider === "vimeo"
               ? "embed"
               : "file");
 
@@ -324,7 +311,7 @@ const EmbeddedMedia = Node.create({
         "data-title": HTMLAttributes.title,
         class: "my-6 overflow-hidden rounded-xl",
       },
-      HTMLAttributes,
+      HTMLAttributes
     );
 
     if (HTMLAttributes.kind === "embed") {
@@ -382,13 +369,7 @@ type ToolbarButtonProps = {
   children: React.ReactNode;
 };
 
-function ToolbarButton({
-  active,
-  disabled,
-  onClick,
-  title,
-  children,
-}: ToolbarButtonProps) {
+function ToolbarButton({ active, disabled, onClick, title, children }: ToolbarButtonProps) {
   return (
     <Button
       type="button"
@@ -413,9 +394,7 @@ export function TiptapEditor({ value, onChange, disabled }: BlogEditorProps) {
   const [dialogKind, setDialogKind] = useState<MediaDialogKind | null>(null);
   const [dialogValue, setDialogValue] = useState("");
   const [dialogError, setDialogError] = useState<string | null>(null);
-  const [inlineUploadError, setInlineUploadError] = useState<string | null>(
-    null,
-  );
+  const [inlineUploadError, setInlineUploadError] = useState<string | null>(null);
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -593,12 +572,7 @@ export function TiptapEditor({ value, onChange, disabled }: BlogEditorProps) {
         })
         .run();
     } else {
-      editor
-        .chain()
-        .focus()
-        .extendMarkRange("link")
-        .setLink(linkAttributes)
-        .run();
+      editor.chain().focus().extendMarkRange("link").setLink(linkAttributes).run();
     }
 
     closeDialog();
@@ -659,9 +633,7 @@ export function TiptapEditor({ value, onChange, disabled }: BlogEditorProps) {
     }
   }
 
-  async function handleInlineImageUpload(
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) {
+  async function handleInlineImageUpload(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     event.target.value = "";
 
@@ -690,9 +662,7 @@ export function TiptapEditor({ value, onChange, disabled }: BlogEditorProps) {
         })
         .run();
     } catch (error) {
-      setInlineUploadError(
-        error instanceof Error ? error.message : msg.error.uploadFailed,
-      );
+      setInlineUploadError(error instanceof Error ? error.message : msg.error.uploadFailed);
     }
   }
 
@@ -710,11 +680,7 @@ export function TiptapEditor({ value, onChange, disabled }: BlogEditorProps) {
       return (
         <div className="overflow-hidden rounded-xl border">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={normalized}
-            alt="Image preview"
-            className="max-h-60 w-full object-cover"
-          />
+          <img src={normalized} alt="Image preview" className="max-h-60 w-full object-cover" />
         </div>
       );
     }
@@ -740,13 +706,7 @@ export function TiptapEditor({ value, onChange, disabled }: BlogEditorProps) {
 
     return (
       <div className="overflow-hidden rounded-xl border">
-        <video
-          src={parsed.src}
-          controls
-          playsInline
-          preload="metadata"
-          className="w-full"
-        />
+        <video src={parsed.src} controls playsInline preload="metadata" className="w-full" />
       </div>
     );
   }, [dialogKind, dialogValue]);
@@ -757,9 +717,7 @@ export function TiptapEditor({ value, onChange, disabled }: BlogEditorProps) {
         <ToolbarButton
           active={editorState.isHeading2}
           disabled={!editor || disabled}
-          onClick={() =>
-            editor?.chain().focus().toggleHeading({ level: 2 }).run()
-          }
+          onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}
           title={msg.toolbar.heading2}
         >
           <Heading2 />
@@ -768,9 +726,7 @@ export function TiptapEditor({ value, onChange, disabled }: BlogEditorProps) {
         <ToolbarButton
           active={editorState.isHeading3}
           disabled={!editor || disabled}
-          onClick={() =>
-            editor?.chain().focus().toggleHeading({ level: 3 }).run()
-          }
+          onClick={() => editor?.chain().focus().toggleHeading({ level: 3 }).run()}
           title={msg.toolbar.heading3}
         >
           <Heading3 />
@@ -861,7 +817,7 @@ export function TiptapEditor({ value, onChange, disabled }: BlogEditorProps) {
             className="bg-transparent text-sm outline-none"
             disabled={!editor || disabled}
             value={editorState.fontSize}
-            onChange={(event) => {
+            onChange={event => {
               const nextValue = event.target.value;
               if (!editor) {
                 return;
@@ -876,7 +832,7 @@ export function TiptapEditor({ value, onChange, disabled }: BlogEditorProps) {
             }}
           >
             <option value="">{msg.toolbar.fontSize}</option>
-            {FONT_SIZE_OPTIONS.map((fontSize) => (
+            {FONT_SIZE_OPTIONS.map(fontSize => (
               <option key={fontSize} value={fontSize}>
                 {fontSize.replace("px", "")}
               </option>
@@ -891,9 +847,7 @@ export function TiptapEditor({ value, onChange, disabled }: BlogEditorProps) {
             title={msg.toolbar.textColor}
             disabled={!editor || disabled}
             value={editorState.textColor || DEFAULT_TEXT_COLOR}
-            onChange={(event) =>
-              editor?.chain().focus().setColor(event.target.value).run()
-            }
+            onChange={event => editor?.chain().focus().setColor(event.target.value).run()}
             className="h-8 w-10 rounded border-0 bg-transparent p-0"
           />
         </label>
@@ -905,12 +859,8 @@ export function TiptapEditor({ value, onChange, disabled }: BlogEditorProps) {
             title={msg.toolbar.highlightColor}
             disabled={!editor || disabled}
             value={editorState.highlightColor || DEFAULT_HIGHLIGHT_COLOR}
-            onChange={(event) =>
-              editor
-                ?.chain()
-                .focus()
-                .setHighlight({ color: event.target.value })
-                .run()
+            onChange={event =>
+              editor?.chain().focus().setHighlight({ color: event.target.value }).run()
             }
             className="h-8 w-10 rounded border-0 bg-transparent p-0"
           />
@@ -1021,9 +971,7 @@ export function TiptapEditor({ value, onChange, disabled }: BlogEditorProps) {
 
       {(inlineUploadError || inlineUpload.error) && (
         <Alert variant="destructive">
-          <AlertDescription>
-            {inlineUploadError || inlineUpload.error?.message}
-          </AlertDescription>
+          <AlertDescription>{inlineUploadError || inlineUpload.error?.message}</AlertDescription>
         </Alert>
       )}
 
@@ -1033,7 +981,7 @@ export function TiptapEditor({ value, onChange, disabled }: BlogEditorProps) {
 
       <Dialog
         open={dialogKind !== null}
-        onOpenChange={(open) => {
+        onOpenChange={open => {
           if (!open) {
             closeDialog();
           }
@@ -1052,7 +1000,7 @@ export function TiptapEditor({ value, onChange, disabled }: BlogEditorProps) {
                 <Input
                   id="media-url"
                   value={dialogValue}
-                  onChange={(event) => setDialogValue(event.target.value)}
+                  onChange={event => setDialogValue(event.target.value)}
                   placeholder={dialogText.placeholder}
                   autoFocus
                 />

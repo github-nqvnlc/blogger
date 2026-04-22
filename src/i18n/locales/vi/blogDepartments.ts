@@ -13,8 +13,7 @@ export const blogDepartments = {
     "Hành động này không thể hoàn tác và có thể ảnh hưởng đến các bài viết đang sử dụng bộ phận nội dung này.",
   deleteSuccess: "Xóa thành công",
   deleteFailure: "Xóa thất bại",
-  deleteFailureDescription:
-    "Không thể xóa bộ phận nội dung này. Vui lòng thử lại.",
+  deleteFailureDescription: "Không thể xóa bộ phận nội dung này. Vui lòng thử lại.",
   deleteSuccessDescriptionPrefix: "Đã xóa bộ phận nội dung",
   bulkDeleteTitle: "Xác nhận xóa nhiều",
   bulkDeleteSuccessDescription: "Đã xóa thành công {count} bộ phận nội dung",
@@ -38,10 +37,8 @@ export const blogDepartments = {
     codeRequired: "Mã bộ phận nội dung là bắt buộc",
     codeMin: "Mã bộ phận nội dung phải có ít nhất 2 ký tự",
     codeMax: "Mã bộ phận nội dung không được vượt quá 10 ký tự",
-    codePattern:
-      "Mã bộ phận nội dung chỉ được chứa chữ hoa, số và dấu gạch dưới",
-    codeHelp:
-      "Mã bộ phận nội dung phải là duy nhất, viết HOA, không dấu. Ví dụ: CNTT, HCTH, KHTC.",
+    codePattern: "Mã bộ phận nội dung chỉ được chứa chữ hoa, số và dấu gạch dưới",
+    codeHelp: "Mã bộ phận nội dung phải là duy nhất, viết HOA, không dấu. Ví dụ: CNTT, HCTH, KHTC.",
     description: "Mô tả",
     descriptionPlaceholder: "Mô tả ngắn về bộ phận này (tối đa 500 ký tự)",
     descriptionMax: "Mô tả không được vượt quá 500 ký tự",
@@ -51,8 +48,7 @@ export const blogDepartments = {
     sortOrderHelp: "Số nhỏ hơn sẽ hiển thị trước. Mặc định: 0",
     activeStatus: "Trạng thái hoạt động",
     activeDescription: "Bộ phận này có thể được sử dụng trong bài viết",
-    inactiveDescription:
-      "Bộ phận này bị vô hiệu hóa và không hiển thị trong lựa chọn",
+    inactiveDescription: "Bộ phận này bị vô hiệu hóa và không hiển thị trong lựa chọn",
     inactiveWarning:
       "Bộ phận này đang bị vô hiệu hóa. Bài viết sử dụng bộ phận này vẫn hoạt động bình thường nhưng bộ phận sẽ không xuất hiện trong danh sách chọn.",
     cancel: "Hủy",

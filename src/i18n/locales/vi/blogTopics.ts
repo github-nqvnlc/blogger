@@ -47,8 +47,7 @@ export const blogTopics = {
     descriptionMax: "Mô tả không được vượt quá 500 ký tự",
     activeStatus: "Trạng thái hoạt động",
     activeDescription: "Chủ đề này có thể được sử dụng trong bài viết",
-    inactiveDescription:
-      "Chủ đề này bị vô hiệu hóa và không hiển thị trong lựa chọn",
+    inactiveDescription: "Chủ đề này bị vô hiệu hóa và không hiển thị trong lựa chọn",
     inactiveWarning:
       "Chủ đề này đang bị vô hiệu hóa. Bài viết sử dụng chủ đề này vẫn hoạt động bình thường nhưng chủ đề sẽ không xuất hiện trong danh sách chọn.",
     cancel: "Hủy",

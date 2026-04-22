@@ -4,31 +4,15 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import {
-  ColumnDef,
-  PaginationState,
-  RowSelectionState,
-  SortingState,
-} from "@tanstack/react-table";
-import {
-  Archive,
-  FolderOpen,
-  Plus,
-  Search,
-  Send,
-  SquarePen,
-  Trash2,
-} from "lucide-react";
+import { ColumnDef, PaginationState, RowSelectionState, SortingState } from "@tanstack/react-table";
+import { Archive, FolderOpen, Plus, Search, Send, SquarePen, Trash2 } from "lucide-react";
 import { useDeleteDoc, useGetCount, useGetList, useUpdateDoc } from "@/hooks";
 import { useLanguage } from "@/hooks/useLanguage";
 import { buildLocalePath } from "@/i18n";
 import { BlogDepartment, Category, Post, PostStatus } from "@/types/blogs";
 import { Filter } from "@/types/hooks";
 import { AdminAccessDenied } from "@/components/layout/admin-access-denied";
-import {
-  getPostColumns,
-  type PostColumnMeta,
-} from "@/components/blogs/posts/PostColumns";
+import { getPostColumns, type PostColumnMeta } from "@/components/blogs/posts/PostColumns";
 import { PostTable } from "@/components/blogs/posts/PostTable";
 import {
   AlertDialog,
@@ -75,20 +59,14 @@ export function PostList() {
   const searchParams = useSearchParams();
   const { locale, t } = useLanguage();
   const copy = t.blogPosts;
-  const [sorting, setSorting] = React.useState<SortingState>([
-    { id: "creation", desc: true },
-  ]);
+  const [sorting, setSorting] = React.useState<SortingState>([{ id: "creation", desc: true }]);
   const [pagination, setPagination] = React.useState<PaginationState>({
     pageIndex: 0,
     pageSize: PAGE_SIZE,
   });
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({});
-  const [statusFilter, setStatusFilter] = React.useState<"all" | PostStatus>(
-    "all",
-  );
-  const [visibilityFilter, setVisibilityFilter] = React.useState<
-    "all" | Post["visibility"]
-  >("all");
+  const [statusFilter, setStatusFilter] = React.useState<"all" | PostStatus>("all");
+  const [visibilityFilter, setVisibilityFilter] = React.useState<"all" | Post["visibility"]>("all");
   const [departmentFilter, setDepartmentFilter] = React.useState("all");
   const [categoryFilter, setCategoryFilter] = React.useState("all");
   const [topicFilter, setTopicFilter] = React.useState<string>("all");
@@ -129,14 +107,7 @@ export function PostList() {
     }
 
     return result;
-  }, [
-    categoryFilter,
-    departmentFilter,
-    statusFilter,
-    topicFilter,
-    tagFilter,
-    visibilityFilter,
-  ]);
+  }, [categoryFilter, departmentFilter, statusFilter, topicFilter, tagFilter, visibilityFilter]);
 
   const searchOrFilters = React.useMemo<Filter[]>(() => {
     const keyword = search.trim();
@@ -188,13 +159,7 @@ export function PostList() {
     limit: pagination.pageSize,
   });
 
-  const { data: totalCount } = useGetCount(
-    "posts",
-    apiFilters,
-    false,
-    undefined,
-    searchOrFilters,
-  );
+  const { data: totalCount } = useGetCount("posts", apiFilters, false, undefined, searchOrFilters);
 
   const [departments, setDepartments] = React.useState<BlogDepartment[]>([]);
   const [categories, setCategories] = React.useState<Category[]>([]);
@@ -202,50 +167,42 @@ export function PostList() {
   const { deleteDoc: deletePost } = useDeleteDoc("posts");
 
   const departmentLabelMap = React.useMemo(
-    () => new Map(departments.map((item) => [item.name, item.department_name])),
-    [departments],
+    () => new Map(departments.map(item => [item.name, item.department_name])),
+    [departments]
   );
   const categoryLabelMap = React.useMemo(
-    () => new Map(categories.map((item) => [item.name, item.category])),
-    [categories],
+    () => new Map(categories.map(item => [item.name, item.category])),
+    [categories]
   );
 
   const getDepartmentLabel = React.useCallback(
     (post: Post) => {
-      const value =
-        typeof post.department === "string"
-          ? post.department
-          : post.department?.name;
-      return value
-        ? (departmentLabelMap.get(value) ?? value)
-        : copy.table.unknownDepartment;
+      const value = typeof post.department === "string" ? post.department : post.department?.name;
+      return value ? (departmentLabelMap.get(value) ?? value) : copy.table.unknownDepartment;
     },
-    [copy.table.unknownDepartment, departmentLabelMap],
+    [copy.table.unknownDepartment, departmentLabelMap]
   );
 
   const getCategoryLabel = React.useCallback(
     (post: Post) => {
-      const value =
-        typeof post.category === "string" ? post.category : post.category?.name;
-      return value
-        ? (categoryLabelMap.get(value) ?? value)
-        : copy.table.unknownCategory;
+      const value = typeof post.category === "string" ? post.category : post.category?.name;
+      return value ? (categoryLabelMap.get(value) ?? value) : copy.table.unknownCategory;
     },
-    [categoryLabelMap, copy.table.unknownCategory],
+    [categoryLabelMap, copy.table.unknownCategory]
   );
 
   const handleViewDetail = React.useCallback(
     (post: Post) => {
       router.push(buildLocalePath(locale, `/admin/posts/${post.name}`));
     },
-    [locale, router],
+    [locale, router]
   );
 
   const handleEdit = React.useCallback(
     (post: Post) => {
       router.push(buildLocalePath(locale, `/admin/posts/${post.name}/edit`));
     },
-    [locale, router],
+    [locale, router]
   );
 
   const handleStatusUpdate = React.useCallback(
@@ -262,14 +219,14 @@ export function PostList() {
           copy.toast.statusUpdateSuccess,
           copy.toast.statusUpdateSuccessDescription
             .replace("{title}", post.title)
-            .replace("{status}", copy.status[nextStatus]),
+            .replace("{status}", copy.status[nextStatus])
         );
         refetch();
       } catch (err) {
         showCrudError(
           copy.toast.statusUpdateFailure,
           err,
-          copy.toast.statusUpdateFailureDescription,
+          copy.toast.statusUpdateFailureDescription
         );
       }
     },
@@ -281,7 +238,7 @@ export function PostList() {
       copy.toast.statusUpdateSuccessDescription,
       refetch,
       updatePost,
-    ],
+    ]
   );
 
   const handleDeleteConfirm = React.useCallback(async () => {
@@ -291,19 +248,12 @@ export function PostList() {
       await deletePost(deletingPost.name);
       showCrudSuccess(
         copy.toast.deleteSuccess,
-        copy.toast.deleteSuccessDescription.replace(
-          "{title}",
-          deletingPost.title,
-        ),
+        copy.toast.deleteSuccessDescription.replace("{title}", deletingPost.title)
       );
       setDeletingPost(null);
       refetch();
     } catch (err) {
-      showCrudError(
-        copy.toast.deleteFailure,
-        err,
-        copy.toast.deleteFailureDescription,
-      );
+      showCrudError(copy.toast.deleteFailure, err, copy.toast.deleteFailureDescription);
     }
   }, [
     copy.toast.deleteFailure,
@@ -319,23 +269,16 @@ export function PostList() {
     if (bulkDeletingPosts.length === 0) return;
 
     try {
-      await Promise.all(bulkDeletingPosts.map((post) => deletePost(post.name)));
+      await Promise.all(bulkDeletingPosts.map(post => deletePost(post.name)));
       showCrudSuccess(
         copy.toast.deleteSuccess,
-        copy.toast.bulkDeleteSuccessDescription.replace(
-          "{count}",
-          String(bulkDeletingPosts.length),
-        ),
+        copy.toast.bulkDeleteSuccessDescription.replace("{count}", String(bulkDeletingPosts.length))
       );
       setBulkDeletingPosts([]);
       setRowSelection({});
       refetch();
     } catch (err) {
-      showCrudError(
-        copy.toast.deleteFailure,
-        err,
-        copy.toast.deleteFailureDescription,
-      );
+      showCrudError(copy.toast.deleteFailure, err, copy.toast.deleteFailureDescription);
     }
   }, [
     bulkDeletingPosts,
@@ -349,27 +292,26 @@ export function PostList() {
 
   const handleBulkStatusUpdate = React.useCallback(
     async (nextStatus: PostStatus) => {
-      const selectedPosts =
-        posts?.filter((_, index) => rowSelection[index] === true) ?? [];
+      const selectedPosts = posts?.filter((_, index) => rowSelection[index] === true) ?? [];
       if (selectedPosts.length === 0) return;
 
       try {
         await Promise.all(
-          selectedPosts.map((post) =>
+          selectedPosts.map(post =>
             updatePost(post.name, {
               status: nextStatus,
               published_at:
                 nextStatus === "Published" && !post.published_at
                   ? formatFrappeDatetime(new Date())
                   : undefined,
-            }),
-          ),
+            })
+          )
         );
         showCrudSuccess(
           copy.toast.statusUpdateSuccess,
           copy.toast.bulkStatusUpdateSuccessDescription
             .replace("{count}", String(selectedPosts.length))
-            .replace("{status}", copy.status[nextStatus]),
+            .replace("{status}", copy.status[nextStatus])
         );
         setRowSelection({});
         refetch();
@@ -377,7 +319,7 @@ export function PostList() {
         showCrudError(
           copy.toast.statusUpdateFailure,
           err,
-          copy.toast.statusUpdateFailureDescription,
+          copy.toast.statusUpdateFailureDescription
         );
       }
     },
@@ -391,31 +333,25 @@ export function PostList() {
       refetch,
       rowSelection,
       updatePost,
-    ],
+    ]
   );
 
   const columnMeta = React.useMemo<PostColumnMeta>(
     () => ({
       onView: handleViewDetail,
       onEdit: handleEdit,
-      onPublish: (post) => handleStatusUpdate(post, "Published"),
-      onMoveToDraft: (post) => handleStatusUpdate(post, "Draft"),
-      onArchive: (post) => handleStatusUpdate(post, "Archived"),
+      onPublish: post => handleStatusUpdate(post, "Published"),
+      onMoveToDraft: post => handleStatusUpdate(post, "Draft"),
+      onArchive: post => handleStatusUpdate(post, "Archived"),
       onDelete: setDeletingPost,
       getDepartmentLabel,
       getCategoryLabel,
     }),
-    [
-      getCategoryLabel,
-      getDepartmentLabel,
-      handleEdit,
-      handleStatusUpdate,
-      handleViewDetail,
-    ],
+    [getCategoryLabel, getDepartmentLabel, handleEdit, handleStatusUpdate, handleViewDetail]
   );
 
   React.useEffect(() => {
-    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+    setPagination(prev => ({ ...prev, pageIndex: 0 }));
   }, [apiFilters, orderBy, search]);
 
   React.useEffect(() => {
@@ -423,38 +359,26 @@ export function PostList() {
       return;
     }
 
-    const categoryExists = categories.some(
-      (item) => item.name === categoryFilter,
-    );
+    const categoryExists = categories.some(item => item.name === categoryFilter);
     if (!categoryExists) {
       setCategoryFilter("all");
     }
   }, [categories, categoryFilter, departmentFilter]);
 
-  const statusCode = (error as { response?: { status?: number } } | null)
-    ?.response?.status;
+  const statusCode = (error as { response?: { status?: number } } | null)?.response?.status;
 
-  const columns: ColumnDef<Post, unknown>[] = React.useMemo(
-    () => getPostColumns(t),
-    [t],
-  );
+  const columns: ColumnDef<Post, unknown>[] = React.useMemo(() => getPostColumns(t), [t]);
 
   if (statusCode === 403) {
-    return (
-      <AdminAccessDenied description={t.errors.postAccessDeniedDescription} />
-    );
+    return <AdminAccessDenied description={t.errors.postAccessDeniedDescription} />;
   }
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div className="space-y-1">
-          <h1 className="text-3xl font-bold tracking-tight">
-            {copy.list.title}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {copy.list.description}
-          </p>
+          <h1 className="text-3xl font-bold tracking-tight">{copy.list.title}</h1>
+          <p className="text-sm text-muted-foreground">{copy.list.description}</p>
         </div>
         <Button asChild>
           <Link href={buildLocalePath(locale, "/admin/posts/new")}>
@@ -470,16 +394,14 @@ export function PostList() {
           <Input
             placeholder={copy.filters.searchPlaceholder}
             value={search}
-            onChange={(event) => setSearch(event.target.value)}
+            onChange={event => setSearch(event.target.value)}
             className="pl-9"
           />
         </div>
         <div className="flex gap-3 lg:w-1/2">
           <Select
             value={statusFilter}
-            onValueChange={(value) =>
-              setStatusFilter(value as typeof statusFilter)
-            }
+            onValueChange={value => setStatusFilter(value as typeof statusFilter)}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder={copy.filters.status} />
@@ -494,9 +416,7 @@ export function PostList() {
 
           <Select
             value={visibilityFilter}
-            onValueChange={(value) =>
-              setVisibilityFilter(value as typeof visibilityFilter)
-            }
+            onValueChange={value => setVisibilityFilter(value as typeof visibilityFilter)}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder={copy.filters.visibility} />
@@ -504,9 +424,7 @@ export function PostList() {
             <SelectContent>
               <SelectItem value="all">{copy.filters.allVisibility}</SelectItem>
               <SelectItem value="Public">{copy.visibility.Public}</SelectItem>
-              <SelectItem value="Internal">
-                {copy.visibility.Internal}
-              </SelectItem>
+              <SelectItem value="Internal">{copy.visibility.Internal}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -556,27 +474,15 @@ export function PostList() {
             {Object.keys(rowSelection).length} {t.common.selected}
           </span>
           <div className="flex flex-wrap gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => handleBulkStatusUpdate("Published")}
-            >
+            <Button size="sm" variant="outline" onClick={() => handleBulkStatusUpdate("Published")}>
               <Send className="mr-2 h-4 w-4" />
               {copy.actions.publish}
             </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => handleBulkStatusUpdate("Draft")}
-            >
+            <Button size="sm" variant="outline" onClick={() => handleBulkStatusUpdate("Draft")}>
               <SquarePen className="mr-2 h-4 w-4" />
               {copy.actions.moveToDraft}
             </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => handleBulkStatusUpdate("Archived")}
-            >
+            <Button size="sm" variant="outline" onClick={() => handleBulkStatusUpdate("Archived")}>
               <Archive className="mr-2 h-4 w-4" />
               {copy.actions.archive}
             </Button>
@@ -585,8 +491,7 @@ export function PostList() {
               size="sm"
               onClick={() =>
                 setBulkDeletingPosts(
-                  posts?.filter((_, index) => rowSelection[index] === true) ??
-                    [],
+                  posts?.filter((_, index) => rowSelection[index] === true) ?? []
                 )
               }
             >
@@ -616,9 +521,7 @@ export function PostList() {
             </div>
             <div>
               <p className="font-medium">{copy.list.emptyTitle}</p>
-              <p className="text-sm text-muted-foreground">
-                {copy.list.emptyDescription}
-              </p>
+              <p className="text-sm text-muted-foreground">{copy.list.emptyDescription}</p>
             </div>
             <Button asChild variant="outline" size="sm">
               <Link href={buildLocalePath(locale, "/admin/posts/new")}>
@@ -632,7 +535,7 @@ export function PostList() {
 
       <AlertDialog
         open={Boolean(deletingPost)}
-        onOpenChange={(open) => {
+        onOpenChange={open => {
           if (!open) setDeletingPost(null);
         }}
       >
@@ -640,24 +543,19 @@ export function PostList() {
           <AlertDialogHeader>
             <AlertDialogTitle>{copy.actions.delete}</AlertDialogTitle>
             <AlertDialogDescription>
-              {copy.list.deleteConfirmDescription.replace(
-                "{title}",
-                deletingPost?.title ?? "",
-              )}
+              {copy.list.deleteConfirmDescription.replace("{title}", deletingPost?.title ?? "")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{t.common.cancel}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteConfirm}>
-              {t.common.delete}
-            </AlertDialogAction>
+            <AlertDialogAction onClick={handleDeleteConfirm}>{t.common.delete}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
       <AlertDialog
         open={bulkDeletingPosts.length > 0}
-        onOpenChange={(open) => {
+        onOpenChange={open => {
           if (!open) setBulkDeletingPosts([]);
         }}
       >
@@ -667,7 +565,7 @@ export function PostList() {
             <AlertDialogDescription>
               {copy.list.bulkDeleteConfirmDescription.replace(
                 "{count}",
-                String(bulkDeletingPosts.length),
+                String(bulkDeletingPosts.length)
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>

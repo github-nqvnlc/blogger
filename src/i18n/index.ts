@@ -4,17 +4,12 @@ import { vi } from "./locales/vi";
 export const dictionaries = { en, vi } as const;
 
 export type Locale = keyof typeof dictionaries;
-type DeepStringLeaves<T> = T extends string
-  ? string
-  : { [K in keyof T]: DeepStringLeaves<T[K]> };
+type DeepStringLeaves<T> = T extends string ? string : { [K in keyof T]: DeepStringLeaves<T[K]> };
 
 export type Dictionary = DeepStringLeaves<typeof en>;
 
 export const DEFAULT_LOCALE: Locale = "vi";
-export const SUPPORTED_LOCALES = [
-  "vi",
-  "en",
-] as const satisfies readonly Locale[];
+export const SUPPORTED_LOCALES = ["vi", "en"] as const satisfies readonly Locale[];
 export const LOCALE_COOKIE_KEY = "cds_app_locale";
 
 export const SUPPORTED_LANGUAGES: { code: Locale; label: string }[] = [
@@ -22,9 +17,7 @@ export const SUPPORTED_LANGUAGES: { code: Locale; label: string }[] = [
   { code: "en", label: "English" },
 ];
 
-export function isValidLocale(
-  value: string | null | undefined,
-): value is Locale {
+export function isValidLocale(value: string | null | undefined): value is Locale {
   return value === "vi" || value === "en";
 }
 

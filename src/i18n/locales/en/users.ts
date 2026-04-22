@@ -36,8 +36,7 @@ export const users = {
     },
     active_sessions: {
       title: "Active Sessions",
-      description:
-        "Devices and browser sessions currently linked to this user.",
+      description: "Devices and browser sessions currently linked to this user.",
       current: "Current",
       active: "Active",
     },
