@@ -3,7 +3,6 @@
 import { AdminAccessDenied } from "@/components/layout/admin-access-denied";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -27,7 +26,16 @@ import { buildLocalePath } from "@/i18n";
 import { BlogDepartment, Category, Post, Topic } from "@/types/blogs";
 import { Filter } from "@/types/hooks";
 import { formatDate } from "date-fns";
-import { ArrowLeft, Eye, FolderTree, Hash, Layers3, Pencil } from "lucide-react";
+import {
+  ArrowLeft,
+  BookOpen,
+  FolderOpen,
+  FolderTree,
+  Hash,
+  Layers3,
+  Lightbulb,
+  Pencil,
+} from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import * as React from "react";
@@ -162,59 +170,59 @@ export function DepartmentDetail({ departmentId }: DepartmentDetailProps) {
 
   return (
     <div className="space-y-6">
-      <div className="space-y-2">
-        <div className="flex flex-col gap-4 sm:flex-row-reverse sm:items-start sm:justify-between">
-          <Button asChild variant="ghost" size="sm" className="w-fit px-0">
-            <Link href={buildLocalePath(locale, "/admin/blog-departments")}>
-              <ArrowLeft className="h-4 w-4" />
-              {copy.backToList}
-            </Link>
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">{department.department_name}</h1>
-            <p className="mt-1 text-muted-foreground">
-              {department.description || copy.noDescription}
-            </p>
+      <Button asChild variant="ghost" size="sm" className="w-fit px-0">
+        <Link href={buildLocalePath(locale, "/admin/blog-departments")}>
+          <ArrowLeft className="h-4 w-4" />
+          {copy.backToList}
+        </Link>
+      </Button>
+
+      <div className="-mt-4 flex flex-col gap-4 sm:flex-row-reverse sm:items-start sm:justify-between">
+        <Button size="sm" onClick={() => setEditDialogOpen(true)}>
+          Chỉnh sửa
+          <Pencil className="h-4 w-4 ml-2" />
+        </Button>
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">{department.department_name}</h1>
+          <p className="mt-1 text-muted-foreground">
+            {department.description || copy.noDescription}
+          </p>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap justify-between items-center gap-4 rounded-lg border px-4 py-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-2">
+            <FolderOpen className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm font-medium">{copy.totalCategories}:</span>
+            <span className="text-sm font-bold">{totalCategories ?? 0}</span>
+          </div>
+          <div className="h-4 w-px bg-border" />
+          <div className="flex items-center gap-2">
+            <Lightbulb className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm font-medium">{copy.totalTopics}:</span>
+            <span className="text-sm font-bold">{totalTopics ?? 0}</span>
+          </div>
+          <div className="h-4 w-px bg-border" />
+          <div className="flex items-center gap-2">
+            <BookOpen className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm font-medium">{copy.totalPosts}:</span>
+            <span className="text-sm font-bold">{totalPosts ?? 0}</span>
           </div>
         </div>
-        <div className="flex flex-row items-center justify-between gap-2">
+        <div>
           <div className="flex flex-row items-center gap-2 ">
-            <StatusBadge
-              active={department.is_active === 1}
-              activeLabel={t.blogDepartments.table.active}
-              inactiveLabel={t.blogDepartments.table.inactive}
-            />
             <p className="font-semibold text-sm italic text-muted-foreground">
               {department.creation
                 ? formatDate(new Date(department.creation), " HH:mm - dd/MM/yyyy")
                 : "-"}
             </p>
+            <StatusBadge
+              active={department.is_active === 1}
+              activeLabel={t.blogDepartments.table.active}
+              inactiveLabel={t.blogDepartments.table.inactive}
+            />
           </div>
-
-          <Button size="sm" onClick={() => setEditDialogOpen(true)}>
-            Chỉnh sửa
-            <Pencil className="h-4 w-4 ml-2" />
-          </Button>
-        </div>
-      </div>
-
-      <div className="flex flex-wrap items-center gap-4 rounded-lg border bg-muted/30 px-4 py-3">
-        <div className="flex items-center gap-2">
-          <FolderTree className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm font-medium">{copy.totalCategories}:</span>
-          <span className="text-sm font-bold">{totalCategories ?? 0}</span>
-        </div>
-        <div className="h-4 w-px bg-border" />
-        <div className="flex items-center gap-2">
-          <Hash className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm font-medium">{copy.totalTopics}:</span>
-          <span className="text-sm font-bold">{totalTopics ?? 0}</span>
-        </div>
-        <div className="h-4 w-px bg-border" />
-        <div className="flex items-center gap-2">
-          <Eye className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm font-medium">{copy.totalPosts}:</span>
-          <span className="text-sm font-bold">{totalPosts ?? 0}</span>
         </div>
       </div>
 
@@ -222,186 +230,178 @@ export function DepartmentDetail({ departmentId }: DepartmentDetailProps) {
         defaultValue="categories"
         className="space-y-2 bg-card rounded-xl p-2 lg:p-4 shadow-2xl"
       >
-        <TabsList variant="line" className="w-full justify-start ">
-          <TabsTrigger value="categories">{copy.categories}</TabsTrigger>
-          <TabsTrigger value="topics">{copy.topics}</TabsTrigger>
-          <TabsTrigger value="posts">{copy.posts}</TabsTrigger>
+        <TabsList variant="line" className="w-full justify-start">
+          <TabsTrigger
+            value="categories"
+            className="data-[state=active]:text-primary font-bold after:bg-primary"
+          >
+            {copy.categories}
+          </TabsTrigger>
+          <TabsTrigger
+            value="topics"
+            className="data-[state=active]:text-primary font-bold after:bg-primary"
+          >
+            {copy.topics}
+          </TabsTrigger>
+          <TabsTrigger
+            value="posts"
+            className="data-[state=active]:text-primary font-bold after:bg-primary"
+          >
+            {copy.posts}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="categories">
-          <Card>
-            <CardHeader>
-              <CardTitle>{copy.categories}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {isLoadingCategories && !loadedCategories.length ? (
-                <Skeleton className="h-48 w-full rounded-xl" />
-              ) : !loadedCategories.length ? (
-                <EmptyState icon={FolderTree} label={copy.noCategories} />
-              ) : (
-                <div
-                  ref={categoriesScrollRef}
-                  onScroll={handleCategoriesScroll}
-                  className="max-h-96 overflow-y-auto rounded-md border"
-                >
-                  <Table>
-                    <TableHeader className="sticky top-0 z-10 bg-background">
-                      <TableRow>
-                        <TableHead>{copy.categories}</TableHead>
-                        <TableHead>{copy.description}</TableHead>
-                        <TableHead>{common.status}</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {loadedCategories.map(category => (
-                        <TableRow key={category.name}>
-                          <TableCell>
-                            <div className="space-y-1">
-                              <p className="font-medium">{category.category}</p>
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-muted-foreground">
-                            {category.description || copy.noDescription}
-                          </TableCell>
-                          <TableCell>
-                            <StatusBadge
-                              active={category.is_active === 1}
-                              activeLabel={t.blogDepartments.table.active}
-                              inactiveLabel={t.blogDepartments.table.inactive}
-                            />
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                      {isLoadingCategories && loadedCategories.length > 0 && (
-                        <TableRow>
-                          <TableCell colSpan={3}>
-                            <Skeleton className="h-8 w-full rounded-md" />
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          {isLoadingCategories && !loadedCategories.length ? (
+            <Skeleton className="h-48 w-full rounded-xl" />
+          ) : !loadedCategories.length ? (
+            <EmptyState icon={FolderTree} label={copy.noCategories} />
+          ) : (
+            <div
+              ref={categoriesScrollRef}
+              onScroll={handleCategoriesScroll}
+              className="max-h-96 overflow-y-auto rounded-md border"
+            >
+              <Table noWrapper>
+                <TableHeader className="sticky top-0 z-10 bg-background">
+                  <TableRow>
+                    <TableHead>{copy.categories}</TableHead>
+                    <TableHead>{copy.description}</TableHead>
+                    <TableHead>{common.status}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {loadedCategories.map(category => (
+                    <TableRow key={category.name}>
+                      <TableCell>
+                        <div className="space-y-1">
+                          <p className="font-medium">{category.category}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {category.description || copy.noDescription}
+                      </TableCell>
+                      <TableCell>
+                        <StatusBadge
+                          active={category.is_active === 1}
+                          activeLabel={t.blogDepartments.table.active}
+                          inactiveLabel={t.blogDepartments.table.inactive}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {isLoadingCategories && loadedCategories.length > 0 && (
+                    <TableRow>
+                      <TableCell colSpan={3}>
+                        <Skeleton className="h-8 w-full rounded-md" />
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="topics">
-          <Card>
-            <CardHeader>
-              <CardTitle>{copy.topics}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {isLoadingTopics && !loadedTopics.length ? (
-                <Skeleton className="h-48 w-full rounded-xl" />
-              ) : !loadedTopics.length ? (
-                <EmptyState icon={Hash} label={copy.noTopics} />
-              ) : (
-                <div
-                  ref={topicsScrollRef}
-                  onScroll={handleTopicsScroll}
-                  className="max-h-96 overflow-y-auto rounded-md border"
-                >
-                  <Table>
-                    <TableHeader className="sticky top-0 z-10 bg-background">
-                      <TableRow>
-                        <TableHead>{copy.topics}</TableHead>
-                        <TableHead>{copy.description}</TableHead>
-                        <TableHead>{common.status}</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {loadedTopics.map(topic => (
-                        <TableRow key={topic.name}>
-                          <TableCell>
-                            <div className="space-y-1">
-                              <p className="font-medium">{topic.topic}</p>
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-muted-foreground">
-                            {topic.desc || copy.noDescription}
-                          </TableCell>
-                          <TableCell>
-                            <StatusBadge
-                              active={topic.is_active === 1}
-                              activeLabel={t.blogDepartments.table.active}
-                              inactiveLabel={t.blogDepartments.table.inactive}
-                            />
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                      {isLoadingTopics && loadedTopics.length > 0 && (
-                        <TableRow>
-                          <TableCell colSpan={3}>
-                            <Skeleton className="h-8 w-full rounded-md" />
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          {isLoadingTopics && !loadedTopics.length ? (
+            <Skeleton className="h-48 w-full rounded-xl" />
+          ) : !loadedTopics.length ? (
+            <EmptyState icon={Hash} label={copy.noTopics} />
+          ) : (
+            <div
+              ref={topicsScrollRef}
+              onScroll={handleTopicsScroll}
+              className="max-h-96 overflow-y-auto rounded-md border"
+            >
+              <Table noWrapper>
+                <TableHeader className="sticky top-0 z-10 bg-background">
+                  <TableRow>
+                    <TableHead>{copy.topics}</TableHead>
+                    <TableHead>{copy.description}</TableHead>
+                    <TableHead>{common.status}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {loadedTopics.map(topic => (
+                    <TableRow key={topic.name}>
+                      <TableCell>
+                        <div className="space-y-1">
+                          <p className="font-medium">{topic.topic}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {topic.desc || copy.noDescription}
+                      </TableCell>
+                      <TableCell>
+                        <StatusBadge
+                          active={topic.is_active === 1}
+                          activeLabel={t.blogDepartments.table.active}
+                          inactiveLabel={t.blogDepartments.table.inactive}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {isLoadingTopics && loadedTopics.length > 0 && (
+                    <TableRow>
+                      <TableCell colSpan={3}>
+                        <Skeleton className="h-8 w-full rounded-md" />
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="posts">
-          <Card>
-            <CardHeader>
-              <CardTitle>{copy.posts}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {isLoadingPosts && !loadedPosts.length ? (
-                <Skeleton className="h-48 w-full rounded-xl" />
-              ) : !loadedPosts.length ? (
-                <EmptyState icon={Layers3} label={copy.noPosts} />
-              ) : (
-                <div
-                  ref={postsScrollRef}
-                  onScroll={handlePostsScroll}
-                  className="max-h-96 overflow-y-auto rounded-md border"
-                >
-                  <Table>
-                    <TableHeader className="sticky top-0 z-10 bg-background">
-                      <TableRow>
-                        <TableHead>{copy.posts}</TableHead>
-                        <TableHead>{copy.categories}</TableHead>
-                        <TableHead>{common.status}</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {loadedPosts.map(post => (
-                        <TableRow key={post.name}>
-                          <TableCell>
-                            <div className="space-y-1">
-                              <p className="font-medium">{post.title}</p>
-                              <p className="text-xs text-muted-foreground">{post.visibility}</p>
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-muted-foreground">
-                            {typeof post.category === "string"
-                              ? post.category
-                              : post.category.category}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline">{post.status}</Badge>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                      {isLoadingPosts && loadedPosts.length > 0 && (
-                        <TableRow>
-                          <TableCell colSpan={3}>
-                            <Skeleton className="h-8 w-full rounded-md" />
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          {isLoadingPosts && !loadedPosts.length ? (
+            <Skeleton className="h-48 w-full rounded-xl" />
+          ) : !loadedPosts.length ? (
+            <EmptyState icon={Layers3} label={copy.noPosts} />
+          ) : (
+            <div
+              ref={postsScrollRef}
+              onScroll={handlePostsScroll}
+              className="max-h-[480px] overflow-y-auto rounded-md border"
+            >
+              <Table noWrapper>
+                <TableHeader className="sticky top-0 z-10 bg-background">
+                  <TableRow>
+                    <TableHead>{copy.posts}</TableHead>
+                    <TableHead>{copy.categories}</TableHead>
+                    <TableHead>{common.status}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {loadedPosts.map(post => (
+                    <TableRow key={post.name}>
+                      <TableCell>
+                        <div className="space-y-1">
+                          <p className="font-medium">{post.title}</p>
+                          <p className="text-xs text-muted-foreground">{post.visibility}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {typeof post.category === "string" ? post.category : post.category.category}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{post.status}</Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {isLoadingPosts && loadedPosts.length > 0 && (
+                    <TableRow>
+                      <TableCell colSpan={3}>
+                        <Skeleton className="h-8 w-full rounded-md" />
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </TabsContent>
       </Tabs>
 

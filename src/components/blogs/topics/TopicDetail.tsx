@@ -3,7 +3,6 @@
 import { AdminAccessDenied } from "@/components/layout/admin-access-denied";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -26,7 +25,7 @@ import { buildLocalePath } from "@/i18n";
 import { BlogDepartment, Post, PostTopic, Topic } from "@/types/blogs";
 import { Filter } from "@/types/hooks";
 import { formatDate } from "date-fns";
-import { ArrowLeft, BookOpen, FolderOpen, Hash, Pencil } from "lucide-react";
+import { ArrowLeft, BookOpen, FolderOpen, Newspaper, Pencil } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import * as React from "react";
@@ -159,114 +158,103 @@ export function TopicDetail({ topicId }: TopicDetailProps) {
 
   return (
     <div className="space-y-6">
-      <div className="space-y-2">
-        <div className="flex flex-col gap-4 sm:flex-row-reverse sm:items-start sm:justify-between">
-          <Button asChild variant="ghost" size="sm" className="w-fit px-0">
-            <Link href={buildLocalePath(locale, "/admin/topics")}>
-              <ArrowLeft className="h-4 w-4" />
-              {copy.backToList}
-            </Link>
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">{topic.topic}</h1>
-            <p className="mt-1 text-muted-foreground">{topic.desc || copy.noDescription}</p>
-          </div>
-        </div>
-        <div className="flex flex-row items-center justify-between gap-2">
-          <div className="flex flex-row items-center gap-2">
-            <StatusBadge
-              active={topic.is_active === 1}
-              activeLabel={t.blogTopics.table.active}
-              inactiveLabel={t.blogTopics.table.inactive}
-            />
-            <p className="text-sm font-semibold italic text-muted-foreground">
-              {topic.creation ? formatDate(new Date(topic.creation), " HH:mm - dd/MM/yyyy") : "-"}
-            </p>
-          </div>
-          <Button size="sm" onClick={() => setEditDialogOpen(true)}>
-            Chỉnh sửa
-            <Pencil className="h-4 w-4 ml-2" />
-          </Button>
+      <Button asChild variant="ghost" size="sm" className="w-fit px-0">
+        <Link href={buildLocalePath(locale, "/admin/topics")}>
+          <ArrowLeft className="h-4 w-4" />
+          {copy.backToList}
+        </Link>
+      </Button>
+
+      <div className="-mt-4 flex flex-col gap-4 sm:flex-row-reverse sm:items-start sm:justify-between">
+        <Button size="sm" onClick={() => setEditDialogOpen(true)}>
+          Chỉnh sửa
+          <Pencil className="h-4 w-4 ml-2" />
+        </Button>
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">{topic.topic}</h1>
+          <p className="mt-1 text-muted-foreground">{topic.desc || copy.noDescription}</p>
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-4 rounded-lg border bg-muted/30 px-4 py-3">
-        <div className="flex items-center gap-2">
-          <BookOpen className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm font-medium">{copy.totalPosts}:</span>
-          <span className="text-sm font-bold">{totalPosts}</span>
-        </div>
-        <div className="h-4 w-px bg-border" />
-        <div className="flex items-center gap-2">
-          <Hash className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm font-medium">{copy.department}:</span>
-          <Link
-            href={buildLocalePath(locale, `/admin/blog-departments/${departmentId}`)}
-            className="text-sm font-bold hover:underline underline-offset-4"
-          >
-            {departmentName}
-          </Link>
-        </div>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>{copy.posts}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoadingPostTopics && !loadedPosts?.length ? (
-            <Skeleton className="h-48 w-full rounded-xl" />
-          ) : !loadedPosts?.length ? (
-            <EmptyState icon={FolderOpen} label={copy.noPosts} />
-          ) : (
-            <div
-              ref={postsScrollRef}
-              onScroll={handlePostsScroll}
-              className="max-h-96 overflow-y-auto rounded-md border"
+      <div className="flex flex-wrap justify-between items-center gap-4 rounded-lg border px-4 py-3">
+        <div className="flex flex-wrap justify-between items-center gap-2">
+          <div className="flex items-center gap-2">
+            <Newspaper className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm font-medium">{copy.department}:</span>
+            <Link
+              href={buildLocalePath(locale, `/admin/blog-departments/${departmentId}`)}
+              className="text-sm font-bold hover:underline underline-offset-4"
             >
-              <Table>
-                <TableHeader className="sticky top-0 z-10 bg-background">
-                  <TableRow>
-                    <TableHead>{copy.posts}</TableHead>
-                    <TableHead>{common.status}</TableHead>
-                    <TableHead>{copy.visibility}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {(loadedPosts ?? []).map((post: Post) => (
-                    <TableRow key={post.name}>
-                      <TableCell>
-                        <div className="space-y-1">
-                          <p className="font-medium">{post.title}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {post.published_at
-                              ? formatDate(new Date(post.published_at), " HH:mm dd/MM/yyyy")
-                              : formatDate(
-                                  new Date(post.creation ?? new Date()),
-                                  " HH:mm dd/MM/yyyy"
-                                )}
-                          </p>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{post.status}</Badge>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">{post.visibility}</TableCell>
-                    </TableRow>
-                  ))}
-                  {isLoadingPostTopics && loadedPosts.length > 0 && (
-                    <TableRow>
-                      <TableCell colSpan={3}>
-                        <Skeleton className="h-8 w-full rounded-md" />
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+              {departmentName}
+            </Link>
+          </div>
+          <div className="h-4 w-px bg-border" />
+          <div className="flex flex-wrap justify-between items-center gap-2">
+            <BookOpen className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm font-medium">{copy.totalPosts}:</span>
+            <span className="text-sm font-bold">{totalPosts}</span>
+          </div>
+        </div>
+        <div className="flex flex-row items-center gap-2">
+          <p className="text-sm font-semibold italic text-muted-foreground">
+            {topic.creation ? formatDate(new Date(topic.creation), " HH:mm - dd/MM/yyyy") : "-"}
+          </p>
+          <StatusBadge
+            active={topic.is_active === 1}
+            activeLabel={t.blogTopics.table.active}
+            inactiveLabel={t.blogTopics.table.inactive}
+          />
+        </div>
+      </div>
+
+      {isLoadingPostTopics && !loadedPosts?.length ? (
+        <Skeleton className="h-48 w-full rounded-xl" />
+      ) : !loadedPosts?.length ? (
+        <EmptyState icon={FolderOpen} label={copy.noPosts} />
+      ) : (
+        <div
+          ref={postsScrollRef}
+          onScroll={handlePostsScroll}
+          className="max-h-[550px] overflow-y-auto rounded-md border"
+        >
+          <Table noWrapper>
+            <TableHeader className="sticky top-0 z-10 bg-background">
+              <TableRow>
+                <TableHead>{copy.posts}</TableHead>
+                <TableHead>{common.status}</TableHead>
+                <TableHead>{copy.visibility}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {(loadedPosts ?? []).map((post: Post) => (
+                <TableRow key={post.name}>
+                  <TableCell>
+                    <div className="space-y-1">
+                      <p className="font-medium">{post.title}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {post.published_at
+                          ? formatDate(new Date(post.published_at), " HH:mm dd/MM/yyyy")
+                          : formatDate(new Date(post.creation ?? new Date()), " HH:mm dd/MM/yyyy")}
+                      </p>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline">{post.status}</Badge>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">{post.visibility}</TableCell>
+                </TableRow>
+              ))}
+              {isLoadingPostTopics && loadedPosts.length > 0 && (
+                <TableRow>
+                  <TableCell colSpan={3}>
+                    <Skeleton className="h-8 w-full rounded-md" />
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      )}
 
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent className="max-w-xl">
