@@ -10,12 +10,9 @@ export const errors = {
     "Your account does not have permission to view the content departments list.",
   categoryAccessDeniedDescription:
     "Your account does not have permission to view the categories list.",
-  topicAccessDeniedDescription:
-    "Your account does not have permission to view the topics list.",
-  tagAccessDeniedDescription:
-    "Your account does not have permission to view the tags list.",
-  postAccessDeniedDescription:
-    "Your account does not have permission to view the posts list.",
+  topicAccessDeniedDescription: "Your account does not have permission to view the topics list.",
+  tagAccessDeniedDescription: "Your account does not have permission to view the tags list.",
+  postAccessDeniedDescription: "Your account does not have permission to view the posts list.",
   adminNotFoundHint: "You can try:",
   adminSidebarAccess: "Open it from the sidebar menu",
 } as const;

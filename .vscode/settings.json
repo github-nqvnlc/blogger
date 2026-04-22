@@ -1,5 +1,11 @@
 {
   "cSpell.words": ["playsinline"],
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "explicit",
+    "source.organizeImports": "explicit"
+  },
   "workbench.colorCustomizations": {
     "activityBar.activeBackground": "#e78164",
     "activityBar.background": "#e78164",

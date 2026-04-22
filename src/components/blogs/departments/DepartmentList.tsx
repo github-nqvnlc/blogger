@@ -1,36 +1,9 @@
 "use client";
 
-import * as React from "react";
-import { useRouter } from "next/navigation";
-import { useGetList, useDeleteDoc, useGetCount } from "@/hooks";
-import { useLanguage } from "@/hooks/useLanguage";
-import { buildLocalePath } from "@/i18n";
-import { BlogDepartment } from "@/types/blogs";
-import { Filter } from "@/types/hooks";
-import { showCrudError, showCrudSuccess } from "@/lib/crud-toast";
-import {
-  ColumnDef,
-  PaginationState,
-  RowSelectionState,
-  SortingState,
-} from "@tanstack/react-table";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Spinner } from "@/components/ui/spinner";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { getDepartmentColumns } from "@/components/blogs/departments/DepartmentColumns";
+import { DepartmentForm } from "@/components/blogs/departments/DepartmentForm";
+import { DepartmentTable } from "@/components/blogs/departments/DepartmentTable";
+import { AdminAccessDenied } from "@/components/layout/admin-access-denied";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,11 +14,33 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { AdminAccessDenied } from "@/components/layout/admin-access-denied";
-import { DepartmentForm } from "@/components/blogs/departments/DepartmentForm";
-import { DepartmentTable } from "@/components/blogs/departments/DepartmentTable";
-import { getDepartmentColumns } from "@/components/blogs/departments/DepartmentColumns";
-import { Search, Plus, Building2, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Spinner } from "@/components/ui/spinner";
+import { useDeleteDoc, useGetCount, useGetList } from "@/hooks";
+import { useLanguage } from "@/hooks/useLanguage";
+import { buildLocalePath } from "@/i18n";
+import { showCrudError, showCrudSuccess } from "@/lib/crud-toast";
+import { BlogDepartment } from "@/types/blogs";
+import { Filter } from "@/types/hooks";
+import { ColumnDef, PaginationState, RowSelectionState, SortingState } from "@tanstack/react-table";
+import { Building2, Plus, Search, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import * as React from "react";
 
 const PAGE_SIZE = 20;
 
@@ -53,26 +48,18 @@ export function DepartmentList() {
   const router = useRouter();
   const { locale, t } = useLanguage();
   const copy = t.blogDepartments;
-  const [sorting, setSorting] = React.useState<SortingState>([
-    { id: "creation", desc: true },
-  ]);
+  const [sorting, setSorting] = React.useState<SortingState>([{ id: "creation", desc: true }]);
   const [pagination, setPagination] = React.useState<PaginationState>({
     pageIndex: 0,
     pageSize: PAGE_SIZE,
   });
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({});
-  const [statusFilter, setStatusFilter] = React.useState<
-    "all" | "active" | "inactive"
-  >("all");
+  const [statusFilter, setStatusFilter] = React.useState<"all" | "active" | "inactive">("all");
   const [search, setSearch] = React.useState("");
   const [isFormOpen, setIsFormOpen] = React.useState(false);
-  const [editingDepartment, setEditingDepartment] =
-    React.useState<BlogDepartment | null>(null);
-  const [deletingDepartment, setDeletingDepartment] =
-    React.useState<BlogDepartment | null>(null);
-  const [bulkDeletingDepts, setBulkDeletingDepts] = React.useState<
-    BlogDepartment[]
-  >([]);
+  const [editingDepartment, setEditingDepartment] = React.useState<BlogDepartment | null>(null);
+  const [deletingDepartment, setDeletingDepartment] = React.useState<BlogDepartment | null>(null);
+  const [bulkDeletingDepts, setBulkDeletingDepts] = React.useState<BlogDepartment[]>([]);
 
   const apiFilters = React.useMemo<Filter[]>(() => {
     const result: Filter[] = [];
@@ -95,8 +82,7 @@ export function DepartmentList() {
   }, [search]);
 
   const orderBy = React.useMemo(() => {
-    if (sorting.length === 0)
-      return { field: "creation", order: "asc" as const };
+    if (sorting.length === 0) return { field: "creation", order: "asc" as const };
     const s = sorting[0];
     return {
       field: s.id,
@@ -123,11 +109,10 @@ export function DepartmentList() {
     apiFilters,
     false,
     undefined,
-    searchOrFilters,
+    searchOrFilters
   );
 
-  const { deleteDoc: deleteDepartment, loading: isDeleting } =
-    useDeleteDoc("blog_departments");
+  const { deleteDoc: deleteDepartment, loading: isDeleting } = useDeleteDoc("blog_departments");
 
   const handleOpenCreateForm = React.useCallback(() => {
     setEditingDepartment(null);
@@ -141,11 +126,9 @@ export function DepartmentList() {
 
   const handleViewDetail = React.useCallback(
     (dept: BlogDepartment) => {
-      router.push(
-        buildLocalePath(locale, `/admin/blog-departments/${dept.name}`),
-      );
+      router.push(buildLocalePath(locale, `/admin/blog-departments/${dept.name}`));
     },
-    [locale, router],
+    [locale, router]
   );
 
   const handleToggleStatus = React.useCallback(async (dept: BlogDepartment) => {
@@ -159,7 +142,7 @@ export function DepartmentList() {
       await deleteDepartment(deletingDepartment.name);
       showCrudSuccess(
         copy.deleteSuccess,
-        `${copy.deleteSuccessDescriptionPrefix} "${deletingDepartment.department_name}"`,
+        `${copy.deleteSuccessDescriptionPrefix} "${deletingDepartment.department_name}"`
       );
       setDeletingDepartment(null);
       refetch();
@@ -186,25 +169,17 @@ export function DepartmentList() {
     setDeletingDepartment(dept);
   }, []);
 
-  const handleBulkDeleteClick = React.useCallback(
-    (selectedDepts: BlogDepartment[]) => {
-      setBulkDeletingDepts(selectedDepts);
-    },
-    [],
-  );
+  const handleBulkDeleteClick = React.useCallback((selectedDepts: BlogDepartment[]) => {
+    setBulkDeletingDepts(selectedDepts);
+  }, []);
 
   const handleBulkDeleteConfirm = React.useCallback(async () => {
     if (bulkDeletingDepts.length === 0) return;
     try {
-      await Promise.all(
-        bulkDeletingDepts.map((dept) => deleteDepartment(dept.name)),
-      );
+      await Promise.all(bulkDeletingDepts.map(dept => deleteDepartment(dept.name)));
       showCrudSuccess(
         copy.deleteSuccess,
-        copy.bulkDeleteSuccessDescription.replace(
-          "{count}",
-          String(bulkDeletingDepts.length),
-        ),
+        copy.bulkDeleteSuccessDescription.replace("{count}", String(bulkDeletingDepts.length))
       );
       setBulkDeletingDepts([]);
       setRowSelection({});
@@ -229,29 +204,19 @@ export function DepartmentList() {
       onToggle: handleToggleStatus,
       onDelete: handleDeleteClick,
     }),
-    [
-      handleDeleteClick,
-      handleOpenEditForm,
-      handleToggleStatus,
-      handleViewDetail,
-    ],
+    [handleDeleteClick, handleOpenEditForm, handleToggleStatus, handleViewDetail]
   );
 
-  const statusCode = (error as { response?: { status?: number } } | null)
-    ?.response?.status;
+  const statusCode = (error as { response?: { status?: number } } | null)?.response?.status;
   const isForbidden = statusCode === 403;
 
   const columns: ColumnDef<BlogDepartment, unknown>[] = React.useMemo(
     () => getDepartmentColumns(t),
-    [t],
+    [t]
   );
 
   if (isForbidden) {
-    return (
-      <AdminAccessDenied
-        description={t.errors.blogDepartmentAccessDeniedDescription}
-      />
-    );
+    return <AdminAccessDenied description={t.errors.blogDepartmentAccessDeniedDescription} />;
   }
 
   return (
@@ -274,10 +239,10 @@ export function DepartmentList() {
             <Input
               placeholder={copy.searchPlaceholder}
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              onKeyDown={(e) => {
+              onChange={e => setSearch(e.target.value)}
+              onKeyDown={e => {
                 if (e.key === "Enter") {
-                  setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+                  setPagination(prev => ({ ...prev, pageIndex: 0 }));
                 }
               }}
               className="pl-9"
@@ -286,10 +251,10 @@ export function DepartmentList() {
 
           <Select
             value={statusFilter}
-            onValueChange={(v) => {
+            onValueChange={v => {
               setStatusFilter(v as typeof statusFilter);
-              setPagination((prev) =>
-                prev.pageIndex === 0 ? { ...prev } : { ...prev, pageIndex: 0 },
+              setPagination(prev =>
+                prev.pageIndex === 0 ? { ...prev } : { ...prev, pageIndex: 0 }
               );
             }}
           >
@@ -313,9 +278,7 @@ export function DepartmentList() {
               variant="destructive"
               size="sm"
               onClick={() =>
-                handleBulkDeleteClick(
-                  departments?.filter((_, i) => rowSelection[i] === true) ?? [],
-                )
+                handleBulkDeleteClick(departments?.filter((_, i) => rowSelection[i] === true) ?? [])
               }
             >
               <Trash2 className="mr-2 h-4 w-4" />
@@ -330,20 +293,17 @@ export function DepartmentList() {
           isLoading={isLoading}
           totalCount={totalCount ?? 0}
           pagination={pagination}
-          onPaginationChange={(updater) => {
-            setPagination((prev) => {
-              const next =
-                typeof updater === "function" ? updater(prev) : updater;
+          onPaginationChange={updater => {
+            setPagination(prev => {
+              const next = typeof updater === "function" ? updater(prev) : updater;
               if (next.pageIndex === 0) return next;
               return { ...next, pageIndex: 0 };
             });
           }}
           sorting={sorting}
-          onSortingChange={(updater) => {
+          onSortingChange={updater => {
             setSorting(updater);
-            setPagination((prev) =>
-              prev.pageIndex === 0 ? { ...prev } : { ...prev, pageIndex: 0 },
-            );
+            setPagination(prev => (prev.pageIndex === 0 ? { ...prev } : { ...prev, pageIndex: 0 }));
           }}
           rowSelection={rowSelection}
           onRowSelectionChange={setRowSelection}
@@ -355,15 +315,9 @@ export function DepartmentList() {
               </div>
               <div>
                 <p className="font-medium">{copy.emptyTitle}</p>
-                <p className="text-sm text-muted-foreground">
-                  {copy.emptyDescription}
-                </p>
+                <p className="text-sm text-muted-foreground">{copy.emptyDescription}</p>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleOpenCreateForm}
-              >
+              <Button variant="outline" size="sm" onClick={handleOpenCreateForm}>
                 <Plus className="mr-2 h-4 w-4" />
                 {copy.addDepartment}
               </Button>
@@ -376,14 +330,10 @@ export function DepartmentList() {
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>
-              {editingDepartment
-                ? copy.editDepartmentTitle
-                : copy.addDepartmentTitle}
+              {editingDepartment ? copy.editDepartmentTitle : copy.addDepartmentTitle}
             </DialogTitle>
             <DialogDescription>
-              {editingDepartment
-                ? copy.editDepartmentDescription
-                : copy.addDepartmentDescription}
+              {editingDepartment ? copy.editDepartmentDescription : copy.addDepartmentDescription}
             </DialogDescription>
           </DialogHeader>
           <DepartmentForm
@@ -396,15 +346,14 @@ export function DepartmentList() {
 
       <AlertDialog
         open={!!deletingDepartment}
-        onOpenChange={(open) => !open && setDeletingDepartment(null)}
+        onOpenChange={open => !open && setDeletingDepartment(null)}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{copy.deleteTitle}</AlertDialogTitle>
             <AlertDialogDescription>
               {copy.deleteDescriptionStart} &ldquo;
-              {deletingDepartment?.department_name}&rdquo;?{" "}
-              {copy.deleteDescriptionEnd}
+              {deletingDepartment?.department_name}&rdquo;? {copy.deleteDescriptionEnd}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -423,19 +372,17 @@ export function DepartmentList() {
 
       <AlertDialog
         open={bulkDeletingDepts.length > 0}
-        onOpenChange={(open) => !open && setBulkDeletingDepts([])}
+        onOpenChange={open => !open && setBulkDeletingDepts([])}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>
-              {copy.bulkDeleteTitle ?? copy.deleteTitle}
-            </AlertDialogTitle>
+            <AlertDialogTitle>{copy.bulkDeleteTitle ?? copy.deleteTitle}</AlertDialogTitle>
             <AlertDialogDescription className="space-y-1">
               {bulkDeletingDepts.length === 1 ? (
                 `${copy.deleteDescriptionStart} "${bulkDeletingDepts[0]?.department_name}"? ${copy.deleteDescriptionEnd}`
               ) : (
                 <span className="block space-y-1">
-                  {bulkDeletingDepts.slice(0, 5).map((dept) => (
+                  {bulkDeletingDepts.slice(0, 5).map(dept => (
                     <span key={dept.name} className="flex items-start gap-2">
                       <span className="text-muted-foreground shrink-0">-</span>
                       <span>{dept.department_name}</span>
@@ -443,8 +390,7 @@ export function DepartmentList() {
                   ))}
                   {bulkDeletingDepts.length > 5 && (
                     <span className="block text-muted-foreground">
-                      ... {bulkDeletingDepts.length - 5}{" "}
-                      {copy.itemsWillBeDeleted ?? "mục khác"}
+                      ... {bulkDeletingDepts.length - 5} {copy.itemsWillBeDeleted ?? "mục khác"}
                     </span>
                   )}
                 </span>

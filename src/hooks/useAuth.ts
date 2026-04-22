@@ -3,11 +3,7 @@
 import { useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getApiClient } from "@/lib/apiClient";
-import {
-  buildLocalePath,
-  extractLocaleFromPathname,
-  normalizeLocale,
-} from "@/i18n";
+import { buildLocalePath, extractLocaleFromPathname, normalizeLocale } from "@/i18n";
 
 export interface FrappeUser {
   name: string;
@@ -45,17 +41,13 @@ export function useAuth() {
     queryFn: async () => {
       try {
         const res = await apiClient.get<{ message: string }>(
-          "/api/method/frappe.auth.get_logged_user",
+          "/api/method/frappe.auth.get_logged_user"
         );
         const user = res.data?.message;
         return user && user !== "Guest" ? user : null;
       } catch (err: unknown) {
-        const status = (err as { response?: { status?: number } }).response
-          ?.status;
-        if (
-          (status === 401 || status === 403) &&
-          typeof window !== "undefined"
-        ) {
+        const status = (err as { response?: { status?: number } }).response?.status;
+        if ((status === 401 || status === 403) && typeof window !== "undefined") {
           const locale = getCurrentLocale();
           const loginPath = buildLocalePath(locale, "/login");
           if (!window.location.pathname.startsWith(loginPath)) {
@@ -71,14 +63,11 @@ export function useAuth() {
 
   const login = useCallback(
     async (usr: string, pwd: string): Promise<FrappeLoginResponse> => {
-      const res = await apiClient.post<FrappeLoginResponse>(
-        "/api/method/login",
-        { usr, pwd },
-      );
+      const res = await apiClient.post<FrappeLoginResponse>("/api/method/login", { usr, pwd });
       await queryClient.invalidateQueries({ queryKey: AUTH_QUERY_KEY });
       return res.data;
     },
-    [apiClient, queryClient],
+    [apiClient, queryClient]
   );
 
   const logout = useCallback(async () => {

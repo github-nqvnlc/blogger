@@ -9,10 +9,7 @@ function serializeFilters(filters: Filter[]): string {
   return JSON.stringify(filters);
 }
 
-type UseGetListOptions<T> = Omit<
-  UseQueryOptions<T[], Error>,
-  "queryKey" | "queryFn"
->;
+type UseGetListOptions<T> = Omit<UseQueryOptions<T[], Error>, "queryKey" | "queryFn">;
 
 export function useGetList<T = Record<string, unknown>>(
   /** Tên resource (Doctype), vd: 'Task', 'Project' */
@@ -20,7 +17,7 @@ export function useGetList<T = Record<string, unknown>>(
   /** Điều kiện lọc, sắp xếp, phân trang, fields */
   args?: GetListArgs<T>,
   /** TanStack Query options (staleTime, enabled, ...) */
-  options?: UseGetListOptions<T>,
+  options?: UseGetListOptions<T>
 ) {
   const apiClient = getApiClient();
 

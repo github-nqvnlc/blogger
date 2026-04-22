@@ -1,20 +1,8 @@
-import type {
-  Category,
-  PostFileDoc,
-  PostStatusOption,
-  PostVisibilityOption,
-} from "@/types/blogs";
+import type { Category, PostFileDoc, PostStatusOption, PostVisibilityOption } from "@/types/blogs";
 
-export const POST_STATUS_VALUES: PostStatusOption[] = [
-  "Draft",
-  "Published",
-  "Archived",
-];
+export const POST_STATUS_VALUES: PostStatusOption[] = ["Draft", "Published", "Archived"];
 
-export const POST_VISIBILITY_VALUES: PostVisibilityOption[] = [
-  "Public",
-  "Internal",
-];
+export const POST_VISIBILITY_VALUES: PostVisibilityOption[] = ["Public", "Internal"];
 
 export function slugify(value: string): string {
   return value
@@ -49,23 +37,21 @@ export function stripHtml(value: string): string {
 }
 
 export function normalizeEditorHtml(value: string): string {
-  const nextValue = value
-    .replace(/<p>(?:\s|&nbsp;|<br\s*\/?>)*<\/p>/gi, "")
-    .trim();
+  const nextValue = value.replace(/<p>(?:\s|&nbsp;|<br\s*\/?>)*<\/p>/gi, "").trim();
 
   return stripHtml(nextValue) ? nextValue : "";
 }
 
 export function formatPostStatusLabel(
   value: PostStatusOption,
-  labels: Record<PostStatusOption, string>,
+  labels: Record<PostStatusOption, string>
 ): string {
   return labels[value] ?? value;
 }
 
 export function formatPostVisibilityLabel(
   value: PostVisibilityOption,
-  labels: Record<PostVisibilityOption, string>,
+  labels: Record<PostVisibilityOption, string>
 ): string {
   return labels[value] ?? value;
 }
@@ -75,7 +61,7 @@ export function getPrivateFlag(visibility: PostVisibilityOption): number {
 }
 
 export function normalizePostFileDoc(
-  value: Partial<PostFileDoc> | null | undefined,
+  value: Partial<PostFileDoc> | null | undefined
 ): PostFileDoc | null {
   if (!value?.name || !value.file_url) {
     return null;
@@ -99,8 +85,8 @@ export function isSupportedImageUrl(value: string): boolean {
   try {
     const url = new URL(value);
     const pathname = url.pathname.toLowerCase();
-    return [".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".avif"].some(
-      (extension) => pathname.endsWith(extension),
+    return [".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".avif"].some(extension =>
+      pathname.endsWith(extension)
     );
   } catch {
     return false;
@@ -153,11 +139,7 @@ export function parseVideoMediaUrl(value: string): ParsedVideoMedia {
     }
 
     const pathname = url.pathname.toLowerCase();
-    if (
-      [".mp4", ".webm", ".ogg"].some((extension) =>
-        pathname.endsWith(extension),
-      )
-    ) {
+    if ([".mp4", ".webm", ".ogg"].some(extension => pathname.endsWith(extension))) {
       return {
         provider: "file",
         kind: "file",

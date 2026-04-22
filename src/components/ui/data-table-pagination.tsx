@@ -1,12 +1,7 @@
 "use client";
 
 import { type Table } from "@tanstack/react-table";
-import {
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -36,14 +31,10 @@ export function DataTablePagination<TData>({
         {totalCount !== undefined ? (
           <>
             {t.pagination.showing}{" "}
-            {table.getState().pagination.pageIndex *
-              table.getState().pagination.pageSize +
-              1}
-            –
+            {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1}–
             {Math.min(
-              (table.getState().pagination.pageIndex + 1) *
-                table.getState().pagination.pageSize,
-              totalCount,
+              (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
+              totalCount
             )}{" "}
             {t.pagination.of} {totalCount} {t.pagination.records}
           </>
@@ -59,7 +50,7 @@ export function DataTablePagination<TData>({
           <p className="text-sm font-medium">{t.pagination.rowsPerPage}</p>
           <Select
             value={`${table.getState().pagination.pageSize}`}
-            onValueChange={(value) => {
+            onValueChange={value => {
               table.setPageSize(Number(value));
             }}
           >
@@ -67,7 +58,7 @@ export function DataTablePagination<TData>({
               <SelectValue placeholder={table.getState().pagination.pageSize} />
             </SelectTrigger>
             <SelectContent side="top">
-              {pageSizeOptions.map((pageSize) => (
+              {pageSizeOptions.map(pageSize => (
                 <SelectItem key={pageSize} value={`${pageSize}`}>
                   {pageSize}
                 </SelectItem>
@@ -78,8 +69,7 @@ export function DataTablePagination<TData>({
 
         <div className="flex flex-row justify-between lg:justify-start items-center gap-2 w-full lg:w-auto">
           <div className="flex lg:w-[100px] w-full items-center justify-between text-sm font-medium">
-            {t.pagination.page} {table.getState().pagination.pageIndex + 1} /{" "}
-            {table.getPageCount()}
+            {t.pagination.page} {table.getState().pagination.pageIndex + 1} / {table.getPageCount()}
           </div>
 
           <div className="flex items-center gap-1">
@@ -108,19 +98,17 @@ export function DataTablePagination<TData>({
               const totalPages = table.getPageCount();
               const currentPage = table.getState().pagination.pageIndex + 1;
               if (totalPages <= 7) {
-                return Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                  (page) => (
-                    <Button
-                      key={page}
-                      variant={page === currentPage ? "default" : "outline"}
-                      size="icon"
-                      className="size-8"
-                      onClick={() => table.setPageIndex(page - 1)}
-                    >
-                      {page}
-                    </Button>
-                  ),
-                );
+                return Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                  <Button
+                    key={page}
+                    variant={page === currentPage ? "default" : "outline"}
+                    size="icon"
+                    className="size-8"
+                    onClick={() => table.setPageIndex(page - 1)}
+                  >
+                    {page}
+                  </Button>
+                ));
               }
               const pages: (number | "...")[] = [];
               if (currentPage <= 4) {
@@ -133,7 +121,7 @@ export function DataTablePagination<TData>({
                   totalPages - 3,
                   totalPages - 2,
                   totalPages - 1,
-                  totalPages,
+                  totalPages
                 );
               } else {
                 pages.push(
@@ -143,7 +131,7 @@ export function DataTablePagination<TData>({
                   currentPage,
                   currentPage + 1,
                   "...",
-                  totalPages,
+                  totalPages
                 );
               }
               return pages.map((page, idx) =>
@@ -164,7 +152,7 @@ export function DataTablePagination<TData>({
                   >
                     {page}
                   </Button>
-                ),
+                )
               );
             })()}
 

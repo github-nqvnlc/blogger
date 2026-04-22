@@ -1,13 +1,6 @@
 "use client";
 
-import * as React from "react";
-import { useForm } from "react-hook-form";
-import { AlertCircle, Check, ChevronsUpDown } from "lucide-react";
-import { useCreateDoc, useGetDoc, useGetList, useUpdateDoc } from "@/hooks";
-import { useAuth } from "@/hooks/useAuth";
-import { BlogDepartment, Category, CategoryFormValues } from "@/types/blogs";
 import { DepartmentForm } from "@/components/blogs/departments/DepartmentForm";
-import { showCrudError, showCrudSuccess } from "@/lib/crud-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,17 +12,20 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { useCreateDoc, useGetDoc, useGetList, useUpdateDoc } from "@/hooks";
+import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/hooks/useLanguage";
+import { showCrudError, showCrudSuccess } from "@/lib/crud-toast";
 import { cn } from "@/lib/utils";
+import { BlogDepartment, Category, CategoryFormValues } from "@/types/blogs";
 import { Filter } from "@/types/hooks";
+import { AlertCircle, Check, ChevronsUpDown } from "lucide-react";
+import * as React from "react";
+import { useForm } from "react-hook-form";
 
 interface CategoryFormProps {
   category: Category | null;
@@ -57,11 +53,7 @@ function slugify(value: string) {
     .replace(/^-|-$/g, "");
 }
 
-export function CategoryForm({
-  category,
-  onSuccess,
-  onCancel,
-}: CategoryFormProps) {
+export function CategoryForm({ category, onSuccess, onCancel }: CategoryFormProps) {
   const isEditing = !!category;
   const { currentUser } = useAuth();
   const { t } = useLanguage();
@@ -88,8 +80,7 @@ export function CategoryForm({
   const selectedDepartment = watch("department");
   const [departmentSearch, setDepartmentSearch] = React.useState("");
   const [departmentOpen, setDepartmentOpen] = React.useState(false);
-  const [isDepartmentDialogOpen, setIsDepartmentDialogOpen] =
-    React.useState(false);
+  const [isDepartmentDialogOpen, setIsDepartmentDialogOpen] = React.useState(false);
   const deferredDepartmentSearch = React.useDeferredValue(departmentSearch);
 
   const departmentSearchFilters = React.useMemo<Filter[]>(() => {
@@ -102,43 +93,38 @@ export function CategoryForm({
     ];
   }, [deferredDepartmentSearch]);
 
-  const { data: departments, mutate: refetchDepartments } =
-    useGetList<BlogDepartment>("blog_departments", {
+  const { data: departments, mutate: refetchDepartments } = useGetList<BlogDepartment>(
+    "blog_departments",
+    {
       fields: ["name", "department_name", "department_code", "is_active"],
       orFilters: departmentSearchFilters,
       orderBy: { field: "department_name", order: "asc" },
       limit: 20,
-    });
+    }
+  );
 
   const { data: selectedDepartmentDoc } = useGetDoc<BlogDepartment>(
     "blog_departments",
     selectedDepartment || null,
     {
       enabled: !!selectedDepartment,
-    },
+    }
   );
 
   const { data: userProfile } = useGetDoc<UserWithRoles>("User", currentUser);
 
   const selectedDepartmentLabel = React.useMemo(() => {
-    const matched = (departments ?? []).find(
-      (department) => department.name === selectedDepartment,
-    );
-    return (
-      matched?.department_name ?? selectedDepartmentDoc?.department_name ?? ""
-    );
+    const matched = (departments ?? []).find(department => department.name === selectedDepartment);
+    return matched?.department_name ?? selectedDepartmentDoc?.department_name ?? "";
   }, [departments, selectedDepartment, selectedDepartmentDoc?.department_name]);
 
   const canCreateDepartment = React.useMemo(
-    () =>
-      (userProfile?.roles ?? []).some((item) => item.role === "Admin Blogs"),
-    [userProfile?.roles],
+    () => (userProfile?.roles ?? []).some(item => item.role === "Admin Blogs"),
+    [userProfile?.roles]
   );
 
-  const { createDoc, loading: isCreating } =
-    useCreateDoc<Category>("categories");
-  const { updateDoc, loading: isUpdating } =
-    useUpdateDoc<Category>("categories");
+  const { createDoc, loading: isCreating } = useCreateDoc<Category>("categories");
+  const { updateDoc, loading: isUpdating } = useUpdateDoc<Category>("categories");
   const isLoading = isCreating || isUpdating;
 
   React.useEffect(() => {
@@ -183,25 +169,15 @@ export function CategoryForm({
 
       if (isEditing && category) {
         await updateDoc(category.name, payload);
-        showCrudSuccess(
-          copy.updateSuccess,
-          `${copy.updateSuccessPrefix}: "${values.category}"`,
-        );
+        showCrudSuccess(copy.updateSuccess, `${copy.updateSuccessPrefix}: "${values.category}"`);
       } else {
         await createDoc(payload);
-        showCrudSuccess(
-          copy.createSuccess,
-          `${copy.createSuccessPrefix}: "${values.category}"`,
-        );
+        showCrudSuccess(copy.createSuccess, `${copy.createSuccessPrefix}: "${values.category}"`);
       }
 
       onSuccess?.();
     } catch (err) {
-      showCrudError(
-        isEditing ? copy.updateFailure : copy.createFailure,
-        err,
-        copy.unknownError,
-      );
+      showCrudError(isEditing ? copy.updateFailure : copy.createFailure, err, copy.unknownError);
     }
   };
 
@@ -220,7 +196,7 @@ export function CategoryForm({
       setDepartmentOpen(false);
       setDepartmentSearch("");
     },
-    [refetchDepartments, setValue],
+    [refetchDepartments, setValue]
   );
 
   return (
@@ -242,7 +218,7 @@ export function CategoryForm({
                 className={cn(
                   "w-full justify-between font-normal",
                   !selectedDepartmentLabel && "text-muted-foreground",
-                  errors.department && "border-destructive",
+                  errors.department && "border-destructive"
                 )}
               >
                 {selectedDepartmentLabel || copy.departmentPlaceholder}
@@ -253,17 +229,17 @@ export function CategoryForm({
               <div className="border-b p-2">
                 <Input
                   value={departmentSearch}
-                  onChange={(e) => setDepartmentSearch(e.target.value)}
+                  onChange={e => setDepartmentSearch(e.target.value)}
                   placeholder={copy.departmentPlaceholder}
                   autoFocus
                 />
               </div>
               <div
                 className="max-h-64 overflow-y-auto overscroll-contain p-1"
-                onWheel={(event) => event.stopPropagation()}
+                onWheel={event => event.stopPropagation()}
               >
                 {(departments ?? []).length > 0 ? (
-                  (departments ?? []).map((department) => {
+                  (departments ?? []).map(department => {
                     const isSelected = selectedDepartment === department.name;
 
                     return (
@@ -272,7 +248,7 @@ export function CategoryForm({
                         type="button"
                         className={cn(
                           "hover:bg-accent hover:text-accent-foreground flex w-full items-center justify-between rounded-sm px-2 py-2 text-left text-sm",
-                          isSelected && "bg-accent/50",
+                          isSelected && "bg-accent/50"
                         )}
                         onClick={() => {
                           setValue("department", department.name, {
@@ -282,14 +258,12 @@ export function CategoryForm({
                         }}
                       >
                         <div className="min-w-0">
-                          <p className="truncate font-medium">
-                            {department.department_name}
-                          </p>
+                          <p className="truncate font-medium">{department.department_name}</p>
                         </div>
                         <Check
                           className={cn(
                             "ml-2 h-4 w-4 shrink-0",
-                            isSelected ? "opacity-100" : "opacity-0",
+                            isSelected ? "opacity-100" : "opacity-0"
                           )}
                         />
                       </button>
@@ -297,9 +271,7 @@ export function CategoryForm({
                   })
                 ) : (
                   <div className="space-y-2 px-2 py-3">
-                    <p className="text-sm text-muted-foreground">
-                      Không tìm thấy bộ phận phù hợp.
-                    </p>
+                    <p className="text-sm text-muted-foreground">Không tìm thấy bộ phận phù hợp.</p>
                     {canCreateDepartment ? (
                       <Button
                         type="button"
@@ -325,9 +297,7 @@ export function CategoryForm({
             })}
           />
           {errors.department && (
-            <p className="text-sm text-destructive">
-              {errors.department.message}
-            </p>
+            <p className="text-sm text-destructive">{errors.department.message}</p>
           )}
         </div>
 
@@ -350,11 +320,7 @@ export function CategoryForm({
               },
             })}
           />
-          {errors.category && (
-            <p className="text-sm text-destructive">
-              {errors.category.message}
-            </p>
-          )}
+          {errors.category && <p className="text-sm text-destructive">{errors.category.message}</p>}
         </div>
 
         <div className="space-y-2">
@@ -386,9 +352,7 @@ export function CategoryForm({
               setValueAs: (value: string) => value?.trim().toLowerCase(),
             })}
           />
-          {errors.slug && (
-            <p className="text-sm text-destructive">{errors.slug.message}</p>
-          )}
+          {errors.slug && <p className="text-sm text-destructive">{errors.slug.message}</p>}
           <p className="text-xs text-muted-foreground">{copy.slugHelp}</p>
         </div>
 
@@ -406,9 +370,7 @@ export function CategoryForm({
             })}
           />
           {errors.description && (
-            <p className="text-sm text-destructive">
-              {errors.description.message}
-            </p>
+            <p className="text-sm text-destructive">{errors.description.message}</p>
           )}
           <p className="text-right text-xs text-muted-foreground">
             {(watch("description") ?? "").length}/500
@@ -421,15 +383,13 @@ export function CategoryForm({
               {copy.activeStatus}
             </Label>
             <p className="text-sm text-muted-foreground">
-              {watchIsActive
-                ? copy.activeDescription
-                : copy.inactiveDescription}
+              {watchIsActive ? copy.activeDescription : copy.inactiveDescription}
             </p>
           </div>
           <Switch
             id="is_active"
             checked={watchIsActive}
-            onCheckedChange={(checked) => setValue("is_active", checked)}
+            onCheckedChange={checked => setValue("is_active", checked)}
           />
         </div>
 
@@ -441,12 +401,7 @@ export function CategoryForm({
         )}
 
         <div className="flex items-center justify-end gap-3 border-t pt-2">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onCancel}
-            disabled={isLoading}
-          >
+          <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
             {copy.cancel}
           </Button>
           <Button type="submit" disabled={isLoading}>
@@ -456,16 +411,11 @@ export function CategoryForm({
         </div>
       </form>
 
-      <Dialog
-        open={isDepartmentDialogOpen}
-        onOpenChange={setIsDepartmentDialogOpen}
-      >
+      <Dialog open={isDepartmentDialogOpen} onOpenChange={setIsDepartmentDialogOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>{t.blogDepartments.addDepartmentTitle}</DialogTitle>
-            <DialogDescription>
-              {t.blogDepartments.addDepartmentDescription}
-            </DialogDescription>
+            <DialogDescription>{t.blogDepartments.addDepartmentDescription}</DialogDescription>
           </DialogHeader>
           <DepartmentForm
             department={null}

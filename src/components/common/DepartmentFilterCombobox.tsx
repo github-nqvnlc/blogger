@@ -2,11 +2,7 @@ import { BlogDepartment } from "@/types/blogs";
 import React from "react";
 import { Filter } from "@/types/hooks";
 import { useGetList } from "@/hooks";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { Input } from "@/components/ui/input";
@@ -42,15 +38,12 @@ export function DepartmentFilterCombobox({
     ];
   }, [deferredSearch]);
 
-  const { data: filteredDepartments } = useGetList<BlogDepartment>(
-    "blog_departments",
-    {
-      fields: ["name", "department_name", "department_code"],
-      orFilters: searchFilters,
-      orderBy: { field: "department_name", order: "asc" },
-      limit: 20,
-    },
-  );
+  const { data: filteredDepartments } = useGetList<BlogDepartment>("blog_departments", {
+    fields: ["name", "department_name", "department_code"],
+    orFilters: searchFilters,
+    orderBy: { field: "department_name", order: "asc" },
+    limit: 20,
+  });
 
   React.useEffect(() => {
     if (!deferredSearch && onDepartmentsChange) {
@@ -59,9 +52,7 @@ export function DepartmentFilterCombobox({
   }, [filteredDepartments, deferredSearch, onDepartmentsChange]);
 
   const selectedDept =
-    value === "all"
-      ? null
-      : (filteredDepartments ?? []).find((d) => d.name === value);
+    value === "all" ? null : (filteredDepartments ?? []).find(d => d.name === value);
 
   const handleSelect = (deptName: string) => {
     onChange(deptName);
@@ -93,40 +84,35 @@ export function DepartmentFilterCombobox({
           ) : value === "all" ? (
             <span className="truncate text-muted-foreground">{allLabel}</span>
           ) : (
-            <span className="truncate text-muted-foreground">
-              {placeholder}
-            </span>
+            <span className="truncate text-muted-foreground">{placeholder}</span>
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent
-        className="w-[--radix-popover-trigger-width] sm:w-[250px] p-0"
-        align="start"
-      >
+      <PopoverContent className="w-[--radix-popover-trigger-width] sm:w-[250px] p-0" align="start">
         <div className="border-b p-2">
           <Input
             ref={searchInputRef}
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={e => setSearch(e.target.value)}
             placeholder={placeholder}
           />
         </div>
         <div
           className="max-h-64 overflow-y-auto overscroll-contain p-1"
-          onWheel={(event) => event.stopPropagation()}
+          onWheel={event => event.stopPropagation()}
         >
           <button
             type="button"
             className={cn(
               "hover:bg-accent hover:text-accent-foreground flex w-full items-center justify-between rounded-sm px-2 py-2 text-left text-sm",
-              value === "all" && "bg-accent/50",
+              value === "all" && "bg-accent/50"
             )}
             onClick={() => handleSelect("all")}
           >
             <span className="font-medium">{allLabel}</span>
             {value === "all" && <Check className="ml-2 h-4 w-4 shrink-0" />}
           </button>
-          {(filteredDepartments ?? []).map((dept) => {
+          {(filteredDepartments ?? []).map(dept => {
             const isSelected = value === dept.name;
             return (
               <button
@@ -134,7 +120,7 @@ export function DepartmentFilterCombobox({
                 type="button"
                 className={cn(
                   "hover:bg-accent hover:text-accent-foreground flex w-full items-center justify-between rounded-sm px-2 py-2 text-left text-sm",
-                  isSelected && "bg-accent/50",
+                  isSelected && "bg-accent/50"
                 )}
                 onClick={() => handleSelect(dept.name)}
               >
@@ -142,18 +128,13 @@ export function DepartmentFilterCombobox({
                   <p className="truncate font-medium">{dept.department_name}</p>
                 </div>
                 <Check
-                  className={cn(
-                    "ml-2 h-4 w-4 shrink-0",
-                    isSelected ? "opacity-100" : "opacity-0",
-                  )}
+                  className={cn("ml-2 h-4 w-4 shrink-0", isSelected ? "opacity-100" : "opacity-0")}
                 />
               </button>
             );
           })}
           {(filteredDepartments ?? []).length === 0 && !deferredSearch && (
-            <p className="p-2 text-center text-sm text-muted-foreground">
-              No departments found
-            </p>
+            <p className="p-2 text-center text-sm text-muted-foreground">No departments found</p>
           )}
           {deferredSearch && (filteredDepartments ?? []).length === 0 && (
             <p className="p-2 text-center text-sm text-muted-foreground">

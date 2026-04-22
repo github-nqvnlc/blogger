@@ -1,14 +1,7 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import {
-  Eye,
-  MoreHorizontal,
-  Pencil,
-  ToggleLeft,
-  ToggleRight,
-  Trash2,
-} from "lucide-react";
+import { Eye, MoreHorizontal, Pencil, ToggleLeft, ToggleRight, Trash2 } from "lucide-react";
 import { formatDate } from "date-fns";
 import { Tag } from "@/types/blogs";
 import { Badge } from "@/components/ui/badge";
@@ -45,7 +38,7 @@ export function getTagColumns(t: Dictionary): ColumnDef<Tag, unknown>[] {
                 ? "indeterminate"
                 : false
           }
-          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          onCheckedChange={value => table.toggleAllPageRowsSelected(!!value)}
           aria-label="Select all"
           className="translate-y-[2px]"
         />
@@ -53,7 +46,7 @@ export function getTagColumns(t: Dictionary): ColumnDef<Tag, unknown>[] {
       cell: ({ row }) => (
         <Checkbox
           checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          onCheckedChange={value => row.toggleSelected(!!value)}
           aria-label="Select row"
           className="translate-y-[2px]"
         />
@@ -87,13 +80,9 @@ export function getTagColumns(t: Dictionary): ColumnDef<Tag, unknown>[] {
       ),
       cell: ({ row }) =>
         row.original.slug ? (
-          <code className="text-xs text-muted-foreground">
-            {row.original.slug}
-          </code>
+          <code className="text-xs text-muted-foreground">{row.original.slug}</code>
         ) : (
-          <span className="italic text-muted-foreground">
-            {t.blogTags.table.noSlug}
-          </span>
+          <span className="italic text-muted-foreground">{t.blogTags.table.noSlug}</span>
         ),
       enableSorting: true,
     },
@@ -106,9 +95,7 @@ export function getTagColumns(t: Dictionary): ColumnDef<Tag, unknown>[] {
             {row.original.description}
           </span>
         ) : (
-          <span className="italic text-muted-foreground">
-            {t.blogTags.table.noDescription}
-          </span>
+          <span className="italic text-muted-foreground">{t.blogTags.table.noDescription}</span>
         ),
       enableSorting: false,
     },
@@ -119,14 +106,10 @@ export function getTagColumns(t: Dictionary): ColumnDef<Tag, unknown>[] {
         <Badge
           variant={row.original.is_active === 1 ? "default" : "secondary"}
           className={cn(
-            row.original.is_active === 1
-              ? "bg-green-500 text-white"
-              : "bg-gray-500 text-white",
+            row.original.is_active === 1 ? "bg-green-500 text-white" : "bg-gray-500 text-white"
           )}
         >
-          {row.original.is_active === 1
-            ? t.blogTags.table.active
-            : t.blogTags.table.inactive}
+          {row.original.is_active === 1 ? t.blogTags.table.active : t.blogTags.table.inactive}
         </Badge>
       ),
       enableSorting: false,
@@ -134,17 +117,11 @@ export function getTagColumns(t: Dictionary): ColumnDef<Tag, unknown>[] {
     {
       accessorKey: "creation",
       header: ({ column }) => (
-        <DataTableColumnHeader
-          column={column}
-          title={t.blogTags.table.creation}
-        />
+        <DataTableColumnHeader column={column} title={t.blogTags.table.creation} />
       ),
       cell: ({ row }) => (
         <span className="text-muted-foreground">
-          {formatDate(
-            new Date(row.original.creation ?? new Date()),
-            " HH:mm dd/MM/yyyy",
-          )}
+          {formatDate(new Date(row.original.creation ?? new Date()), " HH:mm dd/MM/yyyy")}
         </span>
       ),
       enableSorting: true,
@@ -174,9 +151,7 @@ export function getTagColumns(t: Dictionary): ColumnDef<Tag, unknown>[] {
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => meta.onToggle(tag)}
-                className={cn(
-                  tag.is_active === 1 ? "text-amber-600" : "text-green-600",
-                )}
+                className={cn(tag.is_active === 1 ? "text-amber-600" : "text-green-600")}
               >
                 {tag.is_active === 1 ? (
                   <>

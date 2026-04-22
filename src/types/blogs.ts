@@ -15,9 +15,7 @@ export interface BlogDepartment {
 export interface Category {
   name: string;
   category: string;
-  department:
-    | string
-    | Pick<BlogDepartment, "name" | "department_name" | "department_code">;
+  department: string | Pick<BlogDepartment, "name" | "department_name" | "department_code">;
   description: string;
   is_active: number;
   creation: string | number;
@@ -27,9 +25,7 @@ export interface Category {
 export interface Topic {
   name: string;
   topic: string;
-  department:
-    | string
-    | Pick<BlogDepartment, "name" | "department_name" | "department_code">;
+  department: string | Pick<BlogDepartment, "name" | "department_name" | "department_code">;
   desc: string;
   is_active: number;
   slug: string;
@@ -53,9 +49,7 @@ export type PostVisibility = "Public" | "Internal";
 export interface Post {
   name: string;
   title: string;
-  department:
-    | string
-    | Pick<BlogDepartment, "name" | "department_name" | "department_code">;
+  department: string | Pick<BlogDepartment, "name" | "department_name" | "department_code">;
   category: string | Pick<Category, "name" | "category" | "slug">;
   slug: string;
   author: string;
@@ -98,10 +92,7 @@ export interface Comment {
 // ─── Assembled Data (sau khi FE assemble) ─────────────────
 
 export interface AssembledPost extends Post {
-  department: Pick<
-    BlogDepartment,
-    "name" | "department_name" | "department_code"
-  >;
+  department: Pick<BlogDepartment, "name" | "department_name" | "department_code">;
   category: Pick<Category, "name" | "category" | "slug">;
   topics: Pick<Topic, "name" | "topic" | "slug">[];
   tags: Pick<Tag, "name" | "tag_name" | "slug">[];

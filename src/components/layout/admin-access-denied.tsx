@@ -11,10 +11,7 @@ interface AdminAccessDeniedProps {
   title?: string;
 }
 
-export function AdminAccessDenied({
-  description,
-  title,
-}: AdminAccessDeniedProps) {
+export function AdminAccessDenied({ description, title }: AdminAccessDeniedProps) {
   const { locale, t } = useLanguage();
 
   return (

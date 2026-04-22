@@ -1,15 +1,7 @@
 "use client";
 
-import { useDeferredValue, useMemo, useState } from "react";
-import { Check, ChevronsUpDown, X } from "lucide-react";
-import { useGetList } from "@/hooks";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import {
   Command,
   CommandGroup,
@@ -17,9 +9,13 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Spinner } from "@/components/ui/spinner";
+import { useGetList } from "@/hooks";
 import { cn } from "@/lib/utils";
 import { Filter } from "@/types/hooks";
+import { Check, ChevronsUpDown, X } from "lucide-react";
+import { useDeferredValue, useMemo, useState } from "react";
 import type { SelectOption } from "./SearchableSingleSelect";
 
 interface SearchableMultiSelectProps {
@@ -52,28 +48,21 @@ function normalizeOption(
   valueField: string,
   labelField: string,
   descriptionField?: string,
-  keywordFields?: string[],
+  keywordFields?: string[]
 ): SelectOption {
   const value = String(item[valueField] ?? "");
   const label = String(item[labelField] ?? value);
-  const description = descriptionField
-    ? String(item[descriptionField] ?? "")
-    : undefined;
+  const description = descriptionField ? String(item[descriptionField] ?? "") : undefined;
 
   return {
     value,
     label,
     description: description || undefined,
-    keywords: keywordFields
-      ?.map((field) => String(item[field] ?? "").trim())
-      .filter(Boolean),
+    keywords: keywordFields?.map(field => String(item[field] ?? "").trim()).filter(Boolean),
   };
 }
 
-function mergeOptions(
-  options: SelectOption[],
-  selectedOptions: SelectOption[],
-): SelectOption[] {
+function mergeOptions(options: SelectOption[], selectedOptions: SelectOption[]): SelectOption[] {
   const optionMap = new Map<string, SelectOption>();
 
   for (const option of selectedOptions) {
@@ -120,7 +109,7 @@ export function SearchableMultiSelect({
       return undefined;
     }
 
-    return searchFields.map((field) => [field, "like", `%${deferredSearch}%`]);
+    return searchFields.map(field => [field, "like", `%${deferredSearch}%`]);
   }, [deferredSearch, searchFields]);
 
   const { data, isLoading, isValidating } = useGetList<Record<string, unknown>>(
@@ -134,47 +123,39 @@ export function SearchableMultiSelect({
     },
     {
       enabled: open && enabled && !disabled,
-    },
+    }
   );
 
-  const isLoadingOptions =
-    open && enabled && !disabled && !data && (isLoading || isValidating);
+  const isLoadingOptions = open && enabled && !disabled && !data && (isLoading || isValidating);
 
   const options = useMemo(
     () =>
-      (data ?? []).map((item) =>
-        normalizeOption(
-          item,
-          valueField,
-          labelField,
-          descriptionField,
-          keywordFields,
-        ),
+      (data ?? []).map(item =>
+        normalizeOption(item, valueField, labelField, descriptionField, keywordFields)
       ),
-    [data, descriptionField, keywordFields, labelField, valueField],
+    [data, descriptionField, keywordFields, labelField, valueField]
   );
 
   const mergedOptions = useMemo(
     () => mergeOptions(options, selectedOptions),
-    [options, selectedOptions],
+    [options, selectedOptions]
   );
 
   const hasSelectableFetchedOptions = useMemo(
-    () => options.some((option) => !values.includes(option.value)),
-    [options, values],
+    () => options.some(option => !values.includes(option.value)),
+    [options, values]
   );
 
-  const shouldShowCreateAction =
-    !isLoadingOptions && !hasSelectableFetchedOptions;
+  const shouldShowCreateAction = !isLoadingOptions && !hasSelectableFetchedOptions;
 
   const resolvedSelectedOptions = useMemo(
-    () => mergedOptions.filter((option) => values.includes(option.value)),
-    [mergedOptions, values],
+    () => mergedOptions.filter(option => values.includes(option.value)),
+    [mergedOptions, values]
   );
 
   function toggleValue(nextValue: string) {
     if (values.includes(nextValue)) {
-      onChange(values.filter((value) => value !== nextValue));
+      onChange(values.filter(value => value !== nextValue));
       return;
     }
 
@@ -185,7 +166,7 @@ export function SearchableMultiSelect({
     <div className="space-y-3">
       <Popover
         open={open}
-        onOpenChange={(nextOpen) => {
+        onOpenChange={nextOpen => {
           setOpen(nextOpen);
           if (!nextOpen) {
             setSearch("");
@@ -201,7 +182,7 @@ export function SearchableMultiSelect({
             disabled={disabled}
             className={cn(
               "w-full justify-between font-normal",
-              resolvedSelectedOptions.length === 0 && "text-muted-foreground",
+              resolvedSelectedOptions.length === 0 && "text-muted-foreground"
             )}
           >
             <span className="truncate">
@@ -251,7 +232,7 @@ export function SearchableMultiSelect({
 
               {mergedOptions.length > 0 ? (
                 <CommandGroup>
-                  {mergedOptions.map((option) => (
+                  {mergedOptions.map(option => (
                     <CommandItem
                       key={option.value}
                       value={option.value}
@@ -263,9 +244,7 @@ export function SearchableMultiSelect({
                       <Check
                         className={cn(
                           "ml-2 size-4 shrink-0",
-                          values.includes(option.value)
-                            ? "opacity-100"
-                            : "opacity-0",
+                          values.includes(option.value) ? "opacity-100" : "opacity-0"
                         )}
                       />
                     </CommandItem>
@@ -279,16 +258,14 @@ export function SearchableMultiSelect({
 
       <div className="flex flex-wrap gap-2">
         {resolvedSelectedOptions.length > 0 ? (
-          resolvedSelectedOptions.map((option) => (
+          resolvedSelectedOptions.map(option => (
             <Badge key={option.value} variant="outline" className="gap-1">
               <span>{option.label}</span>
               <button
                 type="button"
                 disabled={disabled}
                 className="rounded-full p-0.5 transition-colors hover:bg-black/10"
-                onClick={() =>
-                  onChange(values.filter((value) => value !== option.value))
-                }
+                onClick={() => onChange(values.filter(value => value !== option.value))}
               >
                 <X className="size-3" />
               </button>

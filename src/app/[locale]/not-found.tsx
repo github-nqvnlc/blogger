@@ -15,17 +15,11 @@ export default function NotFoundPage() {
         <div className="space-y-3">
           <div className="flex justify-center">
             <div className="inline-flex items-center justify-center size-20 rounded-full bg-muted">
-              <span className="text-4xl font-bold text-muted-foreground">
-                404
-              </span>
+              <span className="text-4xl font-bold text-muted-foreground">404</span>
             </div>
           </div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            {t.errors.notFoundTitle}
-          </h1>
-          <p className="text-muted-foreground text-base">
-            {t.errors.notFoundDescription}
-          </p>
+          <h1 className="text-3xl font-bold tracking-tight">{t.errors.notFoundTitle}</h1>
+          <p className="text-muted-foreground text-base">{t.errors.notFoundDescription}</p>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -44,9 +38,7 @@ export default function NotFoundPage() {
         </div>
 
         <div className="border-t pt-6 space-y-2">
-          <p className="text-sm text-muted-foreground">
-            {t.errors.notFoundHint}
-          </p>
+          <p className="text-sm text-muted-foreground">{t.errors.notFoundHint}</p>
           <ul className="text-sm text-muted-foreground space-y-1">
             <li className="flex items-center justify-center gap-2">
               <Search className="size-3" />

@@ -21,11 +21,7 @@ interface DepartmentFormProps {
   onCancel?: () => void;
 }
 
-export function DepartmentForm({
-  department,
-  onSuccess,
-  onCancel,
-}: DepartmentFormProps) {
+export function DepartmentForm({ department, onSuccess, onCancel }: DepartmentFormProps) {
   const isEditing = !!department;
   const { t } = useLanguage();
   const copy = t.blogDepartments.form;
@@ -49,10 +45,8 @@ export function DepartmentForm({
 
   const watchIsActive = watch("is_active");
 
-  const { createDoc, loading: isCreating } =
-    useCreateDoc<BlogDepartment>("blog_departments");
-  const { updateDoc, loading: isUpdating } =
-    useUpdateDoc<BlogDepartment>("blog_departments");
+  const { createDoc, loading: isCreating } = useCreateDoc<BlogDepartment>("blog_departments");
+  const { updateDoc, loading: isUpdating } = useUpdateDoc<BlogDepartment>("blog_departments");
   const isLoading = isCreating || isUpdating;
 
   useEffect(() => {
@@ -89,23 +83,19 @@ export function DepartmentForm({
         const updatedDepartment = await updateDoc(department.name, payload);
         showCrudSuccess(
           copy.updateSuccess,
-          `${copy.updateSuccessPrefix}: "${values.department_name}"`,
+          `${copy.updateSuccessPrefix}: "${values.department_name}"`
         );
         onSuccess?.(updatedDepartment);
       } else {
         const createdDepartment = await createDoc(payload);
         showCrudSuccess(
           copy.createSuccess,
-          `${copy.createSuccessPrefix}: "${values.department_name}"`,
+          `${copy.createSuccessPrefix}: "${values.department_name}"`
         );
         onSuccess?.(createdDepartment);
       }
     } catch (err) {
-      showCrudError(
-        isEditing ? copy.updateFailure : copy.createFailure,
-        err,
-        copy.unknownError,
-      );
+      showCrudError(isEditing ? copy.updateFailure : copy.createFailure, err, copy.unknownError);
     }
   };
 
@@ -118,7 +108,7 @@ export function DepartmentForm({
       .toUpperCase()
       .replace(/[^\w\s\u00C0-\u024F]/g, "")
       .split(/\s+/)
-      .map((word) => word.charAt(0))
+      .map(word => word.charAt(0))
       .join("")
       .slice(0, 10);
     setValue("department_code", code);
@@ -158,9 +148,7 @@ export function DepartmentForm({
           })}
         />
         {errors.department_name && (
-          <p className="text-sm text-destructive">
-            {errors.department_name.message}
-          </p>
+          <p className="text-sm text-destructive">{errors.department_name.message}</p>
         )}
       </div>
 
@@ -187,13 +175,11 @@ export function DepartmentForm({
               value: /^[A-Z0-9_]+$/,
               message: copy.codePattern,
             },
-            setValueAs: (v) => v?.toUpperCase(),
+            setValueAs: v => v?.toUpperCase(),
           })}
         />
         {errors.department_code && (
-          <p className="text-sm text-destructive">
-            {errors.department_code.message}
-          </p>
+          <p className="text-sm text-destructive">{errors.department_code.message}</p>
         )}
         <p className="text-xs text-muted-foreground">{copy.codeHelp}</p>
       </div>
@@ -212,9 +198,7 @@ export function DepartmentForm({
           })}
         />
         {errors.description && (
-          <p className="text-sm text-destructive">
-            {errors.description.message}
-          </p>
+          <p className="text-sm text-destructive">{errors.description.message}</p>
         )}
         <p className="text-xs text-muted-foreground text-right">
           {(watch("description") ?? "").length}/500
@@ -241,9 +225,7 @@ export function DepartmentForm({
           })}
         />
         {errors.sort_order && (
-          <p className="text-sm text-destructive">
-            {errors.sort_order.message}
-          </p>
+          <p className="text-sm text-destructive">{errors.sort_order.message}</p>
         )}
         <p className="text-xs text-muted-foreground">{copy.sortOrderHelp}</p>
       </div>
@@ -260,7 +242,7 @@ export function DepartmentForm({
         <Switch
           id="is_active"
           checked={watchIsActive}
-          onCheckedChange={(checked) => setValue("is_active", checked)}
+          onCheckedChange={checked => setValue("is_active", checked)}
         />
       </div>
 
@@ -272,12 +254,7 @@ export function DepartmentForm({
       )}
 
       <div className="flex items-center justify-end gap-3 pt-2 border-t">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onCancel}
-          disabled={isLoading}
-        >
+        <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {copy.cancel}
         </Button>
         <Button type="submit" disabled={isLoading}>

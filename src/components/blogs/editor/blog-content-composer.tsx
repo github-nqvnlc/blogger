@@ -32,10 +32,8 @@ const turndownService = new TurndownService({
 });
 
 turndownService.addRule("embedded-media-figure", {
-  filter: (node) =>
-    node instanceof HTMLElement &&
-    node.tagName === "FIGURE" &&
-    node.dataset.blogMedia === "true",
+  filter: node =>
+    node instanceof HTMLElement && node.tagName === "FIGURE" && node.dataset.blogMedia === "true",
   replacement: (_content, node) => `\n\n${(node as HTMLElement).outerHTML}\n\n`,
 });
 
@@ -74,7 +72,7 @@ async function copyTextToClipboard(
     success: string;
     empty: string;
     failed: string;
-  },
+  }
 ) {
   if (!value.trim()) {
     toast.error(messages.empty);
@@ -102,14 +100,9 @@ export function BlogContentComposer({
   const msgToast = msg.toast;
   const normalizedValue = useMemo(() => normalizeHtml(value), [value]);
   const [htmlDraft, setHtmlDraft] = useState(normalizedValue);
-  const [markdownDraft, setMarkdownDraft] = useState(() =>
-    htmlToMarkdown(normalizedValue),
-  );
+  const [markdownDraft, setMarkdownDraft] = useState(() => htmlToMarkdown(normalizedValue));
 
-  const previewText = useMemo(
-    () => stripHtml(normalizedValue),
-    [normalizedValue],
-  );
+  const previewText = useMemo(() => stripHtml(normalizedValue), [normalizedValue]);
 
   async function handleCopy() {
     switch (activeView) {
@@ -198,7 +191,7 @@ export function BlogContentComposer({
       tabIndex={-1}
       className={cn(
         "rounded-2xl border bg-background p-4 outline-none",
-        invalid && "border-red-500 ring-2 ring-red-500/20",
+        invalid && "border-red-500 ring-2 ring-red-500/20"
       )}
     >
       <Tabs value={activeView} onValueChange={handleViewChange}>
@@ -250,17 +243,13 @@ export function BlogContentComposer({
         </div>
 
         <TabsContent value="editor" className="pt-4">
-          <TiptapEditor
-            value={normalizedValue}
-            onChange={onChange}
-            disabled={disabled}
-          />
+          <TiptapEditor value={normalizedValue} onChange={onChange} disabled={disabled} />
         </TabsContent>
 
         <TabsContent value="html" className="pt-4">
           <Textarea
             value={htmlDraft}
-            onChange={(event) => handleHtmlChange(event.target.value)}
+            onChange={event => handleHtmlChange(event.target.value)}
             disabled={disabled}
             className="min-h-[28rem] font-mono text-sm"
             spellCheck={false}
@@ -270,7 +259,7 @@ export function BlogContentComposer({
         <TabsContent value="markdown" className="pt-4">
           <Textarea
             value={markdownDraft}
-            onChange={(event) => handleMarkdownChange(event.target.value)}
+            onChange={event => handleMarkdownChange(event.target.value)}
             disabled={disabled}
             className="min-h-[28rem] font-mono text-sm"
             spellCheck={false}

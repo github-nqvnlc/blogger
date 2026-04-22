@@ -31,16 +31,13 @@ export function DataTableView<TData>({
     <div className="overflow-hidden rounded-md border">
       <TableComponent>
         <TableHeader>
-          {table.getHeaderGroups().map((headerGroup) => (
+          {table.getHeaderGroups().map(headerGroup => (
             <TableRow key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
+              {headerGroup.headers.map(header => (
                 <TableHead key={header.id}>
                   {header.isPlaceholder
                     ? null
-                    : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext(),
-                      )}
+                    : flexRender(header.column.columnDef.header, header.getContext())}
                 </TableHead>
               ))}
             </TableRow>
@@ -50,7 +47,7 @@ export function DataTableView<TData>({
           {isLoading ? (
             Array.from({ length: loadingRows }).map((_, i) => (
               <TableRow key={i}>
-                {table.getAllColumns().map((column) => (
+                {table.getAllColumns().map(column => (
                   <TableCell key={column.id}>
                     <div className="h-4 w-full animate-pulse rounded bg-muted" />
                   </TableCell>
@@ -58,12 +55,9 @@ export function DataTableView<TData>({
               </TableRow>
             ))
           ) : table.getRowModel().rows?.length ? (
-            table.getRowModel().rows.map((row) => (
-              <TableRow
-                key={row.id}
-                data-state={row.getIsSelected() && "selected"}
-              >
-                {row.getVisibleCells().map((cell) => (
+            table.getRowModel().rows.map(row => (
+              <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
+                {row.getVisibleCells().map(cell => (
                   <TableCell key={cell.id}>
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>
@@ -72,15 +66,8 @@ export function DataTableView<TData>({
             ))
           ) : (
             <TableRow>
-              <TableCell
-                colSpan={table.getAllColumns().length}
-                className="h-32 text-center"
-              >
-                {emptyMessage ?? (
-                  <span className="text-muted-foreground">
-                    {t.table.noData}
-                  </span>
-                )}
+              <TableCell colSpan={table.getAllColumns().length} className="h-32 text-center">
+                {emptyMessage ?? <span className="text-muted-foreground">{t.table.noData}</span>}
               </TableCell>
             </TableRow>
           )}

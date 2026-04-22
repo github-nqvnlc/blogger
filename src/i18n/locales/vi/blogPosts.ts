@@ -18,8 +18,7 @@ export const blogPosts = {
   steps: {
     metadata: {
       title: "Thông tin bài viết",
-      description:
-        "Nhập metadata chính, chọn bộ phận, danh mục, chủ đề, nhãn và ảnh bìa.",
+      description: "Nhập metadata chính, chọn bộ phận, danh mục, chủ đề, nhãn và ảnh bìa.",
     },
     content: {
       title: "Soạn nội dung",
@@ -59,8 +58,7 @@ export const blogPosts = {
     visibility: "Phạm vi hiển thị",
     visibilityPlaceholder: "Chọn phạm vi hiển thị",
     topics: "Chủ đề",
-    topicsDescription:
-      "Chọn một hoặc nhiều chủ đề thuộc cùng bộ phận nội dung.",
+    topicsDescription: "Chọn một hoặc nhiều chủ đề thuộc cùng bộ phận nội dung.",
     tags: "Nhãn",
     tagsDescription: "Chọn một hoặc nhiều nhãn dùng chung cho bài viết.",
     content: "Nội dung",
@@ -153,19 +151,15 @@ export const blogPosts = {
     slugMax: "Slug không được vượt quá 140 ký tự.",
     contentRequired: "Vui lòng nhập nội dung bài viết.",
     generic: "Vui lòng kiểm tra lại thông tin đã nhập.",
-    coverBusy:
-      "Ảnh bìa đang được tải lên. Vui lòng chờ quá trình này hoàn tất.",
+    coverBusy: "Ảnh bìa đang được tải lên. Vui lòng chờ quá trình này hoàn tất.",
   },
   list: {
     title: "Quản lý bài viết",
-    description:
-      "Theo dõi quy trình xuất bản, cập nhật trạng thái và quản trị dữ liệu bài viết.",
+    description: "Theo dõi quy trình xuất bản, cập nhật trạng thái và quản trị dữ liệu bài viết.",
     addPost: "Thêm bài viết",
     emptyTitle: "Chưa có bài viết nào",
-    emptyDescription:
-      "Hãy tạo bài viết mới hoặc điều chỉnh bộ lọc để xem nội dung phù hợp.",
-    deleteConfirmDescription:
-      'Xóa vĩnh viễn bài viết "{title}"? Hành động này không thể hoàn tác.',
+    emptyDescription: "Hãy tạo bài viết mới hoặc điều chỉnh bộ lọc để xem nội dung phù hợp.",
+    deleteConfirmDescription: 'Xóa vĩnh viễn bài viết "{title}"? Hành động này không thể hoàn tác.',
     bulkDeleteConfirmDescription:
       "Xóa vĩnh viễn {count} bài viết đã chọn? Hành động này không thể hoàn tác.",
   },
@@ -202,8 +196,7 @@ export const blogPosts = {
     noDepartment: "Chưa gán bộ phận",
     noCategory: "Chưa gán danh mục",
     noPublishedDate: "Chưa xuất bản",
-    deleteConfirmDescription:
-      'Xóa vĩnh viễn bài viết "{title}"? Hành động này không thể hoàn tác.',
+    deleteConfirmDescription: 'Xóa vĩnh viễn bài viết "{title}"? Hành động này không thể hoàn tác.',
   },
   filters: {
     searchPlaceholder: "Tìm theo tiêu đề, slug hoặc tóm tắt...",
@@ -243,7 +236,6 @@ export const blogPosts = {
     bulkStatusUpdateSuccessDescription:
       "Đã chuyển {count} bài viết đã chọn sang trạng thái {status}.",
     statusUpdateFailure: "Không thể cập nhật trạng thái bài viết",
-    statusUpdateFailureDescription:
-      "Vui lòng thử cập nhật trạng thái bài viết lại.",
+    statusUpdateFailureDescription: "Vui lòng thử cập nhật trạng thái bài viết lại.",
   },
 } as const;

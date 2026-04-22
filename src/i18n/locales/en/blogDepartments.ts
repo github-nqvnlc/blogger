@@ -6,24 +6,19 @@ export const blogDepartments = {
   emptyTitle: "No content departments found",
   emptyDescription: "Try adjusting the filters or creating a new department",
   addDepartmentTitle: "Add a new content department",
-  addDepartmentDescription:
-    "Fill in the information below to create a new content department.",
+  addDepartmentDescription: "Fill in the information below to create a new content department.",
   editDepartmentTitle: "Edit content department",
-  editDepartmentDescription:
-    "Update the information for this content department.",
+  editDepartmentDescription: "Update the information for this content department.",
   deleteTitle: "Confirm deletion",
-  deleteDescriptionStart:
-    "Are you sure you want to delete the content department",
+  deleteDescriptionStart: "Are you sure you want to delete the content department",
   deleteDescriptionEnd:
     "This action cannot be undone and may affect posts that currently use this department.",
   deleteSuccess: "Department deleted successfully",
   deleteFailure: "Failed to delete department",
-  deleteFailureDescription:
-    "This department could not be deleted. Please try again.",
+  deleteFailureDescription: "This department could not be deleted. Please try again.",
   deleteSuccessDescriptionPrefix: "Deleted content department",
   bulkDeleteTitle: "Confirm bulk deletion",
-  bulkDeleteSuccessDescription:
-    "Successfully deleted {count} content departments",
+  bulkDeleteSuccessDescription: "Successfully deleted {count} content departments",
   itemsWillBeDeleted: "This action cannot be undone.",
   form: {
     updateSuccess: "Department updated successfully",
@@ -44,13 +39,11 @@ export const blogDepartments = {
     codeRequired: "Department code is required",
     codeMin: "Department code must be at least 2 characters",
     codeMax: "Department code must not exceed 10 characters",
-    codePattern:
-      "Department code may only contain uppercase letters, numbers, and underscores",
+    codePattern: "Department code may only contain uppercase letters, numbers, and underscores",
     codeHelp:
       "The department code must be unique, uppercase, and without accents. Example: IT, HR, FIN.",
     description: "Description",
-    descriptionPlaceholder:
-      "Short description for this department (up to 500 characters)",
+    descriptionPlaceholder: "Short description for this department (up to 500 characters)",
     descriptionMax: "Description must not exceed 500 characters",
     sortOrder: "Priority order",
     sortOrderMin: "Priority order must be greater than or equal to 0",
@@ -58,8 +51,7 @@ export const blogDepartments = {
     sortOrderHelp: "Smaller numbers are shown first. Default: 0",
     activeStatus: "Active status",
     activeDescription: "This department can be used in posts",
-    inactiveDescription:
-      "This department is disabled and hidden from selectors",
+    inactiveDescription: "This department is disabled and hidden from selectors",
     inactiveWarning:
       "This department is disabled. Posts that already use it will continue to work, but the department will no longer appear in selection lists.",
     cancel: "Cancel",

@@ -29,8 +29,7 @@ export const Indent = Extension.create({
         attributes: {
           indent: {
             default: 0,
-            parseHTML: (element: HTMLElement) =>
-              Number(element.getAttribute("data-indent") ?? 0),
+            parseHTML: (element: HTMLElement) => Number(element.getAttribute("data-indent") ?? 0),
             renderHTML: (attributes: Record<string, number>) => {
               const indent = clampIndent(Number(attributes.indent ?? 0));
 
@@ -54,31 +53,27 @@ export const Indent = Extension.create({
       setIndent:
         (level: number) =>
         ({ commands }) =>
-          INDENT_TYPES.every((type) =>
-            commands.updateAttributes(type, { indent: clampIndent(level) }),
+          INDENT_TYPES.every(type =>
+            commands.updateAttributes(type, { indent: clampIndent(level) })
           ),
       indent:
         () =>
         ({ editor, commands }) => {
-          const currentIndent = Number(
-            editor.getAttributes("paragraph").indent ?? 0,
-          );
-          return INDENT_TYPES.every((type) =>
+          const currentIndent = Number(editor.getAttributes("paragraph").indent ?? 0);
+          return INDENT_TYPES.every(type =>
             commands.updateAttributes(type, {
               indent: clampIndent(currentIndent + 1),
-            }),
+            })
           );
         },
       outdent:
         () =>
         ({ editor, commands }) => {
-          const currentIndent = Number(
-            editor.getAttributes("paragraph").indent ?? 0,
-          );
-          return INDENT_TYPES.every((type) =>
+          const currentIndent = Number(editor.getAttributes("paragraph").indent ?? 0);
+          return INDENT_TYPES.every(type =>
             commands.updateAttributes(type, {
               indent: clampIndent(currentIndent - 1),
-            }),
+            })
           );
         },
     };

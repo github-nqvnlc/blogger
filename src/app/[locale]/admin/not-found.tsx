@@ -2,12 +2,7 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import {
-  ArrowLeft,
-  LayoutDashboard,
-  Search,
-  MessageSquare,
-} from "lucide-react";
+import { ArrowLeft, LayoutDashboard, Search, MessageSquare } from "lucide-react";
 import { useLanguage } from "@/hooks/useLanguage";
 import { buildLocalePath } from "@/i18n";
 
@@ -20,17 +15,11 @@ export default function AdminNotFoundPage() {
         <div className="space-y-3">
           <div className="flex justify-center">
             <div className="inline-flex items-center justify-center size-20 rounded-full bg-muted">
-              <span className="text-4xl font-bold text-muted-foreground">
-                404
-              </span>
+              <span className="text-4xl font-bold text-muted-foreground">404</span>
             </div>
           </div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            {t.errors.notFoundTitle}
-          </h1>
-          <p className="text-muted-foreground text-base">
-            {t.errors.adminNotFoundDescription}
-          </p>
+          <h1 className="text-3xl font-bold tracking-tight">{t.errors.notFoundTitle}</h1>
+          <p className="text-muted-foreground text-base">{t.errors.adminNotFoundDescription}</p>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -49,9 +38,7 @@ export default function AdminNotFoundPage() {
         </div>
 
         <div className="border-t pt-6 space-y-2">
-          <p className="text-sm text-muted-foreground">
-            {t.errors.adminNotFoundHint}
-          </p>
+          <p className="text-sm text-muted-foreground">{t.errors.adminNotFoundHint}</p>
           <ul className="text-sm text-muted-foreground space-y-1">
             <li className="flex items-center justify-center gap-2">
               <Search className="size-3" />

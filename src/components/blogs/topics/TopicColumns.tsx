@@ -1,14 +1,7 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import {
-  Eye,
-  MoreHorizontal,
-  Pencil,
-  ToggleLeft,
-  ToggleRight,
-  Trash2,
-} from "lucide-react";
+import { Eye, MoreHorizontal, Pencil, ToggleLeft, ToggleRight, Trash2 } from "lucide-react";
 import { formatDate } from "date-fns";
 import { Topic } from "@/types/blogs";
 import { Badge } from "@/components/ui/badge";
@@ -46,7 +39,7 @@ export function getTopicColumns(t: Dictionary): ColumnDef<Topic, unknown>[] {
                 ? "indeterminate"
                 : false
           }
-          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          onCheckedChange={value => table.toggleAllPageRowsSelected(!!value)}
           aria-label="Select all"
           className="translate-y-[2px]"
         />
@@ -54,7 +47,7 @@ export function getTopicColumns(t: Dictionary): ColumnDef<Topic, unknown>[] {
       cell: ({ row }) => (
         <Checkbox
           checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          onCheckedChange={value => row.toggleSelected(!!value)}
           aria-label="Select row"
           className="translate-y-[2px]"
         />
@@ -65,10 +58,7 @@ export function getTopicColumns(t: Dictionary): ColumnDef<Topic, unknown>[] {
     {
       accessorKey: "topic",
       header: ({ column }) => (
-        <DataTableColumnHeader
-          column={column}
-          title={t.blogTopics.table.name}
-        />
+        <DataTableColumnHeader column={column} title={t.blogTopics.table.name} />
       ),
       cell: ({ row, table }) => {
         const meta = table.options.meta as TopicColumnMeta;
@@ -87,38 +77,24 @@ export function getTopicColumns(t: Dictionary): ColumnDef<Topic, unknown>[] {
     {
       accessorKey: "department",
       header: ({ column }) => (
-        <DataTableColumnHeader
-          column={column}
-          title={t.blogTopics.table.department}
-        />
+        <DataTableColumnHeader column={column} title={t.blogTopics.table.department} />
       ),
       cell: ({ row, table }) => {
         const meta = table.options.meta as TopicColumnMeta;
-        return (
-          <Badge variant="outline">
-            {meta.getDepartmentLabel(row.original)}
-          </Badge>
-        );
+        return <Badge variant="outline">{meta.getDepartmentLabel(row.original)}</Badge>;
       },
       enableSorting: true,
     },
     {
       accessorKey: "slug",
       header: ({ column }) => (
-        <DataTableColumnHeader
-          column={column}
-          title={t.blogTopics.table.slug}
-        />
+        <DataTableColumnHeader column={column} title={t.blogTopics.table.slug} />
       ),
       cell: ({ row }) =>
         row.original.slug ? (
-          <code className="text-xs text-muted-foreground">
-            {row.original.slug}
-          </code>
+          <code className="text-xs text-muted-foreground">{row.original.slug}</code>
         ) : (
-          <span className="italic text-muted-foreground">
-            {t.blogTopics.table.noSlug}
-          </span>
+          <span className="italic text-muted-foreground">{t.blogTopics.table.noSlug}</span>
         ),
       enableSorting: true,
     },
@@ -131,9 +107,7 @@ export function getTopicColumns(t: Dictionary): ColumnDef<Topic, unknown>[] {
             {row.original.desc}
           </span>
         ) : (
-          <span className="italic text-muted-foreground">
-            {t.blogTopics.table.noDescription}
-          </span>
+          <span className="italic text-muted-foreground">{t.blogTopics.table.noDescription}</span>
         ),
       enableSorting: false,
     },
@@ -144,14 +118,10 @@ export function getTopicColumns(t: Dictionary): ColumnDef<Topic, unknown>[] {
         <Badge
           variant={row.original.is_active === 1 ? "default" : "secondary"}
           className={cn(
-            row.original.is_active === 1
-              ? "bg-green-500 text-white"
-              : "bg-gray-500 text-white",
+            row.original.is_active === 1 ? "bg-green-500 text-white" : "bg-gray-500 text-white"
           )}
         >
-          {row.original.is_active === 1
-            ? t.blogTopics.table.active
-            : t.blogTopics.table.inactive}
+          {row.original.is_active === 1 ? t.blogTopics.table.active : t.blogTopics.table.inactive}
         </Badge>
       ),
       enableSorting: false,
@@ -159,17 +129,11 @@ export function getTopicColumns(t: Dictionary): ColumnDef<Topic, unknown>[] {
     {
       accessorKey: "creation",
       header: ({ column }) => (
-        <DataTableColumnHeader
-          column={column}
-          title={t.blogTopics.table.creation}
-        />
+        <DataTableColumnHeader column={column} title={t.blogTopics.table.creation} />
       ),
       cell: ({ row }) => (
         <span className="text-muted-foreground">
-          {formatDate(
-            new Date(row.original.creation ?? new Date()),
-            " HH:mm dd/MM/yyyy",
-          )}
+          {formatDate(new Date(row.original.creation ?? new Date()), " HH:mm dd/MM/yyyy")}
         </span>
       ),
       enableSorting: true,
@@ -199,9 +163,7 @@ export function getTopicColumns(t: Dictionary): ColumnDef<Topic, unknown>[] {
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => meta.onToggle(topic)}
-                className={cn(
-                  topic.is_active === 1 ? "text-amber-600" : "text-green-600",
-                )}
+                className={cn(topic.is_active === 1 ? "text-amber-600" : "text-green-600")}
               >
                 {topic.is_active === 1 ? (
                   <>

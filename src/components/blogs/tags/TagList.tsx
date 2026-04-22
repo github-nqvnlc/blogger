@@ -1,27 +1,9 @@
 "use client";
 
-import * as React from "react";
-import { useRouter } from "next/navigation";
-import {
-  ColumnDef,
-  PaginationState,
-  RowSelectionState,
-  SortingState,
-} from "@tanstack/react-table";
-import { FolderOpen, Plus, Search, Trash2 } from "lucide-react";
-import { useDeleteDoc, useGetCount, useGetList } from "@/hooks";
-import { useLanguage } from "@/hooks/useLanguage";
-import { buildLocalePath } from "@/i18n";
-import { Tag } from "@/types/blogs";
-import { Filter } from "@/types/hooks";
-import { showCrudError, showCrudSuccess } from "@/lib/crud-toast";
-import { AdminAccessDenied } from "@/components/layout/admin-access-denied";
-import {
-  getTagColumns,
-  type TagColumnMeta,
-} from "@/components/blogs/tags/TagColumns";
+import { getTagColumns, type TagColumnMeta } from "@/components/blogs/tags/TagColumns";
 import { TagForm } from "@/components/blogs/tags/TagForm";
 import { TagTable } from "@/components/blogs/tags/TagTable";
+import { AdminAccessDenied } from "@/components/layout/admin-access-denied";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -49,6 +31,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
+import { useDeleteDoc, useGetCount, useGetList } from "@/hooks";
+import { useLanguage } from "@/hooks/useLanguage";
+import { buildLocalePath } from "@/i18n";
+import { showCrudError, showCrudSuccess } from "@/lib/crud-toast";
+import { Tag } from "@/types/blogs";
+import { Filter } from "@/types/hooks";
+import { ColumnDef, PaginationState, RowSelectionState, SortingState } from "@tanstack/react-table";
+import { FolderOpen, Plus, Search, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import * as React from "react";
 
 const PAGE_SIZE = 20;
 
@@ -56,17 +48,13 @@ export function TagList() {
   const router = useRouter();
   const { locale, t } = useLanguage();
   const copy = t.blogTags;
-  const [sorting, setSorting] = React.useState<SortingState>([
-    { id: "creation", desc: true },
-  ]);
+  const [sorting, setSorting] = React.useState<SortingState>([{ id: "creation", desc: true }]);
   const [pagination, setPagination] = React.useState<PaginationState>({
     pageIndex: 0,
     pageSize: PAGE_SIZE,
   });
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({});
-  const [statusFilter, setStatusFilter] = React.useState<
-    "all" | "active" | "inactive"
-  >("all");
+  const [statusFilter, setStatusFilter] = React.useState<"all" | "active" | "inactive">("all");
   const [search, setSearch] = React.useState("");
   const [isFormOpen, setIsFormOpen] = React.useState(false);
   const [editingTag, setEditingTag] = React.useState<Tag | null>(null);
@@ -112,14 +100,7 @@ export function TagList() {
     error,
     mutate: refetch,
   } = useGetList<Tag>("tags", {
-    fields: [
-      "name",
-      "tag_name",
-      "description",
-      "slug",
-      "is_active",
-      "creation",
-    ],
+    fields: ["name", "tag_name", "description", "slug", "is_active", "creation"],
     filters: apiFilters,
     orFilters: searchOrFilters,
     orderBy,
@@ -127,13 +108,7 @@ export function TagList() {
     limit: pagination.pageSize,
   });
 
-  const { data: totalCount } = useGetCount(
-    "tags",
-    apiFilters,
-    false,
-    undefined,
-    searchOrFilters,
-  );
+  const { data: totalCount } = useGetCount("tags", apiFilters, false, undefined, searchOrFilters);
 
   const { deleteDoc: deleteTag, loading: isDeleting } = useDeleteDoc("tags");
 
@@ -151,7 +126,7 @@ export function TagList() {
     (tag: Tag) => {
       router.push(buildLocalePath(locale, `/admin/tags/${tag.name}`));
     },
-    [locale, router],
+    [locale, router]
   );
 
   const handleToggleStatus = React.useCallback(async (tag: Tag) => {
@@ -166,7 +141,7 @@ export function TagList() {
       await deleteTag(deletingTag.name);
       showCrudSuccess(
         copy.deleteSuccess,
-        `${copy.deleteSuccessDescriptionPrefix} "${deletingTag.tag_name}"`,
+        `${copy.deleteSuccessDescriptionPrefix} "${deletingTag.tag_name}"`
       );
       setDeletingTag(null);
       refetch();
@@ -201,13 +176,10 @@ export function TagList() {
     if (bulkDeletingTags.length === 0) return;
 
     try {
-      await Promise.all(bulkDeletingTags.map((tag) => deleteTag(tag.name)));
+      await Promise.all(bulkDeletingTags.map(tag => deleteTag(tag.name)));
       showCrudSuccess(
         copy.deleteSuccess,
-        copy.bulkDeleteSuccessDescription.replace(
-          "{count}",
-          String(bulkDeletingTags.length),
-        ),
+        copy.bulkDeleteSuccessDescription.replace("{count}", String(bulkDeletingTags.length))
       );
       setBulkDeletingTags([]);
       setRowSelection({});
@@ -232,26 +204,15 @@ export function TagList() {
       onToggle: handleToggleStatus,
       onDelete: handleDeleteClick,
     }),
-    [
-      handleDeleteClick,
-      handleOpenEditForm,
-      handleToggleStatus,
-      handleViewDetail,
-    ],
+    [handleDeleteClick, handleOpenEditForm, handleToggleStatus, handleViewDetail]
   );
 
-  const statusCode = (error as { response?: { status?: number } } | null)
-    ?.response?.status;
+  const statusCode = (error as { response?: { status?: number } } | null)?.response?.status;
 
-  const columns: ColumnDef<Tag, unknown>[] = React.useMemo(
-    () => getTagColumns(t),
-    [t],
-  );
+  const columns: ColumnDef<Tag, unknown>[] = React.useMemo(() => getTagColumns(t), [t]);
 
   if (statusCode === 403) {
-    return (
-      <AdminAccessDenied description={t.errors.tagAccessDeniedDescription} />
-    );
+    return <AdminAccessDenied description={t.errors.tagAccessDeniedDescription} />;
   }
 
   return (
@@ -274,10 +235,10 @@ export function TagList() {
             <Input
               placeholder={copy.searchPlaceholder}
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              onKeyDown={(e) => {
+              onChange={e => setSearch(e.target.value)}
+              onKeyDown={e => {
                 if (e.key === "Enter") {
-                  setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+                  setPagination(prev => ({ ...prev, pageIndex: 0 }));
                 }
               }}
               className="pl-9"
@@ -286,7 +247,7 @@ export function TagList() {
 
           <Select
             value={statusFilter}
-            onValueChange={(v) => setStatusFilter(v as typeof statusFilter)}
+            onValueChange={v => setStatusFilter(v as typeof statusFilter)}
           >
             <SelectTrigger className="w-full sm:w-[180px]">
               <SelectValue placeholder={t.common.status} />
@@ -308,9 +269,7 @@ export function TagList() {
               variant="destructive"
               size="sm"
               onClick={() =>
-                handleBulkDeleteClick(
-                  tags?.filter((_, i) => rowSelection[i] === true) ?? [],
-                )
+                handleBulkDeleteClick(tags?.filter((_, i) => rowSelection[i] === true) ?? [])
               }
             >
               <Trash2 className="mr-2 h-4 w-4" />
@@ -325,20 +284,17 @@ export function TagList() {
           isLoading={isLoading}
           totalCount={totalCount ?? 0}
           pagination={pagination}
-          onPaginationChange={(updater) => {
-            setPagination((prev) => {
-              const next =
-                typeof updater === "function" ? updater(prev) : updater;
+          onPaginationChange={updater => {
+            setPagination(prev => {
+              const next = typeof updater === "function" ? updater(prev) : updater;
               if (next.pageIndex === 0) return next;
               return { ...next, pageIndex: 0 };
             });
           }}
           sorting={sorting}
-          onSortingChange={(updater) => {
+          onSortingChange={updater => {
             setSorting(updater);
-            setPagination((prev) =>
-              prev.pageIndex === 0 ? { ...prev } : { ...prev, pageIndex: 0 },
-            );
+            setPagination(prev => (prev.pageIndex === 0 ? { ...prev } : { ...prev, pageIndex: 0 }));
           }}
           rowSelection={rowSelection}
           onRowSelectionChange={setRowSelection}
@@ -350,15 +306,9 @@ export function TagList() {
               </div>
               <div>
                 <p className="font-medium">{copy.emptyTitle}</p>
-                <p className="text-sm text-muted-foreground">
-                  {copy.emptyDescription}
-                </p>
+                <p className="text-sm text-muted-foreground">{copy.emptyDescription}</p>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleOpenCreateForm}
-              >
+              <Button variant="outline" size="sm" onClick={handleOpenCreateForm}>
                 <Plus className="mr-2 h-4 w-4" />
                 {copy.addTag}
               </Button>
@@ -370,9 +320,7 @@ export function TagList() {
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
-            <DialogTitle>
-              {editingTag ? copy.editTagTitle : copy.addTagTitle}
-            </DialogTitle>
+            <DialogTitle>{editingTag ? copy.editTagTitle : copy.addTagTitle}</DialogTitle>
             <DialogDescription>
               {editingTag ? copy.editTagDescription : copy.addTagDescription}
             </DialogDescription>
@@ -385,10 +333,7 @@ export function TagList() {
         </DialogContent>
       </Dialog>
 
-      <AlertDialog
-        open={!!deletingTag}
-        onOpenChange={(open) => !open && setDeletingTag(null)}
-      >
+      <AlertDialog open={!!deletingTag} onOpenChange={open => !open && setDeletingTag(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{copy.deleteTitle}</AlertDialogTitle>
@@ -413,19 +358,17 @@ export function TagList() {
 
       <AlertDialog
         open={bulkDeletingTags.length > 0}
-        onOpenChange={(open) => !open && setBulkDeletingTags([])}
+        onOpenChange={open => !open && setBulkDeletingTags([])}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>
-              {copy.bulkDeleteTitle ?? copy.deleteTitle}
-            </AlertDialogTitle>
+            <AlertDialogTitle>{copy.bulkDeleteTitle ?? copy.deleteTitle}</AlertDialogTitle>
             <AlertDialogDescription className="space-y-1">
               {bulkDeletingTags.length === 1 ? (
                 `${copy.deleteDescriptionStart} "${bulkDeletingTags[0]?.tag_name}"? ${copy.deleteDescriptionEnd}`
               ) : (
                 <span className="block space-y-1">
-                  {bulkDeletingTags.slice(0, 5).map((tag) => (
+                  {bulkDeletingTags.slice(0, 5).map(tag => (
                     <span key={tag.name} className="flex items-start gap-2">
                       <span className="shrink-0 text-muted-foreground">-</span>
                       <span>{tag.tag_name}</span>
@@ -433,8 +376,7 @@ export function TagList() {
                   ))}
                   {bulkDeletingTags.length > 5 && (
                     <span className="block text-muted-foreground">
-                      ... {bulkDeletingTags.length - 5}{" "}
-                      {copy.itemsWillBeDeleted ?? "items"}
+                      ... {bulkDeletingTags.length - 5} {copy.itemsWillBeDeleted ?? "items"}
                     </span>
                   )}
                 </span>

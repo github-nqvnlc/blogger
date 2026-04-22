@@ -1,27 +1,13 @@
 "use client";
 
-import * as React from "react";
-import { useRouter } from "next/navigation";
-import {
-  ColumnDef,
-  PaginationState,
-  RowSelectionState,
-  SortingState,
-} from "@tanstack/react-table";
-import { FolderOpen, Plus, Search, Trash2 } from "lucide-react";
-import { useDeleteDoc, useGetCount, useGetList } from "@/hooks";
-import { useLanguage } from "@/hooks/useLanguage";
-import { buildLocalePath } from "@/i18n";
-import { BlogDepartment, Category } from "@/types/blogs";
-import { Filter } from "@/types/hooks";
-import { showCrudError, showCrudSuccess } from "@/lib/crud-toast";
-import { AdminAccessDenied } from "@/components/layout/admin-access-denied";
 import {
   getCategoryColumns,
   type CategoryColumnMeta,
 } from "@/components/blogs/categories/CategoryColumns";
 import { CategoryForm } from "@/components/blogs/categories/CategoryForm";
 import { CategoryTable } from "@/components/blogs/categories/CategoryTable";
+import { DepartmentFilterCombobox } from "@/components/common/DepartmentFilterCombobox";
+import { AdminAccessDenied } from "@/components/layout/admin-access-denied";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -49,7 +35,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
-import { DepartmentFilterCombobox } from "@/components/common/DepartmentFilterCombobox";
+import { useDeleteDoc, useGetCount, useGetList } from "@/hooks";
+import { useLanguage } from "@/hooks/useLanguage";
+import { buildLocalePath } from "@/i18n";
+import { showCrudError, showCrudSuccess } from "@/lib/crud-toast";
+import { BlogDepartment, Category } from "@/types/blogs";
+import { Filter } from "@/types/hooks";
+import { ColumnDef, PaginationState, RowSelectionState, SortingState } from "@tanstack/react-table";
+import { FolderOpen, Plus, Search, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import * as React from "react";
 
 const PAGE_SIZE = 20;
 
@@ -57,29 +52,20 @@ export function CategoryList() {
   const router = useRouter();
   const { locale, t } = useLanguage();
   const copy = t.blogCategories;
-  const [sorting, setSorting] = React.useState<SortingState>([
-    { id: "creation", desc: true },
-  ]);
+  const [sorting, setSorting] = React.useState<SortingState>([{ id: "creation", desc: true }]);
   const [pagination, setPagination] = React.useState<PaginationState>({
     pageIndex: 0,
     pageSize: PAGE_SIZE,
   });
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({});
-  const [statusFilter, setStatusFilter] = React.useState<
-    "all" | "active" | "inactive"
-  >("all");
+  const [statusFilter, setStatusFilter] = React.useState<"all" | "active" | "inactive">("all");
   const [departmentFilter, setDepartmentFilter] = React.useState<string>("all");
   const [departments, setDepartments] = React.useState<BlogDepartment[]>([]);
   const [search, setSearch] = React.useState("");
   const [isFormOpen, setIsFormOpen] = React.useState(false);
-  const [editingCategory, setEditingCategory] = React.useState<Category | null>(
-    null,
-  );
-  const [deletingCategory, setDeletingCategory] =
-    React.useState<Category | null>(null);
-  const [bulkDeletingCategories, setBulkDeletingCategories] = React.useState<
-    Category[]
-  >([]);
+  const [editingCategory, setEditingCategory] = React.useState<Category | null>(null);
+  const [deletingCategory, setDeletingCategory] = React.useState<Category | null>(null);
+  const [bulkDeletingCategories, setBulkDeletingCategories] = React.useState<Category[]>([]);
 
   const apiFilters = React.useMemo<Filter[]>(() => {
     const result: Filter[] = [];
@@ -124,15 +110,7 @@ export function CategoryList() {
     error,
     mutate: refetch,
   } = useGetList<Category>("categories", {
-    fields: [
-      "name",
-      "category",
-      "department",
-      "description",
-      "slug",
-      "is_active",
-      "creation",
-    ],
+    fields: ["name", "category", "department", "description", "slug", "is_active", "creation"],
     filters: apiFilters,
     orFilters: searchOrFilters,
     orderBy,
@@ -141,8 +119,8 @@ export function CategoryList() {
   });
 
   const departmentLabelMap = React.useMemo(
-    () => new Map(departments.map((item) => [item.name, item.department_name])),
-    [departments],
+    () => new Map(departments.map(item => [item.name, item.department_name])),
+    [departments]
   );
 
   const { data: totalCount } = useGetCount(
@@ -150,23 +128,18 @@ export function CategoryList() {
     apiFilters,
     false,
     undefined,
-    searchOrFilters,
+    searchOrFilters
   );
 
-  const { deleteDoc: deleteCategory, loading: isDeleting } =
-    useDeleteDoc("categories");
+  const { deleteDoc: deleteCategory, loading: isDeleting } = useDeleteDoc("categories");
 
   const getDepartmentLabel = React.useCallback(
     (category: Category) => {
       const value =
-        typeof category.department === "string"
-          ? category.department
-          : category.department?.name;
-      return value
-        ? (departmentLabelMap.get(value) ?? value)
-        : copy.table.unknownDepartment;
+        typeof category.department === "string" ? category.department : category.department?.name;
+      return value ? (departmentLabelMap.get(value) ?? value) : copy.table.unknownDepartment;
     },
-    [copy.table.unknownDepartment, departmentLabelMap],
+    [copy.table.unknownDepartment, departmentLabelMap]
   );
 
   const handleOpenCreateForm = React.useCallback(() => {
@@ -181,11 +154,9 @@ export function CategoryList() {
 
   const handleViewDetail = React.useCallback(
     (category: Category) => {
-      router.push(
-        buildLocalePath(locale, `/admin/categories/${category.name}`),
-      );
+      router.push(buildLocalePath(locale, `/admin/categories/${category.name}`));
     },
-    [locale, router],
+    [locale, router]
   );
 
   const handleToggleStatus = React.useCallback(async (category: Category) => {
@@ -200,7 +171,7 @@ export function CategoryList() {
       await deleteCategory(deletingCategory.name);
       showCrudSuccess(
         copy.deleteSuccess,
-        `${copy.deleteSuccessDescriptionPrefix} "${deletingCategory.category}"`,
+        `${copy.deleteSuccessDescriptionPrefix} "${deletingCategory.category}"`
       );
       setDeletingCategory(null);
       refetch();
@@ -227,26 +198,18 @@ export function CategoryList() {
     setDeletingCategory(category);
   }, []);
 
-  const handleBulkDeleteClick = React.useCallback(
-    (selectedCategories: Category[]) => {
-      setBulkDeletingCategories(selectedCategories);
-    },
-    [],
-  );
+  const handleBulkDeleteClick = React.useCallback((selectedCategories: Category[]) => {
+    setBulkDeletingCategories(selectedCategories);
+  }, []);
 
   const handleBulkDeleteConfirm = React.useCallback(async () => {
     if (bulkDeletingCategories.length === 0) return;
 
     try {
-      await Promise.all(
-        bulkDeletingCategories.map((category) => deleteCategory(category.name)),
-      );
+      await Promise.all(bulkDeletingCategories.map(category => deleteCategory(category.name)));
       showCrudSuccess(
         copy.deleteSuccess,
-        copy.bulkDeleteSuccessDescription.replace(
-          "{count}",
-          String(bulkDeletingCategories.length),
-        ),
+        copy.bulkDeleteSuccessDescription.replace("{count}", String(bulkDeletingCategories.length))
       );
       setBulkDeletingCategories([]);
       setRowSelection({});
@@ -278,23 +241,15 @@ export function CategoryList() {
       handleOpenEditForm,
       handleToggleStatus,
       handleViewDetail,
-    ],
+    ]
   );
 
-  const statusCode = (error as { response?: { status?: number } } | null)
-    ?.response?.status;
+  const statusCode = (error as { response?: { status?: number } } | null)?.response?.status;
 
-  const columns: ColumnDef<Category, unknown>[] = React.useMemo(
-    () => getCategoryColumns(t),
-    [t],
-  );
+  const columns: ColumnDef<Category, unknown>[] = React.useMemo(() => getCategoryColumns(t), [t]);
 
   if (statusCode === 403) {
-    return (
-      <AdminAccessDenied
-        description={t.errors.categoryAccessDeniedDescription}
-      />
-    );
+    return <AdminAccessDenied description={t.errors.categoryAccessDeniedDescription} />;
   }
 
   return (
@@ -317,10 +272,10 @@ export function CategoryList() {
             <Input
               placeholder={copy.searchPlaceholder}
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              onKeyDown={(e) => {
+              onChange={e => setSearch(e.target.value)}
+              onKeyDown={e => {
                 if (e.key === "Enter") {
-                  setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+                  setPagination(prev => ({ ...prev, pageIndex: 0 }));
                 }
               }}
               className="pl-9"
@@ -329,10 +284,10 @@ export function CategoryList() {
 
           <Select
             value={statusFilter}
-            onValueChange={(v) => {
+            onValueChange={v => {
               setStatusFilter(v as typeof statusFilter);
-              setPagination((prev) =>
-                prev.pageIndex === 0 ? { ...prev } : { ...prev, pageIndex: 0 },
+              setPagination(prev =>
+                prev.pageIndex === 0 ? { ...prev } : { ...prev, pageIndex: 0 }
               );
             }}
           >
@@ -348,10 +303,10 @@ export function CategoryList() {
 
           <DepartmentFilterCombobox
             value={departmentFilter}
-            onChange={(v) => {
+            onChange={v => {
               setDepartmentFilter(v);
-              setPagination((prev) =>
-                prev.pageIndex === 0 ? { ...prev } : { ...prev, pageIndex: 0 },
+              setPagination(prev =>
+                prev.pageIndex === 0 ? { ...prev } : { ...prev, pageIndex: 0 }
               );
             }}
             onDepartmentsChange={setDepartments}
@@ -370,9 +325,7 @@ export function CategoryList() {
               variant="destructive"
               size="sm"
               onClick={() =>
-                handleBulkDeleteClick(
-                  categories?.filter((_, i) => rowSelection[i] === true) ?? [],
-                )
+                handleBulkDeleteClick(categories?.filter((_, i) => rowSelection[i] === true) ?? [])
               }
             >
               <Trash2 className="mr-2 h-4 w-4" />
@@ -387,20 +340,17 @@ export function CategoryList() {
           isLoading={isLoading}
           totalCount={totalCount ?? 0}
           pagination={pagination}
-          onPaginationChange={(updater) => {
-            setPagination((prev) => {
-              const next =
-                typeof updater === "function" ? updater(prev) : updater;
+          onPaginationChange={updater => {
+            setPagination(prev => {
+              const next = typeof updater === "function" ? updater(prev) : updater;
               if (next.pageIndex === 0) return next;
               return { ...next, pageIndex: 0 };
             });
           }}
           sorting={sorting}
-          onSortingChange={(updater) => {
+          onSortingChange={updater => {
             setSorting(updater);
-            setPagination((prev) =>
-              prev.pageIndex === 0 ? { ...prev } : { ...prev, pageIndex: 0 },
-            );
+            setPagination(prev => (prev.pageIndex === 0 ? { ...prev } : { ...prev, pageIndex: 0 }));
           }}
           rowSelection={rowSelection}
           onRowSelectionChange={setRowSelection}
@@ -412,15 +362,9 @@ export function CategoryList() {
               </div>
               <div>
                 <p className="font-medium">{copy.emptyTitle}</p>
-                <p className="text-sm text-muted-foreground">
-                  {copy.emptyDescription}
-                </p>
+                <p className="text-sm text-muted-foreground">{copy.emptyDescription}</p>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleOpenCreateForm}
-              >
+              <Button variant="outline" size="sm" onClick={handleOpenCreateForm}>
                 <Plus className="mr-2 h-4 w-4" />
                 {copy.addCategory}
               </Button>
@@ -436,9 +380,7 @@ export function CategoryList() {
               {editingCategory ? copy.editCategoryTitle : copy.addCategoryTitle}
             </DialogTitle>
             <DialogDescription>
-              {editingCategory
-                ? copy.editCategoryDescription
-                : copy.addCategoryDescription}
+              {editingCategory ? copy.editCategoryDescription : copy.addCategoryDescription}
             </DialogDescription>
           </DialogHeader>
           <CategoryForm
@@ -451,7 +393,7 @@ export function CategoryList() {
 
       <AlertDialog
         open={!!deletingCategory}
-        onOpenChange={(open) => !open && setDeletingCategory(null)}
+        onOpenChange={open => !open && setDeletingCategory(null)}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -477,31 +419,25 @@ export function CategoryList() {
 
       <AlertDialog
         open={bulkDeletingCategories.length > 0}
-        onOpenChange={(open) => !open && setBulkDeletingCategories([])}
+        onOpenChange={open => !open && setBulkDeletingCategories([])}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>
-              {copy.bulkDeleteTitle ?? copy.deleteTitle}
-            </AlertDialogTitle>
+            <AlertDialogTitle>{copy.bulkDeleteTitle ?? copy.deleteTitle}</AlertDialogTitle>
             <AlertDialogDescription className="space-y-1">
               {bulkDeletingCategories.length === 1 ? (
                 `${copy.deleteDescriptionStart} "${bulkDeletingCategories[0]?.category}"? ${copy.deleteDescriptionEnd}`
               ) : (
                 <span className="block space-y-1">
-                  {bulkDeletingCategories.slice(0, 5).map((category) => (
-                    <span
-                      key={category.name}
-                      className="flex items-start gap-2"
-                    >
+                  {bulkDeletingCategories.slice(0, 5).map(category => (
+                    <span key={category.name} className="flex items-start gap-2">
                       <span className="shrink-0 text-muted-foreground">-</span>
                       <span>{category.category}</span>
                     </span>
                   ))}
                   {bulkDeletingCategories.length > 5 && (
                     <span className="block text-muted-foreground">
-                      ... {bulkDeletingCategories.length - 5}{" "}
-                      {copy.itemsWillBeDeleted ?? "items"}
+                      ... {bulkDeletingCategories.length - 5} {copy.itemsWillBeDeleted ?? "items"}
                     </span>
                   )}
                 </span>

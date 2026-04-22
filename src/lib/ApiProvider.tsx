@@ -8,10 +8,9 @@ import { createApiClient } from "./apiClient";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { Dictionary, Locale } from "@/i18n";
 
-const Toaster = dynamic(
-  () => import("@/components/ui/sonner").then((mod) => mod.Toaster),
-  { ssr: false },
-);
+const Toaster = dynamic(() => import("@/components/ui/sonner").then(mod => mod.Toaster), {
+  ssr: false,
+});
 
 interface ApiContextValue {
   url: string;
@@ -37,11 +36,7 @@ interface ApiProviderProps {
   dictionary: Dictionary;
 }
 
-export function ApiProvider({
-  children,
-  locale,
-  dictionary,
-}: ApiProviderProps) {
+export function ApiProvider({ children, locale, dictionary }: ApiProviderProps) {
   useEffect(() => {
     createApiClient();
   }, []);

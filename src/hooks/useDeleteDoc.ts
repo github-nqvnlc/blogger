@@ -5,7 +5,7 @@ import { getApiClient } from "@/lib/apiClient";
 
 export function useDeleteDoc(
   /** Tên resource (Doctype) */
-  resource: string,
+  resource: string
 ) {
   const [loading, setLoading] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
@@ -24,9 +24,7 @@ export function useDeleteDoc(
       setError(null);
       try {
         const apiClient = getApiClient();
-        const res = await apiClient.delete<{ message: string }>(
-          `/api/resource/${resource}/${id}`,
-        );
+        const res = await apiClient.delete<{ message: string }>(`/api/resource/${resource}/${id}`);
         const data = (res.data as { message?: string }).message
           ? (res.data as { message: string })
           : { message: "ok" };
@@ -40,7 +38,7 @@ export function useDeleteDoc(
         setLoading(false);
       }
     },
-    [resource],
+    [resource]
   );
 
   return { deleteDoc, loading, isCompleted, error, reset };

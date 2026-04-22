@@ -1,25 +1,9 @@
 "use client";
 
-import * as React from "react";
-import Link from "next/link";
-import { ArrowLeft, BookOpen, FolderOpen, Hash, Pencil } from "lucide-react";
-import { formatDate } from "date-fns";
-import { notFound } from "next/navigation";
-import { useGetDoc, useGetList } from "@/hooks";
-import { useLanguage } from "@/hooks/useLanguage";
-import { buildLocalePath } from "@/i18n";
-import { BlogDepartment, Post, PostTopic, Topic } from "@/types/blogs";
-import { Filter } from "@/types/hooks";
 import { AdminAccessDenied } from "@/components/layout/admin-access-denied";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -28,7 +12,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { TopicForm } from "./TopicForm";
 import {
   Table,
   TableBody,
@@ -37,6 +20,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useGetDoc, useGetList } from "@/hooks";
+import { useLanguage } from "@/hooks/useLanguage";
+import { buildLocalePath } from "@/i18n";
+import { BlogDepartment, Post, PostTopic, Topic } from "@/types/blogs";
+import { Filter } from "@/types/hooks";
+import { formatDate } from "date-fns";
+import { ArrowLeft, BookOpen, FolderOpen, Hash, Pencil } from "lucide-react";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import * as React from "react";
+import { TopicForm } from "./TopicForm";
 
 interface TopicDetailProps {
   topicId: string;
@@ -78,13 +72,7 @@ function OverviewSkeleton() {
   );
 }
 
-function EmptyState({
-  icon: Icon,
-  label,
-}: {
-  icon: React.ElementType;
-  label: string;
-}) {
+function EmptyState({ icon: Icon, label }: { icon: React.ElementType; label: string }) {
   return (
     <div className="flex min-h-40 flex-col items-center justify-center gap-3 rounded-lg border border-dashed text-center">
       <div className="rounded-full bg-muted p-3">
@@ -109,9 +97,7 @@ function StatCard({
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">
-          {title}
-        </CardTitle>
+        <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
         <Icon className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
       <CardContent>
@@ -143,36 +129,27 @@ export function TopicDetail({ topicId }: TopicDetailProps) {
   } = useGetDoc<Topic>("topics", topicId);
 
   const departmentId =
-    typeof topic?.department === "string"
-      ? topic.department
-      : topic?.department?.name;
+    typeof topic?.department === "string" ? topic.department : topic?.department?.name;
 
-  const { data: department } = useGetDoc<BlogDepartment>(
-    "blog_departments",
-    departmentId,
+  const { data: department } = useGetDoc<BlogDepartment>("blog_departments", departmentId);
+
+  const topicFilter = React.useMemo(() => [["topic", "=", topicId]] as Filter[], [topicId]);
+
+  const { data: postTopics, isLoading: isLoadingPostTopics } = useGetList<PostTopic>(
+    "post_topics",
+    {
+      fields: ["name", "post", "topic"],
+      filters: topicFilter,
+      limit: 100,
+    },
+    {
+      enabled: !!topic,
+    }
   );
-
-  const topicFilter = React.useMemo(
-    () => [["topic", "=", topicId]] as Filter[],
-    [topicId],
-  );
-
-  const { data: postTopics, isLoading: isLoadingPostTopics } =
-    useGetList<PostTopic>(
-      "post_topics",
-      {
-        fields: ["name", "post", "topic"],
-        filters: topicFilter,
-        limit: 100,
-      },
-      {
-        enabled: !!topic,
-      },
-    );
 
   const relatedPostIds = React.useMemo(
-    () => Array.from(new Set((postTopics ?? []).map((item) => item.post))),
-    [postTopics],
+    () => Array.from(new Set((postTopics ?? []).map(item => item.post))),
+    [postTopics]
   );
 
   const relatedPostsFilter = React.useMemo<Filter[]>(() => {
@@ -183,32 +160,22 @@ export function TopicDetail({ topicId }: TopicDetailProps) {
   const { data: posts, isLoading: isLoadingPosts } = useGetList<Post>(
     "posts",
     {
-      fields: [
-        "name",
-        "title",
-        "status",
-        "visibility",
-        "published_at",
-        "creation",
-      ],
+      fields: ["name", "title", "status", "visibility", "published_at", "creation"],
       filters: relatedPostsFilter,
       orderBy: { field: "creation", order: "desc" },
       limit: relatedPostIds.length || 100,
     },
     {
       enabled: relatedPostIds.length > 0,
-    },
+    }
   );
 
   const totalPosts = posts?.length ?? 0;
 
-  const statusCode = (topicError as { response?: { status?: number } } | null)
-    ?.response?.status;
+  const statusCode = (topicError as { response?: { status?: number } } | null)?.response?.status;
 
   if (statusCode === 403) {
-    return (
-      <AdminAccessDenied description={t.errors.topicAccessDeniedDescription} />
-    );
+    return <AdminAccessDenied description={t.errors.topicAccessDeniedDescription} />;
   }
 
   if (isLoadingTopic) {
@@ -221,9 +188,7 @@ export function TopicDetail({ topicId }: TopicDetailProps) {
 
   const departmentName =
     department?.department_name ??
-    (typeof topic.department === "string"
-      ? topic.department
-      : topic.department.department_name);
+    (typeof topic.department === "string" ? topic.department : topic.department.department_name);
 
   return (
     <div className="space-y-6">
@@ -247,9 +212,7 @@ export function TopicDetail({ topicId }: TopicDetailProps) {
               inactiveLabel={t.blogTopics.table.inactive}
             />
             <p className="text-sm font-semibold italic text-muted-foreground">
-              {topic.creation
-                ? formatDate(new Date(topic.creation), " HH:mm - dd/MM/yyyy")
-                : "-"}
+              {topic.creation ? formatDate(new Date(topic.creation), " HH:mm - dd/MM/yyyy") : "-"}
             </p>
           </div>
           <Button size="sm" onClick={() => setEditDialogOpen(true)}>
@@ -265,10 +228,7 @@ export function TopicDetail({ topicId }: TopicDetailProps) {
           title={copy.department}
           value={departmentName}
           icon={Hash}
-          link={buildLocalePath(
-            locale,
-            `/admin/blog-departments/${departmentId}`,
-          )}
+          link={buildLocalePath(locale, `/admin/blog-departments/${departmentId}`)}
         />
       </div>
 
@@ -278,9 +238,7 @@ export function TopicDetail({ topicId }: TopicDetailProps) {
             <CardTitle>{copy.description}</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-2">
-            <CardDescription>
-              {topic.desc || copy.noDescription}
-            </CardDescription>
+            <CardDescription>{topic.desc || copy.noDescription}</CardDescription>
           </CardContent>
         </Card>
       </div>
@@ -293,8 +251,7 @@ export function TopicDetail({ topicId }: TopicDetailProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {isLoadingPostTopics ||
-          (relatedPostIds.length > 0 && isLoadingPosts) ? (
+          {isLoadingPostTopics || (relatedPostIds.length > 0 && isLoadingPosts) ? (
             <Skeleton className="h-48 w-full rounded-xl" />
           ) : !posts?.length ? (
             <EmptyState icon={FolderOpen} label={copy.noPosts} />
@@ -308,20 +265,17 @@ export function TopicDetail({ topicId }: TopicDetailProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {posts.map((post) => (
+                {posts.map(post => (
                   <TableRow key={post.name}>
                     <TableCell>
                       <div className="space-y-1">
                         <p className="font-medium">{post.title}</p>
                         <p className="text-xs text-muted-foreground">
                           {post.published_at
-                            ? formatDate(
-                                new Date(post.published_at),
-                                " HH:mm dd/MM/yyyy",
-                              )
+                            ? formatDate(new Date(post.published_at), " HH:mm dd/MM/yyyy")
                             : formatDate(
                                 new Date(post.creation ?? new Date()),
-                                " HH:mm dd/MM/yyyy",
+                                " HH:mm dd/MM/yyyy"
                               )}
                         </p>
                       </div>
@@ -329,9 +283,7 @@ export function TopicDetail({ topicId }: TopicDetailProps) {
                     <TableCell>
                       <Badge variant="outline">{post.status}</Badge>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {post.visibility}
-                    </TableCell>
+                    <TableCell className="text-muted-foreground">{post.visibility}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -344,9 +296,7 @@ export function TopicDetail({ topicId }: TopicDetailProps) {
         <DialogContent className="max-w-xl">
           <DialogHeader>
             <DialogTitle>{t.blogTopics.editTopicTitle}</DialogTitle>
-            <DialogDescription>
-              {t.blogTopics.editTopicDescription}
-            </DialogDescription>
+            <DialogDescription>{t.blogTopics.editTopicDescription}</DialogDescription>
           </DialogHeader>
           <TopicForm
             topic={topic}

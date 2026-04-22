@@ -48,8 +48,7 @@ export const blogEditor = {
     dialog: {
       link: {
         title: "Chèn liên kết",
-        description:
-          "Nhập URL hợp lệ. Nếu đang chọn text, editor sẽ gắn link vào vùng chọn.",
+        description: "Nhập URL hợp lệ. Nếu đang chọn text, editor sẽ gắn link vào vùng chọn.",
         label: "Link URL",
         placeholder: "https://example.com",
         submit: "Chèn link",
@@ -63,8 +62,7 @@ export const blogEditor = {
       },
       video: {
         title: "Chèn video từ URL",
-        description:
-          "Hỗ trợ YouTube, Vimeo và link file video .mp4/.webm/.ogg.",
+        description: "Hỗ trợ YouTube, Vimeo và link file video .mp4/.webm/.ogg.",
         label: "Video URL",
         placeholder: "https://www.youtube.com/watch?v=...",
         submit: "Chèn video",
@@ -73,8 +71,7 @@ export const blogEditor = {
     },
     error: {
       invalidLinkUrl: "Vui lòng nhập URL liên kết.",
-      invalidLinkProtocol:
-        "Liên kết phải là URL http(s) hoặc đường dẫn nội bộ.",
+      invalidLinkProtocol: "Liên kết phải là URL http(s) hoặc đường dẫn nội bộ.",
       invalidImageUrl: "URL ảnh không hợp lệ.",
       invalidVideoUrl:
         "Video URL không hợp lệ. Chỉ hỗ trợ YouTube, Vimeo hoặc file .mp4/.webm/.ogg.",

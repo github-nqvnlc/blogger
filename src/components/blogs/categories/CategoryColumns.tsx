@@ -1,14 +1,7 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import {
-  Eye,
-  MoreHorizontal,
-  Pencil,
-  ToggleLeft,
-  ToggleRight,
-  Trash2,
-} from "lucide-react";
+import { Eye, MoreHorizontal, Pencil, ToggleLeft, ToggleRight, Trash2 } from "lucide-react";
 import { formatDate } from "date-fns";
 import { Category } from "@/types/blogs";
 import { Badge } from "@/components/ui/badge";
@@ -33,9 +26,7 @@ export interface CategoryColumnMeta {
   getDepartmentLabel: (category: Category) => string;
 }
 
-export function getCategoryColumns(
-  t: Dictionary,
-): ColumnDef<Category, unknown>[] {
+export function getCategoryColumns(t: Dictionary): ColumnDef<Category, unknown>[] {
   return [
     {
       id: "select",
@@ -48,7 +39,7 @@ export function getCategoryColumns(
                 ? "indeterminate"
                 : false
           }
-          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          onCheckedChange={value => table.toggleAllPageRowsSelected(!!value)}
           aria-label="Select all"
           className="translate-y-[2px]"
         />
@@ -56,7 +47,7 @@ export function getCategoryColumns(
       cell: ({ row }) => (
         <Checkbox
           checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          onCheckedChange={value => row.toggleSelected(!!value)}
           aria-label="Select row"
           className="translate-y-[2px]"
         />
@@ -67,10 +58,7 @@ export function getCategoryColumns(
     {
       accessorKey: "category",
       header: ({ column }) => (
-        <DataTableColumnHeader
-          column={column}
-          title={t.blogCategories.table.name}
-        />
+        <DataTableColumnHeader column={column} title={t.blogCategories.table.name} />
       ),
       cell: ({ row, table }) => {
         const meta = table.options.meta as CategoryColumnMeta;
@@ -89,38 +77,24 @@ export function getCategoryColumns(
     {
       accessorKey: "department",
       header: ({ column }) => (
-        <DataTableColumnHeader
-          column={column}
-          title={t.blogCategories.table.department}
-        />
+        <DataTableColumnHeader column={column} title={t.blogCategories.table.department} />
       ),
       cell: ({ row, table }) => {
         const meta = table.options.meta as CategoryColumnMeta;
-        return (
-          <Badge variant="outline">
-            {meta.getDepartmentLabel(row.original)}
-          </Badge>
-        );
+        return <Badge variant="outline">{meta.getDepartmentLabel(row.original)}</Badge>;
       },
       enableSorting: true,
     },
     {
       accessorKey: "slug",
       header: ({ column }) => (
-        <DataTableColumnHeader
-          column={column}
-          title={t.blogCategories.table.slug}
-        />
+        <DataTableColumnHeader column={column} title={t.blogCategories.table.slug} />
       ),
       cell: ({ row }) =>
         row.original.slug ? (
-          <code className="text-xs text-muted-foreground">
-            {row.original.slug}
-          </code>
+          <code className="text-xs text-muted-foreground">{row.original.slug}</code>
         ) : (
-          <span className="italic text-muted-foreground">
-            {t.blogCategories.table.noSlug}
-          </span>
+          <span className="italic text-muted-foreground">{t.blogCategories.table.noSlug}</span>
         ),
       enableSorting: true,
     },
@@ -146,9 +120,7 @@ export function getCategoryColumns(
         <Badge
           variant={row.original.is_active === 1 ? "default" : "secondary"}
           className={cn(
-            row.original.is_active === 1
-              ? "bg-green-500 text-white"
-              : "bg-gray-500 text-white",
+            row.original.is_active === 1 ? "bg-green-500 text-white" : "bg-gray-500 text-white"
           )}
         >
           {row.original.is_active === 1
@@ -161,10 +133,7 @@ export function getCategoryColumns(
     {
       accessorKey: "creation",
       header: ({ column }) => (
-        <DataTableColumnHeader
-          column={column}
-          title={t.blogCategories.table.creation}
-        />
+        <DataTableColumnHeader column={column} title={t.blogCategories.table.creation} />
       ),
       cell: ({ row }) => (
         <span className="text-muted-foreground">
@@ -198,11 +167,7 @@ export function getCategoryColumns(
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => meta.onToggle(category)}
-                className={cn(
-                  category.is_active === 1
-                    ? "text-amber-600"
-                    : "text-green-600",
-                )}
+                className={cn(category.is_active === 1 ? "text-amber-600" : "text-green-600")}
               >
                 {category.is_active === 1 ? (
                   <>

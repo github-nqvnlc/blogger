@@ -26,9 +26,7 @@ export function useUserSettings(currentUser: string | null) {
   const query = useQuery<UserSettings, Error>({
     queryKey: QUERY_KEY,
     queryFn: async () => {
-      const res = await apiClient.get<UserSettings>(
-        `/api/resource/User/${currentUser}`,
-      );
+      const res = await apiClient.get<UserSettings>(`/api/resource/User/${currentUser}`);
       return (res.data as { data?: UserSettings }).data ?? res.data;
     },
     enabled: !!currentUser,
@@ -36,14 +34,11 @@ export function useUserSettings(currentUser: string | null) {
   });
 
   const mutation = useMutation<UserSettings, Error, UpdateSettingsPayload>({
-    mutationFn: async (payload) => {
-      const res = await apiClient.put<UserSettings>(
-        `/api/resource/User/${currentUser}`,
-        payload,
-      );
+    mutationFn: async payload => {
+      const res = await apiClient.put<UserSettings>(`/api/resource/User/${currentUser}`, payload);
       return (res.data as { data?: UserSettings }).data ?? res.data;
     },
-    onSuccess: (data) => {
+    onSuccess: data => {
       queryClient.setQueryData<UserSettings>(QUERY_KEY, data);
     },
   });

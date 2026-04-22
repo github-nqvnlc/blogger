@@ -90,25 +90,15 @@ export function TagForm({ tag, onSuccess, onCancel }: TagFormProps) {
 
       if (isEditing && tag) {
         await updateDoc(tag.name, payload);
-        showCrudSuccess(
-          copy.updateSuccess,
-          `${copy.updateSuccessPrefix}: "${values.tag_name}"`,
-        );
+        showCrudSuccess(copy.updateSuccess, `${copy.updateSuccessPrefix}: "${values.tag_name}"`);
       } else {
         await createDoc(payload);
-        showCrudSuccess(
-          copy.createSuccess,
-          `${copy.createSuccessPrefix}: "${values.tag_name}"`,
-        );
+        showCrudSuccess(copy.createSuccess, `${copy.createSuccessPrefix}: "${values.tag_name}"`);
       }
 
       onSuccess?.();
     } catch (err) {
-      showCrudError(
-        isEditing ? copy.updateFailure : copy.createFailure,
-        err,
-        copy.unknownError,
-      );
+      showCrudError(isEditing ? copy.updateFailure : copy.createFailure, err, copy.unknownError);
     }
   };
 
@@ -140,9 +130,7 @@ export function TagForm({ tag, onSuccess, onCancel }: TagFormProps) {
             },
           })}
         />
-        {errors.tag_name && (
-          <p className="text-sm text-destructive">{errors.tag_name.message}</p>
-        )}
+        {errors.tag_name && <p className="text-sm text-destructive">{errors.tag_name.message}</p>}
       </div>
 
       <div className="space-y-2">
@@ -174,9 +162,7 @@ export function TagForm({ tag, onSuccess, onCancel }: TagFormProps) {
             setValueAs: (value: string) => value?.trim().toLowerCase(),
           })}
         />
-        {errors.slug && (
-          <p className="text-sm text-destructive">{errors.slug.message}</p>
-        )}
+        {errors.slug && <p className="text-sm text-destructive">{errors.slug.message}</p>}
         <p className="text-xs text-muted-foreground">{copy.slugHelp}</p>
       </div>
 
@@ -194,9 +180,7 @@ export function TagForm({ tag, onSuccess, onCancel }: TagFormProps) {
           })}
         />
         {errors.description && (
-          <p className="text-sm text-destructive">
-            {errors.description.message}
-          </p>
+          <p className="text-sm text-destructive">{errors.description.message}</p>
         )}
         <p className="text-right text-xs text-muted-foreground">
           {(watch("description") ?? "").length}/500
@@ -215,7 +199,7 @@ export function TagForm({ tag, onSuccess, onCancel }: TagFormProps) {
         <Switch
           id="is_active"
           checked={watchIsActive}
-          onCheckedChange={(checked) => setValue("is_active", checked)}
+          onCheckedChange={checked => setValue("is_active", checked)}
         />
       </div>
 
@@ -227,12 +211,7 @@ export function TagForm({ tag, onSuccess, onCancel }: TagFormProps) {
       )}
 
       <div className="flex items-center justify-end gap-3 border-t pt-2">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onCancel}
-          disabled={isLoading}
-        >
+        <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {copy.cancel}
         </Button>
         <Button type="submit" disabled={isLoading}>

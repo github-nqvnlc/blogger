@@ -6,7 +6,7 @@ import { getApiClient } from "@/lib/apiClient";
 function makeMutationHook(method: "post" | "put" | "delete") {
   return function useCall<T = Record<string, unknown>>(
     /** Endpoint bất kỳ, vd: '/api/method/login' */
-    endpoint: string,
+    endpoint: string
   ) {
     const [loading, setLoading] = useState(false);
     const [isCompleted, setIsCompleted] = useState(false);
@@ -33,9 +33,7 @@ function makeMutationHook(method: "post" | "put" | "delete") {
               : await apiClient[method]<T>(endpoint, params);
 
           const data: T =
-            (res.data as { message?: T }).message ??
-            (res.data as { data?: T }).data ??
-            res.data;
+            (res.data as { message?: T }).message ?? (res.data as { data?: T }).data ?? res.data;
           setResult(data);
           setIsCompleted(true);
           return data;
@@ -47,7 +45,7 @@ function makeMutationHook(method: "post" | "put" | "delete") {
           setLoading(false);
         }
       },
-      [endpoint],
+      [endpoint]
     );
 
     return { call, loading, isCompleted, result, error, reset };

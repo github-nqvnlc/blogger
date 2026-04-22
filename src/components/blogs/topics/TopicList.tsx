@@ -1,27 +1,10 @@
 "use client";
 
-import * as React from "react";
-import { useRouter } from "next/navigation";
-import {
-  ColumnDef,
-  PaginationState,
-  RowSelectionState,
-  SortingState,
-} from "@tanstack/react-table";
-import { FolderOpen, Plus, Search, Trash2 } from "lucide-react";
-import { useDeleteDoc, useGetCount, useGetList } from "@/hooks";
-import { useLanguage } from "@/hooks/useLanguage";
-import { buildLocalePath } from "@/i18n";
-import { BlogDepartment, Topic } from "@/types/blogs";
-import { Filter } from "@/types/hooks";
-import { showCrudError, showCrudSuccess } from "@/lib/crud-toast";
-import { AdminAccessDenied } from "@/components/layout/admin-access-denied";
-import {
-  getTopicColumns,
-  type TopicColumnMeta,
-} from "@/components/blogs/topics/TopicColumns";
+import { getTopicColumns, type TopicColumnMeta } from "@/components/blogs/topics/TopicColumns";
 import { TopicForm } from "@/components/blogs/topics/TopicForm";
 import { TopicTable } from "@/components/blogs/topics/TopicTable";
+import { DepartmentFilterCombobox } from "@/components/common/DepartmentFilterCombobox";
+import { AdminAccessDenied } from "@/components/layout/admin-access-denied";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -49,7 +32,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
-import { DepartmentFilterCombobox } from "@/components/common/DepartmentFilterCombobox";
+import { useDeleteDoc, useGetCount, useGetList } from "@/hooks";
+import { useLanguage } from "@/hooks/useLanguage";
+import { buildLocalePath } from "@/i18n";
+import { showCrudError, showCrudSuccess } from "@/lib/crud-toast";
+import { BlogDepartment, Topic } from "@/types/blogs";
+import { Filter } from "@/types/hooks";
+import { ColumnDef, PaginationState, RowSelectionState, SortingState } from "@tanstack/react-table";
+import { FolderOpen, Plus, Search, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import * as React from "react";
 
 const PAGE_SIZE = 20;
 
@@ -57,25 +49,19 @@ export function TopicList() {
   const router = useRouter();
   const { locale, t } = useLanguage();
   const copy = t.blogTopics;
-  const [sorting, setSorting] = React.useState<SortingState>([
-    { id: "creation", desc: true },
-  ]);
+  const [sorting, setSorting] = React.useState<SortingState>([{ id: "creation", desc: true }]);
   const [pagination, setPagination] = React.useState<PaginationState>({
     pageIndex: 0,
     pageSize: PAGE_SIZE,
   });
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({});
-  const [statusFilter, setStatusFilter] = React.useState<
-    "all" | "active" | "inactive"
-  >("all");
+  const [statusFilter, setStatusFilter] = React.useState<"all" | "active" | "inactive">("all");
   const [departmentFilter, setDepartmentFilter] = React.useState<string>("all");
   const [search, setSearch] = React.useState("");
   const [isFormOpen, setIsFormOpen] = React.useState(false);
   const [editingTopic, setEditingTopic] = React.useState<Topic | null>(null);
   const [deletingTopic, setDeletingTopic] = React.useState<Topic | null>(null);
-  const [bulkDeletingTopics, setBulkDeletingTopics] = React.useState<Topic[]>(
-    [],
-  );
+  const [bulkDeletingTopics, setBulkDeletingTopics] = React.useState<Topic[]>([]);
   const [departments, setDepartments] = React.useState<BlogDepartment[]>([]);
 
   const apiFilters = React.useMemo<Filter[]>(() => {
@@ -121,15 +107,7 @@ export function TopicList() {
     error,
     mutate: refetch,
   } = useGetList<Topic>("topics", {
-    fields: [
-      "name",
-      "topic",
-      "department",
-      "desc",
-      "slug",
-      "is_active",
-      "creation",
-    ],
+    fields: ["name", "topic", "department", "desc", "slug", "is_active", "creation"],
     filters: apiFilters,
     orFilters: searchOrFilters,
     orderBy,
@@ -137,16 +115,9 @@ export function TopicList() {
     limit: pagination.pageSize,
   });
 
-  const { data: totalCount } = useGetCount(
-    "topics",
-    apiFilters,
-    false,
-    undefined,
-    searchOrFilters,
-  );
+  const { data: totalCount } = useGetCount("topics", apiFilters, false, undefined, searchOrFilters);
 
-  const { deleteDoc: deleteTopic, loading: isDeleting } =
-    useDeleteDoc("topics");
+  const { deleteDoc: deleteTopic, loading: isDeleting } = useDeleteDoc("topics");
 
   const getDepartmentLabel = React.useCallback(
     (topic: Topic) => {
@@ -160,11 +131,9 @@ export function TopicList() {
         return department.department_name ?? department.name;
       }
 
-      return (
-        departments.find((d) => d.name === department)?.department_name ?? "-"
-      );
+      return departments.find(d => d.name === department)?.department_name ?? "-";
     },
-    [departments],
+    [departments]
   );
 
   const handleOpenCreateForm = React.useCallback(() => {
@@ -181,7 +150,7 @@ export function TopicList() {
     (topic: Topic) => {
       router.push(buildLocalePath(locale, `/admin/topics/${topic.name}`));
     },
-    [locale, router],
+    [locale, router]
   );
 
   const handleToggleStatus = React.useCallback(async (topic: Topic) => {
@@ -196,7 +165,7 @@ export function TopicList() {
       await deleteTopic(deletingTopic.name);
       showCrudSuccess(
         copy.deleteSuccess,
-        `${copy.deleteSuccessDescriptionPrefix} "${deletingTopic.topic}"`,
+        `${copy.deleteSuccessDescriptionPrefix} "${deletingTopic.topic}"`
       );
       setDeletingTopic(null);
       refetch();
@@ -231,15 +200,10 @@ export function TopicList() {
     if (bulkDeletingTopics.length === 0) return;
 
     try {
-      await Promise.all(
-        bulkDeletingTopics.map((topic) => deleteTopic(topic.name)),
-      );
+      await Promise.all(bulkDeletingTopics.map(topic => deleteTopic(topic.name)));
       showCrudSuccess(
         copy.deleteSuccess,
-        copy.bulkDeleteSuccessDescription.replace(
-          "{count}",
-          String(bulkDeletingTopics.length),
-        ),
+        copy.bulkDeleteSuccessDescription.replace("{count}", String(bulkDeletingTopics.length))
       );
       setBulkDeletingTopics([]);
       setRowSelection({});
@@ -271,21 +235,15 @@ export function TopicList() {
       handleOpenEditForm,
       handleToggleStatus,
       handleViewDetail,
-    ],
+    ]
   );
 
-  const statusCode = (error as { response?: { status?: number } } | null)
-    ?.response?.status;
+  const statusCode = (error as { response?: { status?: number } } | null)?.response?.status;
 
-  const columns: ColumnDef<Topic, unknown>[] = React.useMemo(
-    () => getTopicColumns(t),
-    [t],
-  );
+  const columns: ColumnDef<Topic, unknown>[] = React.useMemo(() => getTopicColumns(t), [t]);
 
   if (statusCode === 403) {
-    return (
-      <AdminAccessDenied description={t.errors.topicAccessDeniedDescription} />
-    );
+    return <AdminAccessDenied description={t.errors.topicAccessDeniedDescription} />;
   }
 
   return (
@@ -308,10 +266,10 @@ export function TopicList() {
             <Input
               placeholder={copy.searchPlaceholder}
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              onKeyDown={(e) => {
+              onChange={e => setSearch(e.target.value)}
+              onKeyDown={e => {
                 if (e.key === "Enter") {
-                  setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+                  setPagination(prev => ({ ...prev, pageIndex: 0 }));
                 }
               }}
               className="pl-9"
@@ -320,7 +278,7 @@ export function TopicList() {
 
           <Select
             value={statusFilter}
-            onValueChange={(v) => setStatusFilter(v as typeof statusFilter)}
+            onValueChange={v => setStatusFilter(v as typeof statusFilter)}
           >
             <SelectTrigger className="w-full sm:w-[180px]">
               <SelectValue placeholder={t.common.status} />
@@ -334,10 +292,10 @@ export function TopicList() {
 
           <DepartmentFilterCombobox
             value={departmentFilter}
-            onChange={(v) => {
+            onChange={v => {
               setDepartmentFilter(v);
-              setPagination((prev) =>
-                prev.pageIndex === 0 ? { ...prev } : { ...prev, pageIndex: 0 },
+              setPagination(prev =>
+                prev.pageIndex === 0 ? { ...prev } : { ...prev, pageIndex: 0 }
               );
             }}
             onDepartmentsChange={setDepartments}
@@ -356,9 +314,7 @@ export function TopicList() {
               variant="destructive"
               size="sm"
               onClick={() =>
-                handleBulkDeleteClick(
-                  topics?.filter((_, i) => rowSelection[i] === true) ?? [],
-                )
+                handleBulkDeleteClick(topics?.filter((_, i) => rowSelection[i] === true) ?? [])
               }
             >
               <Trash2 className="mr-2 h-4 w-4" />
@@ -373,20 +329,17 @@ export function TopicList() {
           isLoading={isLoading}
           totalCount={totalCount ?? 0}
           pagination={pagination}
-          onPaginationChange={(updater) => {
-            setPagination((prev) => {
-              const next =
-                typeof updater === "function" ? updater(prev) : updater;
+          onPaginationChange={updater => {
+            setPagination(prev => {
+              const next = typeof updater === "function" ? updater(prev) : updater;
               if (next.pageIndex === 0) return next;
               return { ...next, pageIndex: 0 };
             });
           }}
           sorting={sorting}
-          onSortingChange={(updater) => {
+          onSortingChange={updater => {
             setSorting(updater);
-            setPagination((prev) =>
-              prev.pageIndex === 0 ? { ...prev } : { ...prev, pageIndex: 0 },
-            );
+            setPagination(prev => (prev.pageIndex === 0 ? { ...prev } : { ...prev, pageIndex: 0 }));
           }}
           rowSelection={rowSelection}
           onRowSelectionChange={setRowSelection}
@@ -398,15 +351,9 @@ export function TopicList() {
               </div>
               <div>
                 <p className="font-medium">{copy.emptyTitle}</p>
-                <p className="text-sm text-muted-foreground">
-                  {copy.emptyDescription}
-                </p>
+                <p className="text-sm text-muted-foreground">{copy.emptyDescription}</p>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleOpenCreateForm}
-              >
+              <Button variant="outline" size="sm" onClick={handleOpenCreateForm}>
                 <Plus className="mr-2 h-4 w-4" />
                 {copy.addTopic}
               </Button>
@@ -418,13 +365,9 @@ export function TopicList() {
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
-            <DialogTitle>
-              {editingTopic ? copy.editTopicTitle : copy.addTopicTitle}
-            </DialogTitle>
+            <DialogTitle>{editingTopic ? copy.editTopicTitle : copy.addTopicTitle}</DialogTitle>
             <DialogDescription>
-              {editingTopic
-                ? copy.editTopicDescription
-                : copy.addTopicDescription}
+              {editingTopic ? copy.editTopicDescription : copy.addTopicDescription}
             </DialogDescription>
           </DialogHeader>
           <TopicForm
@@ -435,10 +378,7 @@ export function TopicList() {
         </DialogContent>
       </Dialog>
 
-      <AlertDialog
-        open={!!deletingTopic}
-        onOpenChange={(open) => !open && setDeletingTopic(null)}
-      >
+      <AlertDialog open={!!deletingTopic} onOpenChange={open => !open && setDeletingTopic(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{copy.deleteTitle}</AlertDialogTitle>
@@ -463,19 +403,17 @@ export function TopicList() {
 
       <AlertDialog
         open={bulkDeletingTopics.length > 0}
-        onOpenChange={(open) => !open && setBulkDeletingTopics([])}
+        onOpenChange={open => !open && setBulkDeletingTopics([])}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>
-              {copy.bulkDeleteTitle ?? copy.deleteTitle}
-            </AlertDialogTitle>
+            <AlertDialogTitle>{copy.bulkDeleteTitle ?? copy.deleteTitle}</AlertDialogTitle>
             <AlertDialogDescription className="space-y-1">
               {bulkDeletingTopics.length === 1 ? (
                 `${copy.deleteDescriptionStart} "${bulkDeletingTopics[0]?.topic}"? ${copy.deleteDescriptionEnd}`
               ) : (
                 <span className="block space-y-1">
-                  {bulkDeletingTopics.slice(0, 5).map((topic) => (
+                  {bulkDeletingTopics.slice(0, 5).map(topic => (
                     <span key={topic.name} className="flex items-start gap-2">
                       <span className="shrink-0 text-muted-foreground">-</span>
                       <span>{topic.topic}</span>
@@ -483,8 +421,7 @@ export function TopicList() {
                   ))}
                   {bulkDeletingTopics.length > 5 && (
                     <span className="block text-muted-foreground">
-                      ... {bulkDeletingTopics.length - 5}{" "}
-                      {copy.itemsWillBeDeleted ?? "items"}
+                      ... {bulkDeletingTopics.length - 5} {copy.itemsWillBeDeleted ?? "items"}
                     </span>
                   )}
                 </span>

@@ -1,30 +1,9 @@
 "use client";
 
-import * as React from "react";
-import Link from "next/link";
-import {
-  ArrowLeft,
-  Eye,
-  FolderTree,
-  Hash,
-  Layers3,
-  Pencil,
-} from "lucide-react";
-import { useGetCount, useGetDoc, useGetList } from "@/hooks";
-import { useLanguage } from "@/hooks/useLanguage";
-import { buildLocalePath } from "@/i18n";
-import { BlogDepartment, Category, Post, Topic } from "@/types/blogs";
-import { Filter } from "@/types/hooks";
 import { AdminAccessDenied } from "@/components/layout/admin-access-denied";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -33,7 +12,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
   TableBody,
@@ -42,9 +20,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { DepartmentForm } from "./DepartmentForm";
-import { notFound } from "next/navigation";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useGetCount, useGetDoc, useGetList } from "@/hooks";
+import { useLanguage } from "@/hooks/useLanguage";
+import { buildLocalePath } from "@/i18n";
+import { BlogDepartment, Category, Post, Topic } from "@/types/blogs";
+import { Filter } from "@/types/hooks";
 import { formatDate } from "date-fns";
+import { ArrowLeft, Eye, FolderTree, Hash, Layers3, Pencil } from "lucide-react";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import * as React from "react";
+import { DepartmentForm } from "./DepartmentForm";
 
 interface DepartmentDetailProps {
   departmentId: string;
@@ -86,13 +73,7 @@ function OverviewSkeleton() {
   );
 }
 
-function EmptyState({
-  icon: Icon,
-  label,
-}: {
-  icon: React.ElementType;
-  label: string;
-}) {
+function EmptyState({ icon: Icon, label }: { icon: React.ElementType; label: string }) {
   return (
     <div className="flex min-h-40 flex-col items-center justify-center gap-3 rounded-lg border border-dashed text-center">
       <div className="rounded-full bg-muted p-3">
@@ -115,9 +96,7 @@ function StatCard({
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">
-          {title}
-        </CardTitle>
+        <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
         <Icon className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
       <CardContent>
@@ -142,65 +121,39 @@ export function DepartmentDetail({ departmentId }: DepartmentDetailProps) {
 
   const departmentFilter = React.useMemo(
     () => [["department", "=", departmentId]] as Filter[],
-    [departmentId],
+    [departmentId]
   );
 
-  const { data: categories, isLoading: isLoadingCategories } =
-    useGetList<Category>("categories", {
-      fields: [
-        "name",
-        "category",
-        "description",
-        "slug",
-        "is_active",
-        "creation",
-      ],
-      filters: [...departmentFilter],
-      orderBy: { field: "creation", order: "desc" },
-      limit: 100,
-    });
-
-  const { data: topics, isLoading: isLoadingTopics } = useGetList<Topic>(
-    "topics",
-    {
-      fields: ["name", "topic", "desc", "slug", "is_active", "creation"],
-      filters: [...departmentFilter],
-      orderBy: { field: "creation", order: "desc" },
-      limit: 100,
-    },
-  );
-
-  const { data: posts, isLoading: isLoadingPosts } = useGetList<Post>("posts", {
-    fields: [
-      "name",
-      "title",
-      "category",
-      "status",
-      "visibility",
-      "published_at",
-      "creation",
-    ],
+  const { data: categories, isLoading: isLoadingCategories } = useGetList<Category>("categories", {
+    fields: ["name", "category", "description", "slug", "is_active", "creation"],
     filters: [...departmentFilter],
     orderBy: { field: "creation", order: "desc" },
     limit: 100,
   });
 
-  const { data: totalCategories } = useGetCount("categories", [
-    ...departmentFilter,
-  ]);
+  const { data: topics, isLoading: isLoadingTopics } = useGetList<Topic>("topics", {
+    fields: ["name", "topic", "desc", "slug", "is_active", "creation"],
+    filters: [...departmentFilter],
+    orderBy: { field: "creation", order: "desc" },
+    limit: 100,
+  });
+
+  const { data: posts, isLoading: isLoadingPosts } = useGetList<Post>("posts", {
+    fields: ["name", "title", "category", "status", "visibility", "published_at", "creation"],
+    filters: [...departmentFilter],
+    orderBy: { field: "creation", order: "desc" },
+    limit: 100,
+  });
+
+  const { data: totalCategories } = useGetCount("categories", [...departmentFilter]);
   const { data: totalTopics } = useGetCount("topics", [...departmentFilter]);
   const { data: totalPosts } = useGetCount("posts", [...departmentFilter]);
 
-  const statusCode = (
-    departmentError as { response?: { status?: number } } | null
-  )?.response?.status;
+  const statusCode = (departmentError as { response?: { status?: number } } | null)?.response
+    ?.status;
 
   if (statusCode === 403) {
-    return (
-      <AdminAccessDenied
-        description={t.errors.blogDepartmentAccessDeniedDescription}
-      />
-    );
+    return <AdminAccessDenied description={t.errors.blogDepartmentAccessDeniedDescription} />;
   }
 
   if (isLoadingDepartment) {
@@ -222,9 +175,7 @@ export function DepartmentDetail({ departmentId }: DepartmentDetailProps) {
             </Link>
           </Button>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">
-              {department.department_name}
-            </h1>
+            <h1 className="text-3xl font-bold tracking-tight">{department.department_name}</h1>
           </div>
         </div>
         <div className="flex flex-row items-center justify-between gap-2">
@@ -236,10 +187,7 @@ export function DepartmentDetail({ departmentId }: DepartmentDetailProps) {
             />
             <p className="font-semibold text-sm italic text-muted-foreground">
               {department.creation
-                ? formatDate(
-                    new Date(department.creation),
-                    " HH:mm - dd/MM/yyyy",
-                  )
+                ? formatDate(new Date(department.creation), " HH:mm - dd/MM/yyyy")
                 : "-"}
             </p>
           </div>
@@ -252,11 +200,7 @@ export function DepartmentDetail({ departmentId }: DepartmentDetailProps) {
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
-        <StatCard
-          title={copy.totalCategories}
-          value={totalCategories}
-          icon={FolderTree}
-        />
+        <StatCard title={copy.totalCategories} value={totalCategories} icon={FolderTree} />
         <StatCard title={copy.totalTopics} value={totalTopics} icon={Hash} />
         <StatCard title={copy.totalPosts} value={totalPosts} icon={Eye} />
       </div>
@@ -266,9 +210,7 @@ export function DepartmentDetail({ departmentId }: DepartmentDetailProps) {
           <CardTitle>{copy.description}</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-2">
-          <CardDescription>
-            {department.description || copy.noDescription}
-          </CardDescription>
+          <CardDescription>{department.description || copy.noDescription}</CardDescription>
         </CardContent>
       </Card>
 
@@ -305,7 +247,7 @@ export function DepartmentDetail({ departmentId }: DepartmentDetailProps) {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {categories.map((category) => (
+                    {categories.map(category => (
                       <TableRow key={category.name}>
                         <TableCell>
                           <div className="space-y-1">
@@ -354,7 +296,7 @@ export function DepartmentDetail({ departmentId }: DepartmentDetailProps) {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {topics.map((topic) => (
+                    {topics.map(topic => (
                       <TableRow key={topic.name}>
                         <TableCell>
                           <div className="space-y-1">
@@ -403,14 +345,12 @@ export function DepartmentDetail({ departmentId }: DepartmentDetailProps) {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {posts.map((post) => (
+                    {posts.map(post => (
                       <TableRow key={post.name}>
                         <TableCell>
                           <div className="space-y-1">
                             <p className="font-medium">{post.title}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {post.visibility}
-                            </p>
+                            <p className="text-xs text-muted-foreground">{post.visibility}</p>
                           </div>
                         </TableCell>
                         <TableCell className="text-muted-foreground">
@@ -435,9 +375,7 @@ export function DepartmentDetail({ departmentId }: DepartmentDetailProps) {
         <DialogContent className="max-w-xl">
           <DialogHeader>
             <DialogTitle>{t.blogDepartments.editDepartmentTitle}</DialogTitle>
-            <DialogDescription>
-              {t.blogDepartments.editDepartmentDescription}
-            </DialogDescription>
+            <DialogDescription>{t.blogDepartments.editDepartmentDescription}</DialogDescription>
           </DialogHeader>
           <DepartmentForm
             department={department}

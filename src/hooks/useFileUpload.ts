@@ -32,7 +32,7 @@ export function useFileUpload() {
     async (
       file: File,
       args?: UploadArgs,
-      onProgress?: ProgressCallback,
+      onProgress?: ProgressCallback
     ): Promise<FileUploadResponse> => {
       setLoading(true);
       setIsCompleted(false);
@@ -50,20 +50,16 @@ export function useFileUpload() {
         if (args?.docname) formData.append("docname", args.docname);
         if (args?.fieldname) formData.append("fieldname", args.fieldname);
 
-        const res = await apiClient.post<FileUploadResponse>(
-          "/api/method/upload_file",
-          formData,
-          {
-            headers: { "Content-Type": "multipart/form-data" },
-            onUploadProgress: (event) => {
-              if (event.total) {
-                const pct = Math.round((event.loaded / event.total) * 100);
-                setProgress(pct);
-                onProgress?.(event.loaded, event.total);
-              }
-            },
+        const res = await apiClient.post<FileUploadResponse>("/api/method/upload_file", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+          onUploadProgress: event => {
+            if (event.total) {
+              const pct = Math.round((event.loaded / event.total) * 100);
+              setProgress(pct);
+              onProgress?.(event.loaded, event.total);
+            }
           },
-        );
+        });
 
         const data: FileUploadResponse =
           (res.data as { message?: FileUploadResponse }).message ?? res.data;
@@ -79,7 +75,7 @@ export function useFileUpload() {
         setLoading(false);
       }
     },
-    [],
+    []
   );
 
   return { upload, loading, isCompleted, progress, result, error, reset };

@@ -1,25 +1,9 @@
 "use client";
 
-import * as React from "react";
-import Link from "next/link";
-import { ArrowLeft, BookOpen, FolderOpen, Hash, Pencil } from "lucide-react";
-import { formatDate } from "date-fns";
-import { notFound } from "next/navigation";
-import { useGetDoc, useGetList } from "@/hooks";
-import { useLanguage } from "@/hooks/useLanguage";
-import { buildLocalePath } from "@/i18n";
-import { Post, PostTag, Tag } from "@/types/blogs";
-import { Filter } from "@/types/hooks";
 import { AdminAccessDenied } from "@/components/layout/admin-access-denied";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -28,7 +12,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { TagForm } from "./TagForm";
 import {
   Table,
   TableBody,
@@ -37,6 +20,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useGetDoc, useGetList } from "@/hooks";
+import { useLanguage } from "@/hooks/useLanguage";
+import { buildLocalePath } from "@/i18n";
+import { Post, PostTag, Tag } from "@/types/blogs";
+import { Filter } from "@/types/hooks";
+import { formatDate } from "date-fns";
+import { ArrowLeft, BookOpen, FolderOpen, Hash, Pencil } from "lucide-react";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import * as React from "react";
+import { TagForm } from "./TagForm";
 
 interface TagDetailProps {
   tagId: string;
@@ -78,13 +72,7 @@ function OverviewSkeleton() {
   );
 }
 
-function EmptyState({
-  icon: Icon,
-  label,
-}: {
-  icon: React.ElementType;
-  label: string;
-}) {
+function EmptyState({ icon: Icon, label }: { icon: React.ElementType; label: string }) {
   return (
     <div className="flex min-h-40 flex-col items-center justify-center gap-3 rounded-lg border border-dashed text-center">
       <div className="rounded-full bg-muted p-3">
@@ -107,9 +95,7 @@ function StatCard({
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">
-          {title}
-        </CardTitle>
+        <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
         <Icon className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
       <CardContent>
@@ -132,10 +118,7 @@ export function TagDetail({ tagId }: TagDetailProps) {
     mutate: refetchTag,
   } = useGetDoc<Tag>("tags", tagId);
 
-  const tagFilter = React.useMemo(
-    () => [["tag", "=", tagId]] as Filter[],
-    [tagId],
-  );
+  const tagFilter = React.useMemo(() => [["tag", "=", tagId]] as Filter[], [tagId]);
 
   const { data: postTags, isLoading: isLoadingPostTags } = useGetList<PostTag>(
     "post_tags",
@@ -146,12 +129,12 @@ export function TagDetail({ tagId }: TagDetailProps) {
     },
     {
       enabled: !!tag,
-    },
+    }
   );
 
   const relatedPostIds = React.useMemo(
-    () => Array.from(new Set((postTags ?? []).map((item) => item.post))),
-    [postTags],
+    () => Array.from(new Set((postTags ?? []).map(item => item.post))),
+    [postTags]
   );
 
   const relatedPostsFilter = React.useMemo<Filter[]>(() => {
@@ -162,32 +145,22 @@ export function TagDetail({ tagId }: TagDetailProps) {
   const { data: posts, isLoading: isLoadingPosts } = useGetList<Post>(
     "posts",
     {
-      fields: [
-        "name",
-        "title",
-        "status",
-        "visibility",
-        "published_at",
-        "creation",
-      ],
+      fields: ["name", "title", "status", "visibility", "published_at", "creation"],
       filters: relatedPostsFilter,
       orderBy: { field: "creation", order: "desc" },
       limit: relatedPostIds.length || 100,
     },
     {
       enabled: relatedPostIds.length > 0,
-    },
+    }
   );
 
   const totalPosts = posts?.length ?? 0;
 
-  const statusCode = (tagError as { response?: { status?: number } } | null)
-    ?.response?.status;
+  const statusCode = (tagError as { response?: { status?: number } } | null)?.response?.status;
 
   if (statusCode === 403) {
-    return (
-      <AdminAccessDenied description={t.errors.tagAccessDeniedDescription} />
-    );
+    return <AdminAccessDenied description={t.errors.tagAccessDeniedDescription} />;
   }
 
   if (isLoadingTag) {
@@ -209,9 +182,7 @@ export function TagDetail({ tagId }: TagDetailProps) {
             </Link>
           </Button>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">
-              {tag.tag_name}
-            </h1>
+            <h1 className="text-3xl font-bold tracking-tight">{tag.tag_name}</h1>
           </div>
         </div>
         <div className="flex flex-row items-center justify-between gap-2">
@@ -222,9 +193,7 @@ export function TagDetail({ tagId }: TagDetailProps) {
               inactiveLabel={t.blogTags.table.inactive}
             />
             <p className="text-sm font-semibold italic text-muted-foreground">
-              {tag.creation
-                ? formatDate(new Date(tag.creation), " HH:mm - dd/MM/yyyy")
-                : "-"}
+              {tag.creation ? formatDate(new Date(tag.creation), " HH:mm - dd/MM/yyyy") : "-"}
             </p>
           </div>
           <Button size="sm" onClick={() => setEditDialogOpen(true)}>
@@ -236,11 +205,7 @@ export function TagDetail({ tagId }: TagDetailProps) {
 
       <div className="grid gap-4 md:grid-cols-2">
         <StatCard title={copy.totalPosts} value={totalPosts} icon={BookOpen} />
-        <StatCard
-          title={copy.slug}
-          value={tag.slug || copy.noSlug}
-          icon={Hash}
-        />
+        <StatCard title={copy.slug} value={tag.slug || copy.noSlug} icon={Hash} />
       </div>
 
       <div className="w-full">
@@ -249,9 +214,7 @@ export function TagDetail({ tagId }: TagDetailProps) {
             <CardTitle>{copy.description}</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-2">
-            <CardDescription>
-              {tag.description || copy.noDescription}
-            </CardDescription>
+            <CardDescription>{tag.description || copy.noDescription}</CardDescription>
           </CardContent>
         </Card>
       </div>
@@ -264,8 +227,7 @@ export function TagDetail({ tagId }: TagDetailProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {isLoadingPostTags ||
-          (relatedPostIds.length > 0 && isLoadingPosts) ? (
+          {isLoadingPostTags || (relatedPostIds.length > 0 && isLoadingPosts) ? (
             <Skeleton className="h-48 w-full rounded-xl" />
           ) : !posts?.length ? (
             <EmptyState icon={FolderOpen} label={copy.noPosts} />
@@ -279,20 +241,17 @@ export function TagDetail({ tagId }: TagDetailProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {posts.map((post) => (
+                {posts.map(post => (
                   <TableRow key={post.name}>
                     <TableCell>
                       <div className="space-y-1">
                         <p className="font-medium">{post.title}</p>
                         <p className="text-xs text-muted-foreground">
                           {post.published_at
-                            ? formatDate(
-                                new Date(post.published_at),
-                                " HH:mm dd/MM/yyyy",
-                              )
+                            ? formatDate(new Date(post.published_at), " HH:mm dd/MM/yyyy")
                             : formatDate(
                                 new Date(post.creation ?? new Date()),
-                                " HH:mm dd/MM/yyyy",
+                                " HH:mm dd/MM/yyyy"
                               )}
                         </p>
                       </div>
@@ -300,9 +259,7 @@ export function TagDetail({ tagId }: TagDetailProps) {
                     <TableCell>
                       <Badge variant="outline">{post.status}</Badge>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {post.visibility}
-                    </TableCell>
+                    <TableCell className="text-muted-foreground">{post.visibility}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -315,9 +272,7 @@ export function TagDetail({ tagId }: TagDetailProps) {
         <DialogContent className="max-w-xl">
           <DialogHeader>
             <DialogTitle>{t.blogTags.editTagTitle}</DialogTitle>
-            <DialogDescription>
-              {t.blogTags.editTagDescription}
-            </DialogDescription>
+            <DialogDescription>{t.blogTags.editTagDescription}</DialogDescription>
           </DialogHeader>
           <TagForm
             tag={tag}

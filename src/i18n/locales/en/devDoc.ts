@@ -1,8 +1,7 @@
 export const devDoc = {
   backHome: "Back to Home",
   title: "Hooks Tester",
-  emptyState:
-    "Choose a hook on the left and click Fetch / Execute to inspect the response.",
+  emptyState: "Choose a hook on the left and click Fetch / Execute to inspect the response.",
   copyJson: "Copy JSON",
   copied: "Copied!",
   copyCurl: "Copy cURL",

@@ -49,8 +49,7 @@ export const blogCategories = {
     descriptionMax: "Mô tả không được vượt quá 500 ký tự",
     activeStatus: "Trạng thái hoạt động",
     activeDescription: "Danh mục này có thể được sử dụng trong bài viết",
-    inactiveDescription:
-      "Danh mục này bị vô hiệu hóa và không hiển thị trong lựa chọn",
+    inactiveDescription: "Danh mục này bị vô hiệu hóa và không hiển thị trong lựa chọn",
     inactiveWarning:
       "Danh mục này đang bị vô hiệu hóa. Bài viết sử dụng danh mục này vẫn hoạt động bình thường nhưng danh mục sẽ không xuất hiện trong danh sách chọn.",
     cancel: "Hủy",

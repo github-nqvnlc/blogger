@@ -8,8 +8,7 @@ export const blogTopics = {
   emptyTitle: "No topics found",
   emptyDescription: "Try adjusting the filters or creating a new topic",
   addTopicTitle: "Add a new topic",
-  addTopicDescription:
-    "Fill in the information below to create a new blog topic.",
+  addTopicDescription: "Fill in the information below to create a new blog topic.",
   editTopicTitle: "Edit topic",
   editTopicDescription: "Update the information for this blog topic.",
   deleteTitle: "Confirm deletion",
@@ -18,8 +17,7 @@ export const blogTopics = {
     "This action cannot be undone and may affect posts that currently use this topic.",
   deleteSuccess: "Topic deleted successfully",
   deleteFailure: "Failed to delete topic",
-  deleteFailureDescription:
-    "This topic could not be deleted. Please try again.",
+  deleteFailureDescription: "This topic could not be deleted. Please try again.",
   deleteSuccessDescriptionPrefix: "Deleted topic",
   bulkDeleteTitle: "Confirm bulk deletion",
   bulkDeleteSuccessDescription: "Successfully deleted {count} topics",
@@ -45,11 +43,9 @@ export const blogTopics = {
     slugPlaceholder: "internal-communication",
     slugHelp: "Optional. Use lowercase letters, numbers, and hyphens only.",
     slugMax: "Slug must not exceed 140 characters",
-    slugPattern:
-      "Slug may only contain lowercase letters, numbers, and hyphens",
+    slugPattern: "Slug may only contain lowercase letters, numbers, and hyphens",
     description: "Description",
-    descriptionPlaceholder:
-      "Short description for this topic (up to 500 characters)",
+    descriptionPlaceholder: "Short description for this topic (up to 500 characters)",
     descriptionMax: "Description must not exceed 500 characters",
     activeStatus: "Active status",
     activeDescription: "This topic can be used in posts",

@@ -18,7 +18,7 @@ function formatLabel(slug: string, map: Record<string, string>): string {
   if (map[slug]) return map[slug];
   return slug
     .split("-")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
 }
 
@@ -36,9 +36,7 @@ export function AdminBreadcrumb() {
       <BreadcrumbList>
         <BreadcrumbItem>
           <BreadcrumbLink asChild>
-            <Link href={buildLocalePath(locale, "/admin")}>
-              {t.admin.breadcrumbHome}
-            </Link>
+            <Link href={buildLocalePath(locale, "/admin")}>{t.admin.breadcrumbHome}</Link>
           </BreadcrumbLink>
         </BreadcrumbItem>
 
@@ -52,9 +50,7 @@ export function AdminBreadcrumb() {
                 <Slash className="h-3 w-3" />
               </BreadcrumbSeparator>
               {isLast ? (
-                <BreadcrumbPage>
-                  {formatLabel(segment, breadcrumbMap)}
-                </BreadcrumbPage>
+                <BreadcrumbPage>{formatLabel(segment, breadcrumbMap)}</BreadcrumbPage>
               ) : (
                 <BreadcrumbLink asChild>
                   <Link href={buildLocalePath(locale, href)}>

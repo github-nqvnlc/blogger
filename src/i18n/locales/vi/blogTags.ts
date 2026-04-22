@@ -44,8 +44,7 @@ export const blogTags = {
     descriptionMax: "Mô tả không được vượt quá 500 ký tự",
     activeStatus: "Trạng thái hoạt động",
     activeDescription: "Nhãn này có thể được sử dụng trong bài viết",
-    inactiveDescription:
-      "Nhãn này bị vô hiệu hóa và không hiển thị trong lựa chọn",
+    inactiveDescription: "Nhãn này bị vô hiệu hóa và không hiển thị trong lựa chọn",
     inactiveWarning:
       "Nhãn này đang bị vô hiệu hóa. Bài viết sử dụng nhãn này vẫn hoạt động bình thường nhưng nhãn sẽ không xuất hiện trong danh sách chọn.",
     cancel: "Hủy",

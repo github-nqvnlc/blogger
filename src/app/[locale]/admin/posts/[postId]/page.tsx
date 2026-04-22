@@ -1,10 +1,6 @@
 import { PostDetail } from "@/components/blogs/posts";
 
-export default async function PostDetailPage({
-  params,
-}: {
-  params: Promise<{ postId: string }>;
-}) {
+export default async function PostDetailPage({ params }: { params: Promise<{ postId: string }> }) {
   const { postId } = await params;
 
   return <PostDetail postId={postId} />;

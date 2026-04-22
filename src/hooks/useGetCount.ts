@@ -8,10 +8,7 @@ function serializeFilters(filters: Filter[]): string {
   return JSON.stringify(filters);
 }
 
-type UseGetCountOptions = Omit<
-  UseQueryOptions<number, Error>,
-  "queryKey" | "queryFn"
->;
+type UseGetCountOptions = Omit<UseQueryOptions<number, Error>, "queryKey" | "queryFn">;
 
 export function useGetCount(
   /** Tên resource (Doctype) */
@@ -22,7 +19,7 @@ export function useGetCount(
   debug?: boolean,
   /** TanStack Query options */
   options?: UseGetCountOptions,
-  orFilters?: Filter[],
+  orFilters?: Filter[]
 ) {
   const apiClient = getApiClient();
 
@@ -47,9 +44,7 @@ export function useGetCount(
 
       // Frappe trả về { data: [...] } — đếm số phần tử
       const raw = res.data as { data?: unknown[] } | unknown[];
-      const list = Array.isArray(raw)
-        ? raw
-        : ((raw as { data?: unknown[] }).data ?? []);
+      const list = Array.isArray(raw) ? raw : ((raw as { data?: unknown[] }).data ?? []);
       const count = list.length;
 
       if (debug) console.log(`[useGetCount] ${resource}:`, count, "raw:", raw);

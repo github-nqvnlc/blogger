@@ -4,11 +4,7 @@ import { useDeferredValue, useMemo, useState } from "react";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { useGetList } from "@/hooks";
 import { Button } from "@/components/ui/button";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Command,
   CommandEmpty,
@@ -58,35 +54,29 @@ function normalizeOption(
   valueField: string,
   labelField: string,
   descriptionField?: string,
-  keywordFields?: string[],
+  keywordFields?: string[]
 ): SelectOption {
   const value = String(item[valueField] ?? "");
   const label = String(item[labelField] ?? value);
-  const description = descriptionField
-    ? String(item[descriptionField] ?? "")
-    : undefined;
+  const description = descriptionField ? String(item[descriptionField] ?? "") : undefined;
 
   return {
     value,
     label,
     description: description || undefined,
-    keywords: keywordFields
-      ?.map((field) => String(item[field] ?? "").trim())
-      .filter(Boolean),
+    keywords: keywordFields?.map(field => String(item[field] ?? "").trim()).filter(Boolean),
   };
 }
 
 function mergeOptions(
   options: SelectOption[],
-  selectedOption?: SelectOption | null,
+  selectedOption?: SelectOption | null
 ): SelectOption[] {
   if (!selectedOption) {
     return options;
   }
 
-  const optionMap = new Map<string, SelectOption>([
-    [selectedOption.value, selectedOption],
-  ]);
+  const optionMap = new Map<string, SelectOption>([[selectedOption.value, selectedOption]]);
 
   for (const option of options) {
     optionMap.set(option.value, option);
@@ -128,7 +118,7 @@ export function SearchableSingleSelect({
       return undefined;
     }
 
-    return searchFields.map((field) => [field, "like", `%${deferredSearch}%`]);
+    return searchFields.map(field => [field, "like", `%${deferredSearch}%`]);
   }, [deferredSearch, searchFields]);
 
   const { data, isLoading, isValidating } = useGetList<Record<string, unknown>>(
@@ -142,41 +132,33 @@ export function SearchableSingleSelect({
     },
     {
       enabled: open && enabled && !disabled,
-    },
+    }
   );
 
-  const isLoadingOptions =
-    open && enabled && !disabled && !data && (isLoading || isValidating);
+  const isLoadingOptions = open && enabled && !disabled && !data && (isLoading || isValidating);
 
   const options = useMemo(
     () =>
-      (data ?? []).map((item) =>
-        normalizeOption(
-          item,
-          valueField,
-          labelField,
-          descriptionField,
-          keywordFields,
-        ),
+      (data ?? []).map(item =>
+        normalizeOption(item, valueField, labelField, descriptionField, keywordFields)
       ),
-    [data, descriptionField, keywordFields, labelField, valueField],
+    [data, descriptionField, keywordFields, labelField, valueField]
   );
 
   const mergedOptions = useMemo(
     () => mergeOptions(options, selectedOption),
-    [options, selectedOption],
+    [options, selectedOption]
   );
 
   const currentOption = useMemo(
-    () =>
-      mergedOptions.find((option) => option.value === value) ?? selectedOption,
-    [mergedOptions, selectedOption, value],
+    () => mergedOptions.find(option => option.value === value) ?? selectedOption,
+    [mergedOptions, selectedOption, value]
   );
 
   return (
     <Popover
       open={open}
-      onOpenChange={(nextOpen) => {
+      onOpenChange={nextOpen => {
         setOpen(nextOpen);
         if (!nextOpen) {
           setSearch("");
@@ -193,22 +175,16 @@ export function SearchableSingleSelect({
           className={cn(
             "w-full justify-between font-normal",
             !currentOption && "text-muted-foreground",
-            invalid && "border-destructive",
+            invalid && "border-destructive"
           )}
         >
-          <span className="truncate">
-            {currentOption?.label ?? placeholder}
-          </span>
+          <span className="truncate">{currentOption?.label ?? placeholder}</span>
           <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-(--radix-popover-trigger-width) p-0">
         <Command shouldFilter={false}>
-          <CommandInput
-            placeholder={searchPlaceholder}
-            value={search}
-            onValueChange={setSearch}
-          />
+          <CommandInput placeholder={searchPlaceholder} value={search} onValueChange={setSearch} />
           <CommandList>
             {isLoadingOptions ? (
               <div className="flex items-center justify-center gap-2 px-3 py-6 text-sm text-muted-foreground">
@@ -237,7 +213,7 @@ export function SearchableSingleSelect({
               </CommandEmpty>
             )}
             <CommandGroup>
-              {mergedOptions.map((option) => (
+              {mergedOptions.map(option => (
                 <CommandItem
                   key={option.value}
                   value={option.value}
@@ -252,7 +228,7 @@ export function SearchableSingleSelect({
                   <Check
                     className={cn(
                       "ml-2 size-4 shrink-0",
-                      value === option.value ? "opacity-100" : "opacity-0",
+                      value === option.value ? "opacity-100" : "opacity-0"
                     )}
                   />
                 </CommandItem>

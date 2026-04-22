@@ -1,25 +1,9 @@
 "use client";
 
-import * as React from "react";
-import Link from "next/link";
-import { ArrowLeft, BookOpen, FolderOpen, Hash, Pencil } from "lucide-react";
-import { formatDate } from "date-fns";
-import { notFound } from "next/navigation";
-import { useGetCount, useGetDoc, useGetList } from "@/hooks";
-import { useLanguage } from "@/hooks/useLanguage";
-import { buildLocalePath } from "@/i18n";
-import { BlogDepartment, Category, Post } from "@/types/blogs";
-import { Filter } from "@/types/hooks";
 import { AdminAccessDenied } from "@/components/layout/admin-access-denied";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -27,7 +11,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { CategoryForm } from "./CategoryForm";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -37,6 +20,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useGetCount, useGetDoc, useGetList } from "@/hooks";
+import { useLanguage } from "@/hooks/useLanguage";
+import { buildLocalePath } from "@/i18n";
+import { BlogDepartment, Category, Post } from "@/types/blogs";
+import { Filter } from "@/types/hooks";
+import { formatDate } from "date-fns";
+import { ArrowLeft, BookOpen, FolderOpen, Hash, Pencil } from "lucide-react";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import * as React from "react";
+import { CategoryForm } from "./CategoryForm";
 
 interface CategoryDetailProps {
   categoryId: string;
@@ -78,13 +72,7 @@ function OverviewSkeleton() {
   );
 }
 
-function EmptyState({
-  icon: Icon,
-  label,
-}: {
-  icon: React.ElementType;
-  label: string;
-}) {
+function EmptyState({ icon: Icon, label }: { icon: React.ElementType; label: string }) {
   return (
     <div className="flex min-h-40 flex-col items-center justify-center gap-3 rounded-lg border border-dashed text-center">
       <div className="rounded-full bg-muted p-3">
@@ -109,9 +97,7 @@ function StatCard({
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">
-          {title}
-        </CardTitle>
+        <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
         <Icon className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
       <CardContent>
@@ -143,29 +129,17 @@ export function CategoryDetail({ categoryId }: CategoryDetailProps) {
   } = useGetDoc<Category>("categories", categoryId);
 
   const departmentId =
-    typeof category?.department === "string"
-      ? category.department
-      : category?.department?.name;
+    typeof category?.department === "string" ? category.department : category?.department?.name;
 
-  const { data: department } = useGetDoc<BlogDepartment>(
-    "blog_departments",
-    departmentId,
-  );
+  const { data: department } = useGetDoc<BlogDepartment>("blog_departments", departmentId);
 
   const categoryFilter = React.useMemo(
     () => [["category", "=", categoryId]] as Filter[],
-    [categoryId],
+    [categoryId]
   );
 
   const { data: posts, isLoading: isLoadingPosts } = useGetList<Post>("posts", {
-    fields: [
-      "name",
-      "title",
-      "status",
-      "visibility",
-      "published_at",
-      "creation",
-    ],
+    fields: ["name", "title", "status", "visibility", "published_at", "creation"],
     filters: [...categoryFilter],
     orderBy: { field: "creation", order: "desc" },
     limit: 100,
@@ -173,16 +147,10 @@ export function CategoryDetail({ categoryId }: CategoryDetailProps) {
 
   const { data: totalPosts } = useGetCount("posts", [...categoryFilter]);
 
-  const statusCode = (
-    categoryError as { response?: { status?: number } } | null
-  )?.response?.status;
+  const statusCode = (categoryError as { response?: { status?: number } } | null)?.response?.status;
 
   if (statusCode === 403) {
-    return (
-      <AdminAccessDenied
-        description={t.errors.categoryAccessDeniedDescription}
-      />
-    );
+    return <AdminAccessDenied description={t.errors.categoryAccessDeniedDescription} />;
   }
 
   if (isLoadingCategory) {
@@ -210,9 +178,7 @@ export function CategoryDetail({ categoryId }: CategoryDetailProps) {
             </Link>
           </Button>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">
-              {category.category}
-            </h1>
+            <h1 className="text-3xl font-bold tracking-tight">{category.category}</h1>
           </div>
         </div>
         <div className="flex flex-row items-center justify-between gap-2">
@@ -241,10 +207,7 @@ export function CategoryDetail({ categoryId }: CategoryDetailProps) {
           title={copy.department}
           value={departmentName}
           icon={Hash}
-          link={buildLocalePath(
-            locale,
-            `/admin/blog-departments/${departmentId}`,
-          )}
+          link={buildLocalePath(locale, `/admin/blog-departments/${departmentId}`)}
         />
       </div>
 
@@ -254,9 +217,7 @@ export function CategoryDetail({ categoryId }: CategoryDetailProps) {
             <CardTitle>{copy.description}</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-2">
-            <CardDescription>
-              {category.description || copy.noDescription}
-            </CardDescription>
+            <CardDescription>{category.description || copy.noDescription}</CardDescription>
           </CardContent>
         </Card>
       </div>
@@ -283,20 +244,17 @@ export function CategoryDetail({ categoryId }: CategoryDetailProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {posts.map((post) => (
+                {posts.map(post => (
                   <TableRow key={post.name}>
                     <TableCell>
                       <div className="space-y-1">
                         <p className="font-medium">{post.title}</p>
                         <p className="text-xs text-muted-foreground">
                           {post.published_at
-                            ? formatDate(
-                                new Date(post.published_at),
-                                " HH:mm dd/MM/yyyy",
-                              )
+                            ? formatDate(new Date(post.published_at), " HH:mm dd/MM/yyyy")
                             : formatDate(
                                 new Date(post.creation ?? new Date()),
-                                " HH:mm dd/MM/yyyy",
+                                " HH:mm dd/MM/yyyy"
                               )}
                         </p>
                       </div>
@@ -304,9 +262,7 @@ export function CategoryDetail({ categoryId }: CategoryDetailProps) {
                     <TableCell>
                       <Badge variant="outline">{post.status}</Badge>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {post.visibility}
-                    </TableCell>
+                    <TableCell className="text-muted-foreground">{post.visibility}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -319,9 +275,7 @@ export function CategoryDetail({ categoryId }: CategoryDetailProps) {
         <DialogContent className="max-w-xl">
           <DialogHeader>
             <DialogTitle>{t.blogCategories.editCategoryTitle}</DialogTitle>
-            <DialogDescription>
-              {t.blogCategories.editCategoryDescription}
-            </DialogDescription>
+            <DialogDescription>{t.blogCategories.editCategoryDescription}</DialogDescription>
           </DialogHeader>
           <CategoryForm
             category={category}

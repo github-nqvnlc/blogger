@@ -7,13 +7,7 @@ import { useMounted } from "@/hooks/useMounted";
 import { SUPPORTED_LANGUAGES } from "@/i18n";
 import { useTheme } from "next-themes";
 import { useEffect } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -51,20 +45,16 @@ function LanguageSetting() {
     <div className="flex items-center justify-between">
       <div className="space-y-0.5">
         <Label>{t.settings.language}</Label>
-        <p className="text-sm text-muted-foreground">
-          {t.settings.languageDescription}
-        </p>
+        <p className="text-sm text-muted-foreground">{t.settings.languageDescription}</p>
       </div>
       <div className="flex items-center gap-2">
-        {isSaving && (
-          <Loader2 className="size-4 animate-spin text-muted-foreground" />
-        )}
+        {isSaving && <Loader2 className="size-4 animate-spin text-muted-foreground" />}
         <Select value={locale} onValueChange={handleChange}>
           <SelectTrigger className="w-40">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {SUPPORTED_LANGUAGES.map((lang) => (
+            {SUPPORTED_LANGUAGES.map(lang => (
               <SelectItem key={lang.code} value={lang.code}>
                 {lang.label}
               </SelectItem>
@@ -80,11 +70,7 @@ function ThemeSetting() {
   const { t, setLanguage } = useLanguage();
   const { theme, setTheme } = useTheme();
   const { currentUser } = useAuth();
-  const {
-    data: settings,
-    updateSettings,
-    isSaving,
-  } = useUserSettings(currentUser);
+  const { data: settings, updateSettings, isSaving } = useUserSettings(currentUser);
   const mounted = useMounted();
 
   useEffect(() => {
@@ -103,9 +89,7 @@ function ThemeSetting() {
       <div className="flex items-center justify-between">
         <div className="space-y-0.5">
           <Label>{t.settings.theme}</Label>
-          <p className="text-sm text-muted-foreground">
-            {t.settings.themeDescription}
-          </p>
+          <p className="text-sm text-muted-foreground">{t.settings.themeDescription}</p>
         </div>
         <Skeleton className="h-9 w-40 rounded-md" />
       </div>
@@ -121,14 +105,10 @@ function ThemeSetting() {
     <div className="flex items-center justify-between">
       <div className="space-y-0.5">
         <Label>{t.settings.theme}</Label>
-        <p className="text-sm text-muted-foreground">
-          {t.settings.themeDescription}
-        </p>
+        <p className="text-sm text-muted-foreground">{t.settings.themeDescription}</p>
       </div>
       <div className="flex items-center gap-2">
-        {isSaving && (
-          <Loader2 className="size-4 animate-spin text-muted-foreground" />
-        )}
+        {isSaving && <Loader2 className="size-4 animate-spin text-muted-foreground" />}
         <Select value={theme} onValueChange={handleChange}>
           <SelectTrigger className="w-40">
             <SelectValue />
@@ -150,9 +130,7 @@ export default function SettingsPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">
-          {t.settings.title}
-        </h1>
+        <h1 className="text-3xl font-bold tracking-tight">{t.settings.title}</h1>
         <p className="text-muted-foreground mt-1">{t.settings.description}</p>
       </div>
 

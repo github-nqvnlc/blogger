@@ -6,11 +6,7 @@ import { useFileUpload } from "@/hooks";
 import { useLanguage } from "@/hooks/useLanguage";
 import { getDictionary } from "@/i18n";
 import type { PostFileDoc, PostVisibilityOption } from "@/types/blogs";
-import {
-  getPrivateFlag,
-  isSupportedImageUrl,
-  normalizePostFileDoc,
-} from "@/lib/blog-posts";
+import { getPrivateFlag, isSupportedImageUrl, normalizePostFileDoc } from "@/lib/blog-posts";
 import { cn, getBaseUrl } from "@/lib/utils";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -82,10 +78,7 @@ export function CoverImageField({
   }
 
   const shouldShowUrlError =
-    source === "url" &&
-    urlTouched &&
-    value.trim() &&
-    !isSupportedImageUrl(value);
+    source === "url" && urlTouched && value.trim() && !isSupportedImageUrl(value);
 
   return (
     <div className="space-y-3">
@@ -95,7 +88,7 @@ export function CoverImageField({
 
       <Tabs
         value={source ?? "url"}
-        onValueChange={(nextValue) => onSourceChange(nextValue as CoverSource)}
+        onValueChange={nextValue => onSourceChange(nextValue as CoverSource)}
       >
         <TabsList className="border border-primary w-full">
           <TabsTrigger value="url">{copy.urlTab}</TabsTrigger>
@@ -108,7 +101,7 @@ export function CoverImageField({
             value={value}
             disabled={disabled}
             onBlur={() => setUrlTouched(true)}
-            onChange={(event) => {
+            onChange={event => {
               onChange(event.target.value);
               onSourceChange("url");
               if (fileMeta) {
@@ -130,9 +123,7 @@ export function CoverImageField({
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="space-y-1">
                 <p className="font-medium">{copy.uploadTab}</p>
-                <p className="text-sm text-muted-foreground">
-                  {copy.uploadHint}
-                </p>
+                <p className="text-sm text-muted-foreground">{copy.uploadHint}</p>
               </div>
               <Button
                 type="button"
@@ -158,9 +149,7 @@ export function CoverImageField({
               {loading ? (
                 <>
                   <Progress value={progress} />
-                  <p className="text-sm text-muted-foreground">
-                    {copy.uploadBusy}
-                  </p>
+                  <p className="text-sm text-muted-foreground">{copy.uploadBusy}</p>
                 </>
               ) : (
                 <p className="text-sm text-primary dark:text-primary/80">

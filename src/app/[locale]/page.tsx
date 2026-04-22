@@ -23,9 +23,7 @@ export default function Home() {
             <p className="mb-1 text-xs font-medium uppercase tracking-wide text-zinc-400">
               {t.home.backend}
             </p>
-            <p className="truncate font-mono text-sm text-zinc-700 dark:text-zinc-200">
-              {url}
-            </p>
+            <p className="truncate font-mono text-sm text-zinc-700 dark:text-zinc-200">{url}</p>
           </div>
 
           <div className="rounded-lg border border-zinc-100 bg-zinc-50 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-800/50">
@@ -52,9 +50,7 @@ export default function Home() {
             ) : (
               <div className="flex items-center gap-2">
                 <span className="h-2 w-2 rounded-full bg-zinc-300" />
-                <span className="text-sm text-zinc-400">
-                  {t.home.unauthenticated}
-                </span>
+                <span className="text-sm text-zinc-400">{t.home.unauthenticated}</span>
               </div>
             )}
           </div>
