@@ -3,7 +3,7 @@
 import { AdminAccessDenied } from "@/components/layout/admin-access-denied";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -20,7 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useGetDoc, useGetList } from "@/hooks";
+import { useGetDoc, useGetList, useLazyLoadList } from "@/hooks";
 import { useLanguage } from "@/hooks/useLanguage";
 import { buildLocalePath } from "@/i18n";
 import { BlogDepartment, Post, PostTopic, Topic } from "@/types/blogs";
@@ -83,39 +83,8 @@ function EmptyState({ icon: Icon, label }: { icon: React.ElementType; label: str
   );
 }
 
-function StatCard({
-  title,
-  value,
-  icon: Icon,
-  link,
-}: {
-  title: string;
-  value?: number | string;
-  icon: React.ElementType;
-  link?: string;
-}) {
-  return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
-        <Icon className="h-4 w-4 text-muted-foreground" />
-      </CardHeader>
-      <CardContent>
-        <div className="text-3xl font-semibold">
-          {link ? (
-            <Link href={link} className="hover:underline underline-offset-4">
-              {value ?? 0}
-            </Link>
-          ) : (
-            <span>{value ?? 0}</span>
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
 export function TopicDetail({ topicId }: TopicDetailProps) {
+  const PAGE_SIZE = 5;
   const { locale, t } = useLanguage();
   const copy = t.blogTopics.detail;
   const common = t.common;
@@ -135,21 +104,23 @@ export function TopicDetail({ topicId }: TopicDetailProps) {
 
   const topicFilter = React.useMemo(() => [["topic", "=", topicId]] as Filter[], [topicId]);
 
-  const { data: postTopics, isLoading: isLoadingPostTopics } = useGetList<PostTopic>(
-    "post_topics",
-    {
-      fields: ["name", "post", "topic"],
-      filters: topicFilter,
-      limit: 100,
-    },
-    {
-      enabled: !!topic,
-    }
-  );
+  const {
+    loadedItems: accumulatedPostTopics,
+    isLoading: isLoadingPostTopics,
+    total: totalPosts,
+    scrollRef: postsScrollRef,
+    handleScroll: handlePostsScroll,
+  } = useLazyLoadList<PostTopic>({
+    resource: "post_topics",
+    fields: ["name", "post", "topic"],
+    filters: topicFilter,
+    pageSize: PAGE_SIZE,
+    enabled: !!topic,
+  });
 
   const relatedPostIds = React.useMemo(
-    () => Array.from(new Set((postTopics ?? []).map(item => item.post))),
-    [postTopics]
+    () => Array.from(new Set(accumulatedPostTopics.map(item => item.post))),
+    [accumulatedPostTopics]
   );
 
   const relatedPostsFilter = React.useMemo<Filter[]>(() => {
@@ -157,7 +128,7 @@ export function TopicDetail({ topicId }: TopicDetailProps) {
     return [["name", "in", relatedPostIds]];
   }, [relatedPostIds]);
 
-  const { data: posts, isLoading: isLoadingPosts } = useGetList<Post>(
+  const { data: loadedPosts } = useGetList<Post>(
     "posts",
     {
       fields: ["name", "title", "status", "visibility", "published_at", "creation"],
@@ -165,12 +136,8 @@ export function TopicDetail({ topicId }: TopicDetailProps) {
       orderBy: { field: "creation", order: "desc" },
       limit: relatedPostIds.length || 100,
     },
-    {
-      enabled: relatedPostIds.length > 0,
-    }
+    { enabled: relatedPostIds.length > 0 }
   );
-
-  const totalPosts = posts?.length ?? 0;
 
   const statusCode = (topicError as { response?: { status?: number } } | null)?.response?.status;
 
@@ -202,6 +169,7 @@ export function TopicDetail({ topicId }: TopicDetailProps) {
           </Button>
           <div>
             <h1 className="text-3xl font-bold tracking-tight">{topic.topic}</h1>
+            <p className="mt-1 text-muted-foreground">{topic.desc || copy.noDescription}</p>
           </div>
         </div>
         <div className="flex flex-row items-center justify-between gap-2">
@@ -222,72 +190,80 @@ export function TopicDetail({ topicId }: TopicDetailProps) {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <StatCard title={copy.totalPosts} value={totalPosts} icon={BookOpen} />
-        <StatCard
-          title={copy.department}
-          value={departmentName}
-          icon={Hash}
-          link={buildLocalePath(locale, `/admin/blog-departments/${departmentId}`)}
-        />
-      </div>
-
-      <div className="w-full">
-        <Card>
-          <CardHeader>
-            <CardTitle>{copy.description}</CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-4 md:grid-cols-2">
-            <CardDescription>{topic.desc || copy.noDescription}</CardDescription>
-          </CardContent>
-        </Card>
+      <div className="flex flex-wrap items-center gap-4 rounded-lg border bg-muted/30 px-4 py-3">
+        <div className="flex items-center gap-2">
+          <BookOpen className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm font-medium">{copy.totalPosts}:</span>
+          <span className="text-sm font-bold">{totalPosts}</span>
+        </div>
+        <div className="h-4 w-px bg-border" />
+        <div className="flex items-center gap-2">
+          <Hash className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm font-medium">{copy.department}:</span>
+          <Link
+            href={buildLocalePath(locale, `/admin/blog-departments/${departmentId}`)}
+            className="text-sm font-bold hover:underline underline-offset-4"
+          >
+            {departmentName}
+          </Link>
+        </div>
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle>{copy.posts}</CardTitle>
-          <CardDescription>
-            {copy.totalPosts}: {totalPosts}
-          </CardDescription>
         </CardHeader>
         <CardContent>
-          {isLoadingPostTopics || (relatedPostIds.length > 0 && isLoadingPosts) ? (
+          {isLoadingPostTopics && !loadedPosts?.length ? (
             <Skeleton className="h-48 w-full rounded-xl" />
-          ) : !posts?.length ? (
+          ) : !loadedPosts?.length ? (
             <EmptyState icon={FolderOpen} label={copy.noPosts} />
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{copy.posts}</TableHead>
-                  <TableHead>{common.status}</TableHead>
-                  <TableHead>{copy.visibility}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {posts.map(post => (
-                  <TableRow key={post.name}>
-                    <TableCell>
-                      <div className="space-y-1">
-                        <p className="font-medium">{post.title}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {post.published_at
-                            ? formatDate(new Date(post.published_at), " HH:mm dd/MM/yyyy")
-                            : formatDate(
-                                new Date(post.creation ?? new Date()),
-                                " HH:mm dd/MM/yyyy"
-                              )}
-                        </p>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{post.status}</Badge>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">{post.visibility}</TableCell>
+            <div
+              ref={postsScrollRef}
+              onScroll={handlePostsScroll}
+              className="max-h-96 overflow-y-auto rounded-md border"
+            >
+              <Table>
+                <TableHeader className="sticky top-0 z-10 bg-background">
+                  <TableRow>
+                    <TableHead>{copy.posts}</TableHead>
+                    <TableHead>{common.status}</TableHead>
+                    <TableHead>{copy.visibility}</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {(loadedPosts ?? []).map((post: Post) => (
+                    <TableRow key={post.name}>
+                      <TableCell>
+                        <div className="space-y-1">
+                          <p className="font-medium">{post.title}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {post.published_at
+                              ? formatDate(new Date(post.published_at), " HH:mm dd/MM/yyyy")
+                              : formatDate(
+                                  new Date(post.creation ?? new Date()),
+                                  " HH:mm dd/MM/yyyy"
+                                )}
+                          </p>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{post.status}</Badge>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">{post.visibility}</TableCell>
+                    </TableRow>
+                  ))}
+                  {isLoadingPostTopics && loadedPosts.length > 0 && (
+                    <TableRow>
+                      <TableCell colSpan={3}>
+                        <Skeleton className="h-8 w-full rounded-md" />
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>

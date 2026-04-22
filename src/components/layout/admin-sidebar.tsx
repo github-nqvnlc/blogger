@@ -8,7 +8,6 @@ import {
   Tags,
   FolderOpen,
   MessageSquare,
-  Users,
   Settings,
   FilePlus,
   ChevronDown,
@@ -257,10 +256,7 @@ export function AdminSidebar() {
     },
     {
       title: t.sidebar.system,
-      items: [
-        { title: t.sidebar.users, url: "/admin/users", icon: Users },
-        { title: t.sidebar.settings, url: "/admin/settings", icon: Settings },
-      ],
+      items: [{ title: t.sidebar.settings, url: "/admin/settings", icon: Settings }],
     },
   ];
 

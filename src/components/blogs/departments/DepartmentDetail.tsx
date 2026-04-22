@@ -3,7 +3,7 @@
 import { AdminAccessDenied } from "@/components/layout/admin-access-denied";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -21,7 +21,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useGetCount, useGetDoc, useGetList } from "@/hooks";
+import { useGetDoc, useLazyLoadList } from "@/hooks";
 import { useLanguage } from "@/hooks/useLanguage";
 import { buildLocalePath } from "@/i18n";
 import { BlogDepartment, Category, Post, Topic } from "@/types/blogs";
@@ -84,29 +84,8 @@ function EmptyState({ icon: Icon, label }: { icon: React.ElementType; label: str
   );
 }
 
-function StatCard({
-  title,
-  value,
-  icon: Icon,
-}: {
-  title: string;
-  value?: number;
-  icon: React.ElementType;
-}) {
-  return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
-        <Icon className="h-4 w-4 text-muted-foreground" />
-      </CardHeader>
-      <CardContent>
-        <div className="text-3xl font-semibold">{value ?? 0}</div>
-      </CardContent>
-    </Card>
-  );
-}
-
 export function DepartmentDetail({ departmentId }: DepartmentDetailProps) {
+  const PAGE_SIZE = 10;
   const { locale, t } = useLanguage();
   const copy = t.blogDepartments.detail;
   const common = t.common;
@@ -124,30 +103,47 @@ export function DepartmentDetail({ departmentId }: DepartmentDetailProps) {
     [departmentId]
   );
 
-  const { data: categories, isLoading: isLoadingCategories } = useGetList<Category>("categories", {
+  const {
+    loadedItems: loadedCategories,
+    isLoading: isLoadingCategories,
+    total: totalCategories,
+    scrollRef: categoriesScrollRef,
+    handleScroll: handleCategoriesScroll,
+  } = useLazyLoadList<Category>({
+    resource: "categories",
     fields: ["name", "category", "description", "slug", "is_active", "creation"],
-    filters: [...departmentFilter],
+    filters: departmentFilter,
     orderBy: { field: "creation", order: "desc" },
-    limit: 100,
+    pageSize: PAGE_SIZE,
   });
 
-  const { data: topics, isLoading: isLoadingTopics } = useGetList<Topic>("topics", {
+  const {
+    loadedItems: loadedTopics,
+    isLoading: isLoadingTopics,
+    total: totalTopics,
+    scrollRef: topicsScrollRef,
+    handleScroll: handleTopicsScroll,
+  } = useLazyLoadList<Topic>({
+    resource: "topics",
     fields: ["name", "topic", "desc", "slug", "is_active", "creation"],
-    filters: [...departmentFilter],
+    filters: departmentFilter,
     orderBy: { field: "creation", order: "desc" },
-    limit: 100,
+    pageSize: PAGE_SIZE,
   });
 
-  const { data: posts, isLoading: isLoadingPosts } = useGetList<Post>("posts", {
+  const {
+    loadedItems: loadedPosts,
+    isLoading: isLoadingPosts,
+    total: totalPosts,
+    scrollRef: postsScrollRef,
+    handleScroll: handlePostsScroll,
+  } = useLazyLoadList<Post>({
+    resource: "posts",
     fields: ["name", "title", "category", "status", "visibility", "published_at", "creation"],
-    filters: [...departmentFilter],
+    filters: departmentFilter,
     orderBy: { field: "creation", order: "desc" },
-    limit: 100,
+    pageSize: PAGE_SIZE,
   });
-
-  const { data: totalCategories } = useGetCount("categories", [...departmentFilter]);
-  const { data: totalTopics } = useGetCount("topics", [...departmentFilter]);
-  const { data: totalPosts } = useGetCount("posts", [...departmentFilter]);
 
   const statusCode = (departmentError as { response?: { status?: number } } | null)?.response
     ?.status;
@@ -176,6 +172,9 @@ export function DepartmentDetail({ departmentId }: DepartmentDetailProps) {
           </Button>
           <div>
             <h1 className="text-3xl font-bold tracking-tight">{department.department_name}</h1>
+            <p className="mt-1 text-muted-foreground">
+              {department.description || copy.noDescription}
+            </p>
           </div>
         </div>
         <div className="flex flex-row items-center justify-between gap-2">
@@ -199,20 +198,25 @@ export function DepartmentDetail({ departmentId }: DepartmentDetailProps) {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <StatCard title={copy.totalCategories} value={totalCategories} icon={FolderTree} />
-        <StatCard title={copy.totalTopics} value={totalTopics} icon={Hash} />
-        <StatCard title={copy.totalPosts} value={totalPosts} icon={Eye} />
+      <div className="flex flex-wrap items-center gap-4 rounded-lg border bg-muted/30 px-4 py-3">
+        <div className="flex items-center gap-2">
+          <FolderTree className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm font-medium">{copy.totalCategories}:</span>
+          <span className="text-sm font-bold">{totalCategories ?? 0}</span>
+        </div>
+        <div className="h-4 w-px bg-border" />
+        <div className="flex items-center gap-2">
+          <Hash className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm font-medium">{copy.totalTopics}:</span>
+          <span className="text-sm font-bold">{totalTopics ?? 0}</span>
+        </div>
+        <div className="h-4 w-px bg-border" />
+        <div className="flex items-center gap-2">
+          <Eye className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm font-medium">{copy.totalPosts}:</span>
+          <span className="text-sm font-bold">{totalPosts ?? 0}</span>
+        </div>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>{copy.description}</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-2">
-          <CardDescription>{department.description || copy.noDescription}</CardDescription>
-        </CardContent>
-      </Card>
 
       <Tabs
         defaultValue="categories"
@@ -228,46 +232,56 @@ export function DepartmentDetail({ departmentId }: DepartmentDetailProps) {
           <Card>
             <CardHeader>
               <CardTitle>{copy.categories}</CardTitle>
-              <CardDescription>
-                {copy.totalCategories}: {totalCategories ?? 0}
-              </CardDescription>
             </CardHeader>
             <CardContent>
-              {isLoadingCategories ? (
+              {isLoadingCategories && !loadedCategories.length ? (
                 <Skeleton className="h-48 w-full rounded-xl" />
-              ) : !categories?.length ? (
+              ) : !loadedCategories.length ? (
                 <EmptyState icon={FolderTree} label={copy.noCategories} />
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{copy.categories}</TableHead>
-                      <TableHead>{copy.description}</TableHead>
-                      <TableHead>{common.status}</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {categories.map(category => (
-                      <TableRow key={category.name}>
-                        <TableCell>
-                          <div className="space-y-1">
-                            <p className="font-medium">{category.category}</p>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {category.description || copy.noDescription}
-                        </TableCell>
-                        <TableCell>
-                          <StatusBadge
-                            active={category.is_active === 1}
-                            activeLabel={t.blogDepartments.table.active}
-                            inactiveLabel={t.blogDepartments.table.inactive}
-                          />
-                        </TableCell>
+                <div
+                  ref={categoriesScrollRef}
+                  onScroll={handleCategoriesScroll}
+                  className="max-h-96 overflow-y-auto rounded-md border"
+                >
+                  <Table>
+                    <TableHeader className="sticky top-0 z-10 bg-background">
+                      <TableRow>
+                        <TableHead>{copy.categories}</TableHead>
+                        <TableHead>{copy.description}</TableHead>
+                        <TableHead>{common.status}</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {loadedCategories.map(category => (
+                        <TableRow key={category.name}>
+                          <TableCell>
+                            <div className="space-y-1">
+                              <p className="font-medium">{category.category}</p>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {category.description || copy.noDescription}
+                          </TableCell>
+                          <TableCell>
+                            <StatusBadge
+                              active={category.is_active === 1}
+                              activeLabel={t.blogDepartments.table.active}
+                              inactiveLabel={t.blogDepartments.table.inactive}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      {isLoadingCategories && loadedCategories.length > 0 && (
+                        <TableRow>
+                          <TableCell colSpan={3}>
+                            <Skeleton className="h-8 w-full rounded-md" />
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
               )}
             </CardContent>
           </Card>
@@ -277,46 +291,56 @@ export function DepartmentDetail({ departmentId }: DepartmentDetailProps) {
           <Card>
             <CardHeader>
               <CardTitle>{copy.topics}</CardTitle>
-              <CardDescription>
-                {copy.totalTopics}: {totalTopics ?? 0}
-              </CardDescription>
             </CardHeader>
             <CardContent>
-              {isLoadingTopics ? (
+              {isLoadingTopics && !loadedTopics.length ? (
                 <Skeleton className="h-48 w-full rounded-xl" />
-              ) : !topics?.length ? (
+              ) : !loadedTopics.length ? (
                 <EmptyState icon={Hash} label={copy.noTopics} />
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{copy.topics}</TableHead>
-                      <TableHead>{copy.description}</TableHead>
-                      <TableHead>{common.status}</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {topics.map(topic => (
-                      <TableRow key={topic.name}>
-                        <TableCell>
-                          <div className="space-y-1">
-                            <p className="font-medium">{topic.topic}</p>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {topic.desc || copy.noDescription}
-                        </TableCell>
-                        <TableCell>
-                          <StatusBadge
-                            active={topic.is_active === 1}
-                            activeLabel={t.blogDepartments.table.active}
-                            inactiveLabel={t.blogDepartments.table.inactive}
-                          />
-                        </TableCell>
+                <div
+                  ref={topicsScrollRef}
+                  onScroll={handleTopicsScroll}
+                  className="max-h-96 overflow-y-auto rounded-md border"
+                >
+                  <Table>
+                    <TableHeader className="sticky top-0 z-10 bg-background">
+                      <TableRow>
+                        <TableHead>{copy.topics}</TableHead>
+                        <TableHead>{copy.description}</TableHead>
+                        <TableHead>{common.status}</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {loadedTopics.map(topic => (
+                        <TableRow key={topic.name}>
+                          <TableCell>
+                            <div className="space-y-1">
+                              <p className="font-medium">{topic.topic}</p>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {topic.desc || copy.noDescription}
+                          </TableCell>
+                          <TableCell>
+                            <StatusBadge
+                              active={topic.is_active === 1}
+                              activeLabel={t.blogDepartments.table.active}
+                              inactiveLabel={t.blogDepartments.table.inactive}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      {isLoadingTopics && loadedTopics.length > 0 && (
+                        <TableRow>
+                          <TableCell colSpan={3}>
+                            <Skeleton className="h-8 w-full rounded-md" />
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
               )}
             </CardContent>
           </Card>
@@ -326,45 +350,55 @@ export function DepartmentDetail({ departmentId }: DepartmentDetailProps) {
           <Card>
             <CardHeader>
               <CardTitle>{copy.posts}</CardTitle>
-              <CardDescription>
-                {copy.totalPosts}: {totalPosts ?? 0}
-              </CardDescription>
             </CardHeader>
             <CardContent>
-              {isLoadingPosts ? (
+              {isLoadingPosts && !loadedPosts.length ? (
                 <Skeleton className="h-48 w-full rounded-xl" />
-              ) : !posts?.length ? (
+              ) : !loadedPosts.length ? (
                 <EmptyState icon={Layers3} label={copy.noPosts} />
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{copy.posts}</TableHead>
-                      <TableHead>{copy.categories}</TableHead>
-                      <TableHead>{common.status}</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {posts.map(post => (
-                      <TableRow key={post.name}>
-                        <TableCell>
-                          <div className="space-y-1">
-                            <p className="font-medium">{post.title}</p>
-                            <p className="text-xs text-muted-foreground">{post.visibility}</p>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {typeof post.category === "string"
-                            ? post.category
-                            : post.category.category}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{post.status}</Badge>
-                        </TableCell>
+                <div
+                  ref={postsScrollRef}
+                  onScroll={handlePostsScroll}
+                  className="max-h-96 overflow-y-auto rounded-md border"
+                >
+                  <Table>
+                    <TableHeader className="sticky top-0 z-10 bg-background">
+                      <TableRow>
+                        <TableHead>{copy.posts}</TableHead>
+                        <TableHead>{copy.categories}</TableHead>
+                        <TableHead>{common.status}</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {loadedPosts.map(post => (
+                        <TableRow key={post.name}>
+                          <TableCell>
+                            <div className="space-y-1">
+                              <p className="font-medium">{post.title}</p>
+                              <p className="text-xs text-muted-foreground">{post.visibility}</p>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {typeof post.category === "string"
+                              ? post.category
+                              : post.category.category}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{post.status}</Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      {isLoadingPosts && loadedPosts.length > 0 && (
+                        <TableRow>
+                          <TableCell colSpan={3}>
+                            <Skeleton className="h-8 w-full rounded-md" />
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
               )}
             </CardContent>
           </Card>

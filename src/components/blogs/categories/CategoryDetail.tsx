@@ -3,7 +3,7 @@
 import { AdminAccessDenied } from "@/components/layout/admin-access-denied";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -20,11 +20,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useGetCount, useGetDoc, useGetList } from "@/hooks";
+import { useGetDoc, useLazyLoadList } from "@/hooks";
 import { useLanguage } from "@/hooks/useLanguage";
 import { buildLocalePath } from "@/i18n";
 import { BlogDepartment, Category, Post } from "@/types/blogs";
-import { Filter } from "@/types/hooks";
 import { formatDate } from "date-fns";
 import { ArrowLeft, BookOpen, FolderOpen, Hash, Pencil } from "lucide-react";
 import Link from "next/link";
@@ -83,44 +82,12 @@ function EmptyState({ icon: Icon, label }: { icon: React.ElementType; label: str
   );
 }
 
-function StatCard({
-  title,
-  value,
-  icon: Icon,
-  link,
-}: {
-  title: string;
-  value?: number | string;
-  icon: React.ElementType;
-  link?: string;
-}) {
-  return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
-        <Icon className="h-4 w-4 text-muted-foreground" />
-      </CardHeader>
-      <CardContent>
-        <div className="text-3xl font-semibold">
-          {link ? (
-            <Link href={link} className="hover:underline underline-offset-4">
-              {value ?? 0}
-            </Link>
-          ) : (
-            <span>{value ?? 0}</span>
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
 export function CategoryDetail({ categoryId }: CategoryDetailProps) {
+  const PAGE_SIZE = 10;
   const { locale, t } = useLanguage();
   const copy = t.blogCategories.detail;
   const common = t.common;
   const [editDialogOpen, setEditDialogOpen] = React.useState(false);
-
   const {
     data: category,
     isLoading: isLoadingCategory,
@@ -134,18 +101,23 @@ export function CategoryDetail({ categoryId }: CategoryDetailProps) {
   const { data: department } = useGetDoc<BlogDepartment>("blog_departments", departmentId);
 
   const categoryFilter = React.useMemo(
-    () => [["category", "=", categoryId]] as Filter[],
+    () => [["category", "=", categoryId]] as [string, "=", string][],
     [categoryId]
   );
 
-  const { data: posts, isLoading: isLoadingPosts } = useGetList<Post>("posts", {
+  const {
+    loadedItems: loadedPosts,
+    isLoading: isLoadingPosts,
+    total: totalPosts,
+    scrollRef: scrollContainerRef,
+    handleScroll,
+  } = useLazyLoadList<Post>({
+    resource: "posts",
     fields: ["name", "title", "status", "visibility", "published_at", "creation"],
-    filters: [...categoryFilter],
+    filters: categoryFilter,
     orderBy: { field: "creation", order: "desc" },
-    limit: 100,
+    pageSize: PAGE_SIZE,
   });
-
-  const { data: totalPosts } = useGetCount("posts", [...categoryFilter]);
 
   const statusCode = (categoryError as { response?: { status?: number } } | null)?.response?.status;
 
@@ -179,6 +151,9 @@ export function CategoryDetail({ categoryId }: CategoryDetailProps) {
           </Button>
           <div>
             <h1 className="text-3xl font-bold tracking-tight">{category.category}</h1>
+            <p className="mt-1 text-muted-foreground">
+              {category.description || copy.noDescription}
+            </p>
           </div>
         </div>
         <div className="flex flex-row items-center justify-between gap-2">
@@ -201,72 +176,80 @@ export function CategoryDetail({ categoryId }: CategoryDetailProps) {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <StatCard title={copy.totalPosts} value={totalPosts} icon={BookOpen} />
-        <StatCard
-          title={copy.department}
-          value={departmentName}
-          icon={Hash}
-          link={buildLocalePath(locale, `/admin/blog-departments/${departmentId}`)}
-        />
-      </div>
-
-      <div className="w-full">
-        <Card>
-          <CardHeader>
-            <CardTitle>{copy.description}</CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-4 md:grid-cols-2">
-            <CardDescription>{category.description || copy.noDescription}</CardDescription>
-          </CardContent>
-        </Card>
+      <div className="flex flex-wrap items-center gap-4 rounded-lg border px-4 py-3">
+        <div className="flex items-center gap-2">
+          <BookOpen className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm font-medium">{copy.totalPosts}:</span>
+          <span className="text-sm font-bold">{totalPosts ?? 0}</span>
+        </div>
+        <div className="h-4 w-px bg-border" />
+        <div className="flex items-center gap-2">
+          <Hash className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm font-medium">{copy.department}:</span>
+          <Link
+            href={buildLocalePath(locale, `/admin/blog-departments/${departmentId}`)}
+            className="text-sm font-bold hover:underline underline-offset-4"
+          >
+            {departmentName}
+          </Link>
+        </div>
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle>{copy.posts}</CardTitle>
-          <CardDescription>
-            {copy.totalPosts}: {totalPosts ?? 0}
-          </CardDescription>
         </CardHeader>
         <CardContent>
-          {isLoadingPosts ? (
+          {isLoadingPosts && !loadedPosts.length ? (
             <Skeleton className="h-48 w-full rounded-xl" />
-          ) : !posts?.length ? (
+          ) : !loadedPosts.length ? (
             <EmptyState icon={FolderOpen} label={copy.noPosts} />
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{copy.posts}</TableHead>
-                  <TableHead>{common.status}</TableHead>
-                  <TableHead>{copy.visibility}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {posts.map(post => (
-                  <TableRow key={post.name}>
-                    <TableCell>
-                      <div className="space-y-1">
-                        <p className="font-medium">{post.title}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {post.published_at
-                            ? formatDate(new Date(post.published_at), " HH:mm dd/MM/yyyy")
-                            : formatDate(
-                                new Date(post.creation ?? new Date()),
-                                " HH:mm dd/MM/yyyy"
-                              )}
-                        </p>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{post.status}</Badge>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">{post.visibility}</TableCell>
+            <div
+              ref={scrollContainerRef}
+              onScroll={handleScroll}
+              className="max-h-[450px] overflow-y-auto rounded-md border"
+            >
+              <Table>
+                <TableHeader className="sticky top-0 z-10 bg-background">
+                  <TableRow>
+                    <TableHead>{copy.posts}</TableHead>
+                    <TableHead>{common.status}</TableHead>
+                    <TableHead>{copy.visibility}</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {loadedPosts.map(post => (
+                    <TableRow key={post.name}>
+                      <TableCell>
+                        <div className="space-y-1">
+                          <p className="font-medium">{post.title}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {post.published_at
+                              ? formatDate(new Date(post.published_at), " HH:mm dd/MM/yyyy")
+                              : formatDate(
+                                  new Date(post.creation ?? new Date()),
+                                  " HH:mm dd/MM/yyyy"
+                                )}
+                          </p>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{post.status}</Badge>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">{post.visibility}</TableCell>
+                    </TableRow>
+                  ))}
+                  {isLoadingPosts && loadedPosts.length > 0 && (
+                    <TableRow>
+                      <TableCell colSpan={3}>
+                        <Skeleton className="h-8 w-full rounded-md" />
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>
