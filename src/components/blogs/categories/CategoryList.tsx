@@ -244,8 +244,7 @@ export function CategoryList() {
     ]
   );
 
-  const statusCode = (error as { response?: { status?: number } } | null)
-    ?.response?.status;
+  const statusCode = (error as { response?: { status?: number } } | null)?.response?.status;
 
   const columns: ColumnDef<Category, unknown>[] = React.useMemo(() => getCategoryColumns(t), [t]);
 
@@ -285,10 +284,10 @@ export function CategoryList() {
 
           <Select
             value={statusFilter}
-            onValueChange={(v) => {
+            onValueChange={v => {
               setStatusFilter(v as typeof statusFilter);
-              setPagination((prev) =>
-                prev.pageIndex === 0 ? { ...prev } : { ...prev, pageIndex: 0 },
+              setPagination(prev =>
+                prev.pageIndex === 0 ? { ...prev } : { ...prev, pageIndex: 0 }
               );
             }}
           >
@@ -304,10 +303,10 @@ export function CategoryList() {
 
           <DepartmentFilterCombobox
             value={departmentFilter}
-            onChange={(v) => {
+            onChange={v => {
               setDepartmentFilter(v);
-              setPagination((prev) =>
-                prev.pageIndex === 0 ? { ...prev } : { ...prev, pageIndex: 0 },
+              setPagination(prev =>
+                prev.pageIndex === 0 ? { ...prev } : { ...prev, pageIndex: 0 }
               );
             }}
             onDepartmentsChange={setDepartments}
@@ -341,20 +340,17 @@ export function CategoryList() {
           isLoading={isLoading}
           totalCount={totalCount ?? 0}
           pagination={pagination}
-          onPaginationChange={(updater) => {
-            setPagination((prev) => {
-              const next =
-                typeof updater === "function" ? updater(prev) : updater;
+          onPaginationChange={updater => {
+            setPagination(prev => {
+              const next = typeof updater === "function" ? updater(prev) : updater;
               if (next.pageIndex === 0) return next;
               return { ...next, pageIndex: 0 };
             });
           }}
           sorting={sorting}
-          onSortingChange={(updater) => {
+          onSortingChange={updater => {
             setSorting(updater);
-            setPagination((prev) =>
-              prev.pageIndex === 0 ? { ...prev } : { ...prev, pageIndex: 0 },
-            );
+            setPagination(prev => (prev.pageIndex === 0 ? { ...prev } : { ...prev, pageIndex: 0 }));
           }}
           rowSelection={rowSelection}
           onRowSelectionChange={setRowSelection}
@@ -384,9 +380,7 @@ export function CategoryList() {
               {editingCategory ? copy.editCategoryTitle : copy.addCategoryTitle}
             </DialogTitle>
             <DialogDescription>
-              {editingCategory
-                ? copy.editCategoryDescription
-                : copy.addCategoryDescription}
+              {editingCategory ? copy.editCategoryDescription : copy.addCategoryDescription}
             </DialogDescription>
           </DialogHeader>
           <CategoryForm

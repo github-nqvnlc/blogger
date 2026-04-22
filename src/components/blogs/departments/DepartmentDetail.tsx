@@ -3,13 +3,7 @@
 import { AdminAccessDenied } from "@/components/layout/admin-access-denied";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -381,9 +375,7 @@ export function DepartmentDetail({ departmentId }: DepartmentDetailProps) {
         <DialogContent className="max-w-xl">
           <DialogHeader>
             <DialogTitle>{t.blogDepartments.editDepartmentTitle}</DialogTitle>
-            <DialogDescription>
-              {t.blogDepartments.editDepartmentDescription}
-            </DialogDescription>
+            <DialogDescription>{t.blogDepartments.editDepartmentDescription}</DialogDescription>
           </DialogHeader>
           <DepartmentForm
             department={department}

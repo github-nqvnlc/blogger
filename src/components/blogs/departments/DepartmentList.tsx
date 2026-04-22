@@ -207,8 +207,7 @@ export function DepartmentList() {
     [handleDeleteClick, handleOpenEditForm, handleToggleStatus, handleViewDetail]
   );
 
-  const statusCode = (error as { response?: { status?: number } } | null)
-    ?.response?.status;
+  const statusCode = (error as { response?: { status?: number } } | null)?.response?.status;
   const isForbidden = statusCode === 403;
 
   const columns: ColumnDef<BlogDepartment, unknown>[] = React.useMemo(
@@ -252,10 +251,10 @@ export function DepartmentList() {
 
           <Select
             value={statusFilter}
-            onValueChange={(v) => {
+            onValueChange={v => {
               setStatusFilter(v as typeof statusFilter);
-              setPagination((prev) =>
-                prev.pageIndex === 0 ? { ...prev } : { ...prev, pageIndex: 0 },
+              setPagination(prev =>
+                prev.pageIndex === 0 ? { ...prev } : { ...prev, pageIndex: 0 }
               );
             }}
           >
@@ -294,20 +293,17 @@ export function DepartmentList() {
           isLoading={isLoading}
           totalCount={totalCount ?? 0}
           pagination={pagination}
-          onPaginationChange={(updater) => {
-            setPagination((prev) => {
-              const next =
-                typeof updater === "function" ? updater(prev) : updater;
+          onPaginationChange={updater => {
+            setPagination(prev => {
+              const next = typeof updater === "function" ? updater(prev) : updater;
               if (next.pageIndex === 0) return next;
               return { ...next, pageIndex: 0 };
             });
           }}
           sorting={sorting}
-          onSortingChange={(updater) => {
+          onSortingChange={updater => {
             setSorting(updater);
-            setPagination((prev) =>
-              prev.pageIndex === 0 ? { ...prev } : { ...prev, pageIndex: 0 },
-            );
+            setPagination(prev => (prev.pageIndex === 0 ? { ...prev } : { ...prev, pageIndex: 0 }));
           }}
           rowSelection={rowSelection}
           onRowSelectionChange={setRowSelection}
@@ -337,9 +333,7 @@ export function DepartmentList() {
               {editingDepartment ? copy.editDepartmentTitle : copy.addDepartmentTitle}
             </DialogTitle>
             <DialogDescription>
-              {editingDepartment
-                ? copy.editDepartmentDescription
-                : copy.addDepartmentDescription}
+              {editingDepartment ? copy.editDepartmentDescription : copy.addDepartmentDescription}
             </DialogDescription>
           </DialogHeader>
           <DepartmentForm

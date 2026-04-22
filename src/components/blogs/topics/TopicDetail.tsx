@@ -3,13 +3,7 @@
 import { AdminAccessDenied } from "@/components/layout/admin-access-denied";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -280,9 +274,9 @@ export function TopicDetail({ topicId }: TopicDetailProps) {
                           {post.published_at
                             ? formatDate(new Date(post.published_at), " HH:mm dd/MM/yyyy")
                             : formatDate(
-                              new Date(post.creation ?? new Date()),
-                              " HH:mm dd/MM/yyyy"
-                            )}
+                                new Date(post.creation ?? new Date()),
+                                " HH:mm dd/MM/yyyy"
+                              )}
                         </p>
                       </div>
                     </TableCell>
@@ -302,9 +296,7 @@ export function TopicDetail({ topicId }: TopicDetailProps) {
         <DialogContent className="max-w-xl">
           <DialogHeader>
             <DialogTitle>{t.blogTopics.editTopicTitle}</DialogTitle>
-            <DialogDescription>
-              {t.blogTopics.editTopicDescription}
-            </DialogDescription>
+            <DialogDescription>{t.blogTopics.editTopicDescription}</DialogDescription>
           </DialogHeader>
           <TopicForm
             topic={topic}

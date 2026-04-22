@@ -284,20 +284,17 @@ export function TagList() {
           isLoading={isLoading}
           totalCount={totalCount ?? 0}
           pagination={pagination}
-          onPaginationChange={(updater) => {
-            setPagination((prev) => {
-              const next =
-                typeof updater === "function" ? updater(prev) : updater;
+          onPaginationChange={updater => {
+            setPagination(prev => {
+              const next = typeof updater === "function" ? updater(prev) : updater;
               if (next.pageIndex === 0) return next;
               return { ...next, pageIndex: 0 };
             });
           }}
           sorting={sorting}
-          onSortingChange={(updater) => {
+          onSortingChange={updater => {
             setSorting(updater);
-            setPagination((prev) =>
-              prev.pageIndex === 0 ? { ...prev } : { ...prev, pageIndex: 0 },
-            );
+            setPagination(prev => (prev.pageIndex === 0 ? { ...prev } : { ...prev, pageIndex: 0 }));
           }}
           rowSelection={rowSelection}
           onRowSelectionChange={setRowSelection}
@@ -323,9 +320,7 @@ export function TagList() {
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
-            <DialogTitle>
-              {editingTag ? copy.editTagTitle : copy.addTagTitle}
-            </DialogTitle>
+            <DialogTitle>{editingTag ? copy.editTagTitle : copy.addTagTitle}</DialogTitle>
             <DialogDescription>
               {editingTag ? copy.editTagDescription : copy.addTagDescription}
             </DialogDescription>

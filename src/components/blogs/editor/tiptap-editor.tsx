@@ -191,9 +191,8 @@ const FontFamily = Extension.create({
         attributes: {
           fontFamily: {
             default: null,
-            parseHTML: (element) =>
-              (element as HTMLElement).style.fontFamily || null,
-            renderHTML: (attributes) => {
+            parseHTML: element => (element as HTMLElement).style.fontFamily || null,
+            renderHTML: attributes => {
               if (!attributes.fontFamily) {
                 return {};
               }
@@ -217,10 +216,7 @@ const FontFamily = Extension.create({
       unsetFontFamily:
         () =>
         ({ chain }) =>
-          chain()
-            .setMark("textStyle", { fontFamily: null })
-            .removeEmptyTextStyle()
-            .run(),
+          chain().setMark("textStyle", { fontFamily: null }).removeEmptyTextStyle().run(),
     };
   },
 });
@@ -875,7 +871,7 @@ export function TiptapEditor({ value, onChange, disabled }: BlogEditorProps) {
             className="max-w-28 bg-transparent text-sm outline-none"
             disabled={!editor || disabled}
             value={editorState.fontFamily}
-            onChange={(event) => {
+            onChange={event => {
               const nextValue = event.target.value;
               if (!editor) {
                 return;
@@ -890,7 +886,7 @@ export function TiptapEditor({ value, onChange, disabled }: BlogEditorProps) {
             }}
           >
             <option value="">{msg.toolbar.fontFamily}</option>
-            {FONT_FAMILY_OPTIONS.map((fontFamily) => (
+            {FONT_FAMILY_OPTIONS.map(fontFamily => (
               <option key={fontFamily.value} value={fontFamily.value}>
                 {fontFamily.label}
               </option>

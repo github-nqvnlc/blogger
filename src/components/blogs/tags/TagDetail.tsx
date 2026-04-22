@@ -3,13 +3,7 @@
 import { AdminAccessDenied } from "@/components/layout/admin-access-denied";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -256,9 +250,9 @@ export function TagDetail({ tagId }: TagDetailProps) {
                           {post.published_at
                             ? formatDate(new Date(post.published_at), " HH:mm dd/MM/yyyy")
                             : formatDate(
-                              new Date(post.creation ?? new Date()),
-                              " HH:mm dd/MM/yyyy"
-                            )}
+                                new Date(post.creation ?? new Date()),
+                                " HH:mm dd/MM/yyyy"
+                              )}
                         </p>
                       </div>
                     </TableCell>
@@ -278,9 +272,7 @@ export function TagDetail({ tagId }: TagDetailProps) {
         <DialogContent className="max-w-xl">
           <DialogHeader>
             <DialogTitle>{t.blogTags.editTagTitle}</DialogTitle>
-            <DialogDescription>
-              {t.blogTags.editTagDescription}
-            </DialogDescription>
+            <DialogDescription>{t.blogTags.editTagDescription}</DialogDescription>
           </DialogHeader>
           <TagForm
             tag={tag}

@@ -135,8 +135,7 @@ export function SearchableSingleSelect({
     }
   );
 
-  const isLoadingOptions =
-    open && enabled && !disabled && !data && (isLoading || isValidating);
+  const isLoadingOptions = open && enabled && !disabled && !data && (isLoading || isValidating);
 
   const options = useMemo(
     () =>

@@ -8,12 +8,6 @@ interface PostContentPreviewProps {
   className?: string;
 }
 
-export function PostContentPreview({
-  value,
-  emptyText,
-  className,
-}: PostContentPreviewProps) {
-  return (
-    <RichContent value={value} emptyText={emptyText} className={className} />
-  );
+export function PostContentPreview({ value, emptyText, className }: PostContentPreviewProps) {
+  return <RichContent value={value} emptyText={emptyText} className={className} />;
 }

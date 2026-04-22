@@ -11,13 +11,7 @@ import { PostContentPreview } from "@/components/blogs/posts/PostContentPreview"
 import { AdminAccessDenied } from "@/components/layout/admin-access-denied";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -186,23 +180,14 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
   const visibilityLabels = copy.visibility;
   const [currentStep, setCurrentStep] = useState<StepNumber>(1);
   const [form, setForm] = useState<PostFormValues>(INITIAL_FORM_STATE);
-  const [createdCategoryOption, setCreatedCategoryOption] =
-    useState<SelectOption | null>(null);
-  const [createdTopicOptions, setCreatedTopicOptions] = useState<
-    SelectOption[]
-  >([]);
-  const [createdTagOptions, setCreatedTagOptions] = useState<SelectOption[]>(
-    [],
-  );
-  const [isCreateCategoryDialogOpen, setIsCreateCategoryDialogOpen] =
-    useState(false);
+  const [createdCategoryOption, setCreatedCategoryOption] = useState<SelectOption | null>(null);
+  const [createdTopicOptions, setCreatedTopicOptions] = useState<SelectOption[]>([]);
+  const [createdTagOptions, setCreatedTagOptions] = useState<SelectOption[]>([]);
+  const [isCreateCategoryDialogOpen, setIsCreateCategoryDialogOpen] = useState(false);
   const [isCreateTopicDialogOpen, setIsCreateTopicDialogOpen] = useState(false);
   const [isCreateTagDialogOpen, setIsCreateTagDialogOpen] = useState(false);
-  const [categoryDraft, setCategoryDraft] = useState<CategoryDraftValues>(
-    INITIAL_CATEGORY_DRAFT,
-  );
-  const [topicDraft, setTopicDraft] =
-    useState<TopicDraftValues>(INITIAL_TOPIC_DRAFT);
+  const [categoryDraft, setCategoryDraft] = useState<CategoryDraftValues>(INITIAL_CATEGORY_DRAFT);
+  const [topicDraft, setTopicDraft] = useState<TopicDraftValues>(INITIAL_TOPIC_DRAFT);
   const [tagDraft, setTagDraft] = useState<TagDraftValues>(INITIAL_TAG_DRAFT);
   const [categoryDraftErrors, setCategoryDraftErrors] = useState<
     Partial<Record<CategoryDraftField, string>>
@@ -210,9 +195,7 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
   const [topicDraftErrors, setTopicDraftErrors] = useState<
     Partial<Record<TopicDraftField, string>>
   >({});
-  const [tagDraftErrors, setTagDraftErrors] = useState<
-    Partial<Record<TagDraftField, string>>
-  >({});
+  const [tagDraftErrors, setTagDraftErrors] = useState<Partial<Record<TagDraftField, string>>>({});
   const [categorySlugEdited, setCategorySlugEdited] = useState(false);
   const [topicSlugEdited, setTopicSlugEdited] = useState(false);
   const [tagSlugEdited, setTagSlugEdited] = useState(false);
@@ -330,13 +313,13 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
     () =>
       selectedDepartment
         ? {
-          value: selectedDepartment.name,
-          label: selectedDepartment.department_name,
-          description: selectedDepartment.department_code,
-          keywords: [selectedDepartment.department_code, selectedDepartment.description].filter(
-            Boolean
-          ),
-        }
+            value: selectedDepartment.name,
+            label: selectedDepartment.department_name,
+            description: selectedDepartment.department_code,
+            keywords: [selectedDepartment.department_code, selectedDepartment.description].filter(
+              Boolean
+            ),
+          }
         : null,
     [selectedDepartment]
   );
@@ -345,19 +328,17 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
     () =>
       selectedCategory
         ? {
-          value: selectedCategory.name,
-          label: getCategoryName(selectedCategory),
-          description: selectedCategory.slug || selectedCategory.description,
-          keywords: [selectedCategory.slug, selectedCategory.description].filter(Boolean),
-        }
+            value: selectedCategory.name,
+            label: getCategoryName(selectedCategory),
+            description: selectedCategory.slug || selectedCategory.description,
+            keywords: [selectedCategory.slug, selectedCategory.description].filter(Boolean),
+          }
         : null,
     [selectedCategory]
   );
 
   const selectedDepartmentLabel =
-    selectedDepartment?.department_name ??
-    selectedDepartmentOption?.label ??
-    form.department;
+    selectedDepartment?.department_name ?? selectedDepartmentOption?.label ?? form.department;
 
   const effectiveSelectedCategoryOption = useMemo<SelectOption | null>(() => {
     if (selectedCategoryOption) {
@@ -484,8 +465,8 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
       visibility: existingPost.visibility ?? "Public",
       content: existingPost.content ?? "",
     });
-    setSelectedTopicIds((existingPostTopics ?? []).map((item) => item.topic));
-    setSelectedTagIds((existingPostTags ?? []).map((item) => item.tag));
+    setSelectedTopicIds((existingPostTopics ?? []).map(item => item.topic));
+    setSelectedTagIds((existingPostTags ?? []).map(item => item.tag));
     setCoverSource(existingCoverFile ? "upload" : "url");
     setCoverFileMeta(existingCoverFile);
     setCreatedCategoryOption(null);
@@ -542,7 +523,7 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
   );
 
   const clearCategoryDraftError = useCallback((field: CategoryDraftField) => {
-    setCategoryDraftErrors((currentErrors) => {
+    setCategoryDraftErrors(currentErrors => {
       if (!currentErrors[field]) {
         return currentErrors;
       }
@@ -570,18 +551,15 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
       setCategoryDraftErrors({});
       setIsCreateCategoryDialogOpen(true);
     },
-    [copy.validation.departmentRequired, form.department],
+    [copy.validation.departmentRequired, form.department]
   );
 
   const handleCategoryDraftChange = useCallback(
-    <K extends keyof CategoryDraftValues>(
-      field: K,
-      value: CategoryDraftValues[K],
-    ) => {
-      setCategoryDraft((currentDraft) => ({ ...currentDraft, [field]: value }));
+    <K extends keyof CategoryDraftValues>(field: K, value: CategoryDraftValues[K]) => {
+      setCategoryDraft(currentDraft => ({ ...currentDraft, [field]: value }));
       clearCategoryDraftError(field);
     },
-    [clearCategoryDraftError],
+    [clearCategoryDraftError]
   );
 
   const handleCategoryNameChange = useCallback(
@@ -591,7 +569,7 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
         handleCategoryDraftChange("slug", slugify(value));
       }
     },
-    [categorySlugEdited, handleCategoryDraftChange],
+    [categorySlugEdited, handleCategoryDraftChange]
   );
 
   function validateCategoryDraft() {
@@ -622,8 +600,7 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
     setCategoryDraftErrors(nextErrors);
     return {
       isValid: Object.keys(nextErrors).length === 0,
-      firstError:
-        nextErrors.category ?? nextErrors.slug ?? nextErrors.description,
+      firstError: nextErrors.category ?? nextErrors.slug ?? nextErrors.description,
     };
   }
 
@@ -652,11 +629,8 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
       const nextOption: SelectOption = {
         value: createdCategory.name,
         label: getCategoryName(createdCategory),
-        description:
-          createdCategory.slug || createdCategory.description || undefined,
-        keywords: [createdCategory.slug, createdCategory.description].filter(
-          Boolean,
-        ),
+        description: createdCategory.slug || createdCategory.description || undefined,
+        keywords: [createdCategory.slug, createdCategory.description].filter(Boolean),
       };
 
       setCreatedCategoryOption(nextOption);
@@ -669,15 +643,13 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
       toast.success(categoryFormCopy.createSuccess);
     } catch (error) {
       toast.error(
-        error instanceof Error && error.message
-          ? error.message
-          : categoryFormCopy.createFailure,
+        error instanceof Error && error.message ? error.message : categoryFormCopy.createFailure
       );
     }
   }
 
   const clearTopicDraftError = useCallback((field: TopicDraftField) => {
-    setTopicDraftErrors((currentErrors) => {
+    setTopicDraftErrors(currentErrors => {
       if (!currentErrors[field]) {
         return currentErrors;
       }
@@ -705,18 +677,15 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
       setTopicDraftErrors({});
       setIsCreateTopicDialogOpen(true);
     },
-    [copy.validation.departmentRequired, form.department],
+    [copy.validation.departmentRequired, form.department]
   );
 
   const handleTopicDraftChange = useCallback(
-    <K extends keyof TopicDraftValues>(
-      field: K,
-      value: TopicDraftValues[K],
-    ) => {
-      setTopicDraft((currentDraft) => ({ ...currentDraft, [field]: value }));
+    <K extends keyof TopicDraftValues>(field: K, value: TopicDraftValues[K]) => {
+      setTopicDraft(currentDraft => ({ ...currentDraft, [field]: value }));
       clearTopicDraftError(field);
     },
-    [clearTopicDraftError],
+    [clearTopicDraftError]
   );
 
   const handleTopicNameChange = useCallback(
@@ -726,7 +695,7 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
         handleTopicDraftChange("slug", slugify(value));
       }
     },
-    [handleTopicDraftChange, topicSlugEdited],
+    [handleTopicDraftChange, topicSlugEdited]
   );
 
   function validateTopicDraft() {
@@ -741,10 +710,7 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
       nextErrors.topic = topicFormCopy.nameMax;
     }
 
-    if (
-      topicDraft.slug.trim() &&
-      !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(topicDraft.slug.trim())
-    ) {
+    if (topicDraft.slug.trim() && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(topicDraft.slug.trim())) {
       nextErrors.slug = topicFormCopy.slugPattern;
     } else if (topicDraft.slug.trim().length > 140) {
       nextErrors.slug = topicFormCopy.slugMax;
@@ -790,14 +756,12 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
         keywords: [createdTopic.slug, createdTopic.desc].filter(Boolean),
       };
 
-      setCreatedTopicOptions((current) => [
-        ...current.filter((item) => item.value !== nextOption.value),
+      setCreatedTopicOptions(current => [
+        ...current.filter(item => item.value !== nextOption.value),
         nextOption,
       ]);
-      setSelectedTopicIds((current) =>
-        current.includes(createdTopic.name)
-          ? current
-          : [...current, createdTopic.name],
+      setSelectedTopicIds(current =>
+        current.includes(createdTopic.name) ? current : [...current, createdTopic.name]
       );
       clearFieldError("topics");
       setTopicDraft(INITIAL_TOPIC_DRAFT);
@@ -807,15 +771,13 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
       toast.success(topicFormCopy.createSuccess);
     } catch (error) {
       toast.error(
-        error instanceof Error && error.message
-          ? error.message
-          : topicFormCopy.createFailure,
+        error instanceof Error && error.message ? error.message : topicFormCopy.createFailure
       );
     }
   }
 
   const clearTagDraftError = useCallback((field: TagDraftField) => {
-    setTagDraftErrors((currentErrors) => {
+    setTagDraftErrors(currentErrors => {
       if (!currentErrors[field]) {
         return currentErrors;
       }
@@ -840,10 +802,10 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
 
   const handleTagDraftChange = useCallback(
     <K extends keyof TagDraftValues>(field: K, value: TagDraftValues[K]) => {
-      setTagDraft((currentDraft) => ({ ...currentDraft, [field]: value }));
+      setTagDraft(currentDraft => ({ ...currentDraft, [field]: value }));
       clearTagDraftError(field);
     },
-    [clearTagDraftError],
+    [clearTagDraftError]
   );
 
   const handleTagNameChange = useCallback(
@@ -853,7 +815,7 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
         handleTagDraftChange("slug", slugify(value));
       }
     },
-    [handleTagDraftChange, tagSlugEdited],
+    [handleTagDraftChange, tagSlugEdited]
   );
 
   function validateTagDraft() {
@@ -868,10 +830,7 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
       nextErrors.tag_name = tagFormCopy.nameMax;
     }
 
-    if (
-      tagDraft.slug.trim() &&
-      !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(tagDraft.slug.trim())
-    ) {
+    if (tagDraft.slug.trim() && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(tagDraft.slug.trim())) {
       nextErrors.slug = tagFormCopy.slugPattern;
     } else if (tagDraft.slug.trim().length > 140) {
       nextErrors.slug = tagFormCopy.slugMax;
@@ -884,8 +843,7 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
     setTagDraftErrors(nextErrors);
     return {
       isValid: Object.keys(nextErrors).length === 0,
-      firstError:
-        nextErrors.tag_name ?? nextErrors.slug ?? nextErrors.description,
+      firstError: nextErrors.tag_name ?? nextErrors.slug ?? nextErrors.description,
     };
   }
 
@@ -912,14 +870,12 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
         keywords: [createdTag.slug, createdTag.description].filter(Boolean),
       };
 
-      setCreatedTagOptions((current) => [
-        ...current.filter((item) => item.value !== nextOption.value),
+      setCreatedTagOptions(current => [
+        ...current.filter(item => item.value !== nextOption.value),
         nextOption,
       ]);
-      setSelectedTagIds((current) =>
-        current.includes(createdTag.name)
-          ? current
-          : [...current, createdTag.name],
+      setSelectedTagIds(current =>
+        current.includes(createdTag.name) ? current : [...current, createdTag.name]
       );
       clearFieldError("tags");
       setTagDraft(INITIAL_TAG_DRAFT);
@@ -929,16 +885,12 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
       toast.success(tagFormCopy.createSuccess);
     } catch (error) {
       toast.error(
-        error instanceof Error && error.message
-          ? error.message
-          : tagFormCopy.createFailure,
+        error instanceof Error && error.message ? error.message : tagFormCopy.createFailure
       );
     }
   }
 
-  function applyValidationErrors(
-    nextErrors: Partial<Record<FieldName, string>>,
-  ) {
+  function applyValidationErrors(nextErrors: Partial<Record<FieldName, string>>) {
     setFieldErrors(nextErrors);
 
     const firstErrorField = (Object.keys(nextErrors) as FieldName[])[0];
@@ -1209,9 +1161,7 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
       ? buildLocalePath(locale, `/admin/posts/${postId}`)
       : buildLocalePath(locale, "/admin/posts");
   const pageTitle = isEditMode ? copy.editTitle : copy.createTitle;
-  const pageDescription = isEditMode
-    ? copy.editDescription
-    : copy.createDescription;
+  const pageDescription = isEditMode ? copy.editDescription : copy.createDescription;
   const steps = isEditMode ? EDIT_STEPS : CREATE_STEPS;
   const totalSteps = steps.length;
   const stepCounterText = copy.stepCounter
@@ -1260,13 +1210,8 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
             </Button>
           </div>
 
-          <div
-            className={cn(
-              "grid gap-2",
-              isEditMode ? "md:grid-cols-2" : "md:grid-cols-3",
-            )}
-          >
-            {steps.map((stepItem) => {
+          <div className={cn("grid gap-2", isEditMode ? "md:grid-cols-2" : "md:grid-cols-3")}>
+            {steps.map(stepItem => {
               const stepCopy = copy.steps[stepItem.titleKey];
               const isActive = currentStep === stepItem.step;
               const isCompleted = currentStep > stepItem.step;
@@ -1426,9 +1371,9 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
                     filters={
                       form.department
                         ? [
-                          ["is_active", "=", 1],
-                          ["department", "=", form.department],
-                        ]
+                            ["is_active", "=", 1],
+                            ["department", "=", form.department],
+                          ]
                         : undefined
                     }
                     searchFields={["category", "slug", "description"]}
@@ -1475,9 +1420,9 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
                     filters={
                       form.department
                         ? [
-                          ["is_active", "=", 1],
-                          ["department", "=", form.department],
-                        ]
+                            ["is_active", "=", 1],
+                            ["department", "=", form.department],
+                          ]
                         : undefined
                     }
                     searchFields={["topic", "slug", "desc"]}
@@ -1638,7 +1583,7 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
               <BlogContentComposer
                 id="post-content-editor"
                 value={form.content}
-                onChange={(value) => {
+                onChange={value => {
                   updateField("content", value);
                   clearFieldError("content");
                 }}
@@ -1768,10 +1713,7 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
                   {submitLabel}
                 </Button>
               ) : (
-                <Button
-                  type="button"
-                  onClick={() => validateStepTwo() && setCurrentStep(3)}
-                >
+                <Button type="button" onClick={() => validateStepTwo() && setCurrentStep(3)}>
                   {copy.preview}
                 </Button>
               )}
@@ -1797,7 +1739,7 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
 
       <Dialog
         open={isCreateCategoryDialogOpen}
-        onOpenChange={(nextOpen) => {
+        onOpenChange={nextOpen => {
           setIsCreateCategoryDialogOpen(nextOpen);
           if (!nextOpen) {
             setCategoryDraftErrors({});
@@ -1808,14 +1750,12 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
         <DialogContent className="sm:max-w-[560px]">
           <DialogHeader>
             <DialogTitle>{categoryCopy.addCategoryTitle}</DialogTitle>
-            <DialogDescription>
-              {categoryCopy.addCategoryDescription}
-            </DialogDescription>
+            <DialogDescription>{categoryCopy.addCategoryDescription}</DialogDescription>
           </DialogHeader>
 
           <form
             className="space-y-5"
-            onSubmit={(event) => {
+            onSubmit={event => {
               event.preventDefault();
               void handleCreateCategory();
             }}
@@ -1826,49 +1766,34 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="inline-category-name">
-                {categoryFormCopy.name}
-              </Label>
+              <Label htmlFor="inline-category-name">{categoryFormCopy.name}</Label>
               <Input
                 id="inline-category-name"
                 value={categoryDraft.category}
-                onChange={(event) =>
-                  handleCategoryNameChange(event.target.value)
-                }
+                onChange={event => handleCategoryNameChange(event.target.value)}
                 placeholder={categoryFormCopy.namePlaceholder}
                 disabled={createCategory.loading}
                 aria-invalid={Boolean(categoryDraftErrors.category)}
-                className={cn(
-                  categoryDraftErrors.category && "border-destructive",
-                )}
+                className={cn(categoryDraftErrors.category && "border-destructive")}
                 autoFocus
               />
               {categoryDraftErrors.category ? (
-                <p className="text-sm text-destructive">
-                  {categoryDraftErrors.category}
-                </p>
+                <p className="text-sm text-destructive">{categoryDraftErrors.category}</p>
               ) : null}
             </div>
 
             <div className="space-y-2">
               <div className="flex items-center justify-between gap-3">
-                <Label htmlFor="inline-category-slug">
-                  {categoryFormCopy.slug}
-                </Label>
+                <Label htmlFor="inline-category-slug">{categoryFormCopy.slug}</Label>
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
                   onClick={() => {
                     setCategorySlugEdited(true);
-                    handleCategoryDraftChange(
-                      "slug",
-                      slugify(categoryDraft.category),
-                    );
+                    handleCategoryDraftChange("slug", slugify(categoryDraft.category));
                   }}
-                  disabled={
-                    !categoryDraft.category.trim() || createCategory.loading
-                  }
+                  disabled={!categoryDraft.category.trim() || createCategory.loading}
                   className="h-7 text-xs"
                 >
                   {categoryFormCopy.generateSlug}
@@ -1877,12 +1802,9 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
               <Input
                 id="inline-category-slug"
                 value={categoryDraft.slug}
-                onChange={(event) => {
+                onChange={event => {
                   setCategorySlugEdited(true);
-                  handleCategoryDraftChange(
-                    "slug",
-                    slugify(event.target.value),
-                  );
+                  handleCategoryDraftChange("slug", slugify(event.target.value));
                 }}
                 placeholder={categoryFormCopy.slugPlaceholder}
                 disabled={createCategory.loading}
@@ -1890,37 +1812,25 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
                 className={cn(categoryDraftErrors.slug && "border-destructive")}
               />
               {categoryDraftErrors.slug ? (
-                <p className="text-sm text-destructive">
-                  {categoryDraftErrors.slug}
-                </p>
+                <p className="text-sm text-destructive">{categoryDraftErrors.slug}</p>
               ) : null}
-              <p className="text-xs text-muted-foreground">
-                {categoryFormCopy.slugHelp}
-              </p>
+              <p className="text-xs text-muted-foreground">{categoryFormCopy.slugHelp}</p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="inline-category-description">
-                {categoryFormCopy.description}
-              </Label>
+              <Label htmlFor="inline-category-description">{categoryFormCopy.description}</Label>
               <Textarea
                 id="inline-category-description"
                 rows={4}
                 value={categoryDraft.description}
-                onChange={(event) =>
-                  handleCategoryDraftChange("description", event.target.value)
-                }
+                onChange={event => handleCategoryDraftChange("description", event.target.value)}
                 placeholder={categoryFormCopy.descriptionPlaceholder}
                 disabled={createCategory.loading}
                 aria-invalid={Boolean(categoryDraftErrors.description)}
-                className={cn(
-                  categoryDraftErrors.description && "border-destructive",
-                )}
+                className={cn(categoryDraftErrors.description && "border-destructive")}
               />
               {categoryDraftErrors.description ? (
-                <p className="text-sm text-destructive">
-                  {categoryDraftErrors.description}
-                </p>
+                <p className="text-sm text-destructive">{categoryDraftErrors.description}</p>
               ) : null}
               <p className="text-sm text-muted-foreground">
                 {getTrimmedLength(categoryDraft.description)}/500
@@ -1946,7 +1856,7 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
 
       <Dialog
         open={isCreateTopicDialogOpen}
-        onOpenChange={(nextOpen) => {
+        onOpenChange={nextOpen => {
           setIsCreateTopicDialogOpen(nextOpen);
           if (!nextOpen) {
             setTopicDraftErrors({});
@@ -1957,14 +1867,12 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
         <DialogContent className="sm:max-w-[560px]">
           <DialogHeader>
             <DialogTitle>{topicCopy.addTopicTitle}</DialogTitle>
-            <DialogDescription>
-              {topicCopy.addTopicDescription}
-            </DialogDescription>
+            <DialogDescription>{topicCopy.addTopicDescription}</DialogDescription>
           </DialogHeader>
 
           <form
             className="space-y-5"
-            onSubmit={(event) => {
+            onSubmit={event => {
               event.preventDefault();
               void handleCreateTopic();
             }}
@@ -1979,7 +1887,7 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
               <Input
                 id="inline-topic-name"
                 value={topicDraft.topic}
-                onChange={(event) => handleTopicNameChange(event.target.value)}
+                onChange={event => handleTopicNameChange(event.target.value)}
                 placeholder={topicFormCopy.namePlaceholder}
                 disabled={createTopic.loading}
                 aria-invalid={Boolean(topicDraftErrors.topic)}
@@ -1987,9 +1895,7 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
                 autoFocus
               />
               {topicDraftErrors.topic ? (
-                <p className="text-sm text-destructive">
-                  {topicDraftErrors.topic}
-                </p>
+                <p className="text-sm text-destructive">{topicDraftErrors.topic}</p>
               ) : null}
             </div>
 
@@ -2013,7 +1919,7 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
               <Input
                 id="inline-topic-slug"
                 value={topicDraft.slug}
-                onChange={(event) => {
+                onChange={event => {
                   setTopicSlugEdited(true);
                   handleTopicDraftChange("slug", slugify(event.target.value));
                 }}
@@ -2023,35 +1929,25 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
                 className={cn(topicDraftErrors.slug && "border-destructive")}
               />
               {topicDraftErrors.slug ? (
-                <p className="text-sm text-destructive">
-                  {topicDraftErrors.slug}
-                </p>
+                <p className="text-sm text-destructive">{topicDraftErrors.slug}</p>
               ) : null}
-              <p className="text-xs text-muted-foreground">
-                {topicFormCopy.slugHelp}
-              </p>
+              <p className="text-xs text-muted-foreground">{topicFormCopy.slugHelp}</p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="inline-topic-description">
-                {topicFormCopy.description}
-              </Label>
+              <Label htmlFor="inline-topic-description">{topicFormCopy.description}</Label>
               <Textarea
                 id="inline-topic-description"
                 rows={4}
                 value={topicDraft.desc}
-                onChange={(event) =>
-                  handleTopicDraftChange("desc", event.target.value)
-                }
+                onChange={event => handleTopicDraftChange("desc", event.target.value)}
                 placeholder={topicFormCopy.descriptionPlaceholder}
                 disabled={createTopic.loading}
                 aria-invalid={Boolean(topicDraftErrors.desc)}
                 className={cn(topicDraftErrors.desc && "border-destructive")}
               />
               {topicDraftErrors.desc ? (
-                <p className="text-sm text-destructive">
-                  {topicDraftErrors.desc}
-                </p>
+                <p className="text-sm text-destructive">{topicDraftErrors.desc}</p>
               ) : null}
               <p className="text-sm text-muted-foreground">
                 {getTrimmedLength(topicDraft.desc)}/500
@@ -2077,7 +1973,7 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
 
       <Dialog
         open={isCreateTagDialogOpen}
-        onOpenChange={(nextOpen) => {
+        onOpenChange={nextOpen => {
           setIsCreateTagDialogOpen(nextOpen);
           if (!nextOpen) {
             setTagDraftErrors({});
@@ -2093,7 +1989,7 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
 
           <form
             className="space-y-5"
-            onSubmit={(event) => {
+            onSubmit={event => {
               event.preventDefault();
               void handleCreateTag();
             }}
@@ -2103,7 +1999,7 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
               <Input
                 id="inline-tag-name"
                 value={tagDraft.tag_name}
-                onChange={(event) => handleTagNameChange(event.target.value)}
+                onChange={event => handleTagNameChange(event.target.value)}
                 placeholder={tagFormCopy.namePlaceholder}
                 disabled={createTag.loading}
                 aria-invalid={Boolean(tagDraftErrors.tag_name)}
@@ -2111,9 +2007,7 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
                 autoFocus
               />
               {tagDraftErrors.tag_name ? (
-                <p className="text-sm text-destructive">
-                  {tagDraftErrors.tag_name}
-                </p>
+                <p className="text-sm text-destructive">{tagDraftErrors.tag_name}</p>
               ) : null}
             </div>
 
@@ -2137,7 +2031,7 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
               <Input
                 id="inline-tag-slug"
                 value={tagDraft.slug}
-                onChange={(event) => {
+                onChange={event => {
                   setTagSlugEdited(true);
                   handleTagDraftChange("slug", slugify(event.target.value));
                 }}
@@ -2147,37 +2041,25 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
                 className={cn(tagDraftErrors.slug && "border-destructive")}
               />
               {tagDraftErrors.slug ? (
-                <p className="text-sm text-destructive">
-                  {tagDraftErrors.slug}
-                </p>
+                <p className="text-sm text-destructive">{tagDraftErrors.slug}</p>
               ) : null}
-              <p className="text-xs text-muted-foreground">
-                {tagFormCopy.slugHelp}
-              </p>
+              <p className="text-xs text-muted-foreground">{tagFormCopy.slugHelp}</p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="inline-tag-description">
-                {tagFormCopy.description}
-              </Label>
+              <Label htmlFor="inline-tag-description">{tagFormCopy.description}</Label>
               <Textarea
                 id="inline-tag-description"
                 rows={4}
                 value={tagDraft.description}
-                onChange={(event) =>
-                  handleTagDraftChange("description", event.target.value)
-                }
+                onChange={event => handleTagDraftChange("description", event.target.value)}
                 placeholder={tagFormCopy.descriptionPlaceholder}
                 disabled={createTag.loading}
                 aria-invalid={Boolean(tagDraftErrors.description)}
-                className={cn(
-                  tagDraftErrors.description && "border-destructive",
-                )}
+                className={cn(tagDraftErrors.description && "border-destructive")}
               />
               {tagDraftErrors.description ? (
-                <p className="text-sm text-destructive">
-                  {tagDraftErrors.description}
-                </p>
+                <p className="text-sm text-destructive">{tagDraftErrors.description}</p>
               ) : null}
               <p className="text-sm text-muted-foreground">
                 {getTrimmedLength(tagDraft.description)}/500

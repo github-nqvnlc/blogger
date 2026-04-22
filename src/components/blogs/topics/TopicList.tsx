@@ -292,10 +292,10 @@ export function TopicList() {
 
           <DepartmentFilterCombobox
             value={departmentFilter}
-            onChange={(v) => {
+            onChange={v => {
               setDepartmentFilter(v);
-              setPagination((prev) =>
-                prev.pageIndex === 0 ? { ...prev } : { ...prev, pageIndex: 0 },
+              setPagination(prev =>
+                prev.pageIndex === 0 ? { ...prev } : { ...prev, pageIndex: 0 }
               );
             }}
             onDepartmentsChange={setDepartments}
@@ -329,20 +329,17 @@ export function TopicList() {
           isLoading={isLoading}
           totalCount={totalCount ?? 0}
           pagination={pagination}
-          onPaginationChange={(updater) => {
-            setPagination((prev) => {
-              const next =
-                typeof updater === "function" ? updater(prev) : updater;
+          onPaginationChange={updater => {
+            setPagination(prev => {
+              const next = typeof updater === "function" ? updater(prev) : updater;
               if (next.pageIndex === 0) return next;
               return { ...next, pageIndex: 0 };
             });
           }}
           sorting={sorting}
-          onSortingChange={(updater) => {
+          onSortingChange={updater => {
             setSorting(updater);
-            setPagination((prev) =>
-              prev.pageIndex === 0 ? { ...prev } : { ...prev, pageIndex: 0 },
-            );
+            setPagination(prev => (prev.pageIndex === 0 ? { ...prev } : { ...prev, pageIndex: 0 }));
           }}
           rowSelection={rowSelection}
           onRowSelectionChange={setRowSelection}
@@ -368,13 +365,9 @@ export function TopicList() {
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
-            <DialogTitle>
-              {editingTopic ? copy.editTopicTitle : copy.addTopicTitle}
-            </DialogTitle>
+            <DialogTitle>{editingTopic ? copy.editTopicTitle : copy.addTopicTitle}</DialogTitle>
             <DialogDescription>
-              {editingTopic
-                ? copy.editTopicDescription
-                : copy.addTopicDescription}
+              {editingTopic ? copy.editTopicDescription : copy.addTopicDescription}
             </DialogDescription>
           </DialogHeader>
           <TopicForm

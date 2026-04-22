@@ -126,8 +126,7 @@ export function SearchableMultiSelect({
     }
   );
 
-  const isLoadingOptions =
-    open && enabled && !disabled && !data && (isLoading || isValidating);
+  const isLoadingOptions = open && enabled && !disabled && !data && (isLoading || isValidating);
 
   const options = useMemo(
     () =>
@@ -143,12 +142,11 @@ export function SearchableMultiSelect({
   );
 
   const hasSelectableFetchedOptions = useMemo(
-    () => options.some((option) => !values.includes(option.value)),
-    [options, values],
+    () => options.some(option => !values.includes(option.value)),
+    [options, values]
   );
 
-  const shouldShowCreateAction =
-    !isLoadingOptions && !hasSelectableFetchedOptions;
+  const shouldShowCreateAction = !isLoadingOptions && !hasSelectableFetchedOptions;
 
   const resolvedSelectedOptions = useMemo(
     () => mergedOptions.filter(option => values.includes(option.value)),
@@ -234,7 +232,7 @@ export function SearchableMultiSelect({
 
               {mergedOptions.length > 0 ? (
                 <CommandGroup>
-                  {mergedOptions.map((option) => (
+                  {mergedOptions.map(option => (
                     <CommandItem
                       key={option.value}
                       value={option.value}
@@ -246,9 +244,7 @@ export function SearchableMultiSelect({
                       <Check
                         className={cn(
                           "ml-2 size-4 shrink-0",
-                          values.includes(option.value)
-                            ? "opacity-100"
-                            : "opacity-0",
+                          values.includes(option.value) ? "opacity-100" : "opacity-0"
                         )}
                       />
                     </CommandItem>

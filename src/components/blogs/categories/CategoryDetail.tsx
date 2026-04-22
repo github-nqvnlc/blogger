@@ -4,7 +4,13 @@ import { AdminAccessDenied } from "@/components/layout/admin-access-denied";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -247,9 +253,9 @@ export function CategoryDetail({ categoryId }: CategoryDetailProps) {
                           {post.published_at
                             ? formatDate(new Date(post.published_at), " HH:mm dd/MM/yyyy")
                             : formatDate(
-                              new Date(post.creation ?? new Date()),
-                              " HH:mm dd/MM/yyyy"
-                            )}
+                                new Date(post.creation ?? new Date()),
+                                " HH:mm dd/MM/yyyy"
+                              )}
                         </p>
                       </div>
                     </TableCell>
@@ -269,9 +275,7 @@ export function CategoryDetail({ categoryId }: CategoryDetailProps) {
         <DialogContent className="max-w-xl">
           <DialogHeader>
             <DialogTitle>{t.blogCategories.editCategoryTitle}</DialogTitle>
-            <DialogDescription>
-              {t.blogCategories.editCategoryDescription}
-            </DialogDescription>
+            <DialogDescription>{t.blogCategories.editCategoryDescription}</DialogDescription>
           </DialogHeader>
           <CategoryForm
             category={category}
