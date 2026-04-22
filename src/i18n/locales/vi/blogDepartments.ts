@@ -6,7 +6,10 @@ export const blogDepartments = {
   emptyTitle: "Không tìm thấy bộ phận nội dung nào",
   emptyDescription: "Thử thay đổi bộ lọc hoặc tạo mới",
   addDepartmentTitle: "Thêm bộ phận nội dung mới",
+  addDepartmentDescription:
+    "Điền thông tin bên dưới để tạo bộ phận nội dung mới.",
   editDepartmentTitle: "Chỉnh sửa bộ phận nội dung",
+  editDepartmentDescription: "Cập nhật thông tin cho bộ phận nội dung này.",
   deleteTitle: "Xác nhận xóa",
   deleteDescriptionStart: "Bạn có chắc chắn muốn xóa bộ phận nội dung",
   deleteDescriptionEnd:

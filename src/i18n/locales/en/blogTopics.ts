@@ -8,7 +8,10 @@ export const blogTopics = {
   emptyTitle: "No topics found",
   emptyDescription: "Try adjusting the filters or creating a new topic",
   addTopicTitle: "Add a new topic",
+  addTopicDescription:
+    "Fill in the information below to create a new blog topic.",
   editTopicTitle: "Edit topic",
+  editTopicDescription: "Update the information for this blog topic.",
   deleteTitle: "Confirm deletion",
   deleteDescriptionStart: "Are you sure you want to delete the topic",
   deleteDescriptionEnd:

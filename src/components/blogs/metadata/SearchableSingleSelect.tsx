@@ -13,6 +13,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
+import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 import { Filter } from "@/types/hooks";
 
@@ -43,6 +44,9 @@ interface SearchableSingleSelectProps {
   orderBy?: { field: string; order: "asc" | "desc" };
   limit?: number;
   selectedOption?: SelectOption | null;
+  emptyActionLabel?: string;
+  onEmptyAction?: (search: string) => void;
+  emptyActionDisabled?: boolean;
 }
 
 function normalizeOption(
@@ -101,6 +105,9 @@ export function SearchableSingleSelect({
   orderBy = { field: "creation", order: "desc" },
   limit = 20,
   selectedOption,
+  emptyActionLabel,
+  onEmptyAction,
+  emptyActionDisabled,
 }: SearchableSingleSelectProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -114,7 +121,7 @@ export function SearchableSingleSelect({
     return searchFields.map(field => [field, "like", `%${deferredSearch}%`]);
   }, [deferredSearch, searchFields]);
 
-  const { data } = useGetList<Record<string, unknown>>(
+  const { data, isLoading, isValidating } = useGetList<Record<string, unknown>>(
     resource,
     {
       fields,
@@ -127,6 +134,9 @@ export function SearchableSingleSelect({
       enabled: open && enabled && !disabled,
     }
   );
+
+  const isLoadingOptions =
+    open && enabled && !disabled && !data && (isLoading || isValidating);
 
   const options = useMemo(
     () =>
@@ -177,7 +187,32 @@ export function SearchableSingleSelect({
         <Command shouldFilter={false}>
           <CommandInput placeholder={searchPlaceholder} value={search} onValueChange={setSearch} />
           <CommandList>
-            <CommandEmpty>{emptyText}</CommandEmpty>
+            {isLoadingOptions ? (
+              <div className="flex items-center justify-center gap-2 px-3 py-6 text-sm text-muted-foreground">
+                <Spinner className="size-4" />
+                <span>Loading...</span>
+              </div>
+            ) : (
+              <CommandEmpty>
+                <div className="flex flex-col items-center gap-2 px-2">
+                  <p className="text-muted-foreground">{emptyText}</p>
+                  {onEmptyAction && emptyActionLabel ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={emptyActionDisabled}
+                      onClick={() => {
+                        onEmptyAction(search.trim());
+                        setOpen(false);
+                      }}
+                    >
+                      {emptyActionLabel}
+                    </Button>
+                  ) : null}
+                </div>
+              </CommandEmpty>
+            )}
             <CommandGroup>
               {mergedOptions.map(option => (
                 <CommandItem

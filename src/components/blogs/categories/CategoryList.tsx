@@ -1,23 +1,13 @@
 "use client";
 
-import * as React from "react";
-import { flushSync } from "react-dom";
-import { useRouter } from "next/navigation";
-import { ColumnDef, PaginationState, RowSelectionState, SortingState } from "@tanstack/react-table";
-import { FolderOpen, Plus, Search, Trash2 } from "lucide-react";
-import { useDeleteDoc, useGetCount, useGetList } from "@/hooks";
-import { useLanguage } from "@/hooks/useLanguage";
-import { buildLocalePath } from "@/i18n";
-import { BlogDepartment, Category } from "@/types/blogs";
-import { Filter } from "@/types/hooks";
-import { showCrudError, showCrudSuccess } from "@/lib/crud-toast";
-import { AdminAccessDenied } from "@/components/layout/admin-access-denied";
 import {
   getCategoryColumns,
   type CategoryColumnMeta,
 } from "@/components/blogs/categories/CategoryColumns";
 import { CategoryForm } from "@/components/blogs/categories/CategoryForm";
 import { CategoryTable } from "@/components/blogs/categories/CategoryTable";
+import { DepartmentFilterCombobox } from "@/components/common/DepartmentFilterCombobox";
+import { AdminAccessDenied } from "@/components/layout/admin-access-denied";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,7 +19,13 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -39,7 +35,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
-import { DepartmentFilterCombobox } from "@/components/common/DepartmentFilterCombobox";
+import { useDeleteDoc, useGetCount, useGetList } from "@/hooks";
+import { useLanguage } from "@/hooks/useLanguage";
+import { buildLocalePath } from "@/i18n";
+import { showCrudError, showCrudSuccess } from "@/lib/crud-toast";
+import { BlogDepartment, Category } from "@/types/blogs";
+import { Filter } from "@/types/hooks";
+import { ColumnDef, PaginationState, RowSelectionState, SortingState } from "@tanstack/react-table";
+import { FolderOpen, Plus, Search, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import * as React from "react";
 
 const PAGE_SIZE = 20;
 
@@ -239,17 +244,8 @@ export function CategoryList() {
     ]
   );
 
-  const resetPagination = React.useCallback(() => {
-    setPagination(prev => (prev.pageIndex === 0 ? { ...prev } : { ...prev, pageIndex: 0 }));
-  }, []);
-
-  React.useEffect(() => {
-    flushSync(() => {
-      resetPagination();
-    });
-  }, [apiFilters, departmentFilter, orderBy, resetPagination]);
-
-  const statusCode = (error as { response?: { status?: number } } | null)?.response?.status;
+  const statusCode = (error as { response?: { status?: number } } | null)
+    ?.response?.status;
 
   const columns: ColumnDef<Category, unknown>[] = React.useMemo(() => getCategoryColumns(t), [t]);
 
@@ -289,7 +285,12 @@ export function CategoryList() {
 
           <Select
             value={statusFilter}
-            onValueChange={v => setStatusFilter(v as typeof statusFilter)}
+            onValueChange={(v) => {
+              setStatusFilter(v as typeof statusFilter);
+              setPagination((prev) =>
+                prev.pageIndex === 0 ? { ...prev } : { ...prev, pageIndex: 0 },
+              );
+            }}
           >
             <SelectTrigger className="w-full sm:w-[180px]">
               <SelectValue placeholder={t.common.status} />
@@ -303,7 +304,12 @@ export function CategoryList() {
 
           <DepartmentFilterCombobox
             value={departmentFilter}
-            onChange={setDepartmentFilter}
+            onChange={(v) => {
+              setDepartmentFilter(v);
+              setPagination((prev) =>
+                prev.pageIndex === 0 ? { ...prev } : { ...prev, pageIndex: 0 },
+              );
+            }}
             onDepartmentsChange={setDepartments}
             isLoading={isLoading}
             placeholder={copy.filterByDepartment}
@@ -335,9 +341,21 @@ export function CategoryList() {
           isLoading={isLoading}
           totalCount={totalCount ?? 0}
           pagination={pagination}
-          onPaginationChange={setPagination}
+          onPaginationChange={(updater) => {
+            setPagination((prev) => {
+              const next =
+                typeof updater === "function" ? updater(prev) : updater;
+              if (next.pageIndex === 0) return next;
+              return { ...next, pageIndex: 0 };
+            });
+          }}
           sorting={sorting}
-          onSortingChange={setSorting}
+          onSortingChange={(updater) => {
+            setSorting(updater);
+            setPagination((prev) =>
+              prev.pageIndex === 0 ? { ...prev } : { ...prev, pageIndex: 0 },
+            );
+          }}
           rowSelection={rowSelection}
           onRowSelectionChange={setRowSelection}
           meta={columnMeta as unknown as Record<string, unknown>}
@@ -365,6 +383,11 @@ export function CategoryList() {
             <DialogTitle>
               {editingCategory ? copy.editCategoryTitle : copy.addCategoryTitle}
             </DialogTitle>
+            <DialogDescription>
+              {editingCategory
+                ? copy.editCategoryDescription
+                : copy.addCategoryDescription}
+            </DialogDescription>
           </DialogHeader>
           <CategoryForm
             category={editingCategory}

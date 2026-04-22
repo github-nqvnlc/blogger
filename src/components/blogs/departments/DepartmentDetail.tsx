@@ -1,20 +1,23 @@
 "use client";
 
-import * as React from "react";
-import Link from "next/link";
-import { ArrowLeft, Eye, FolderTree, Hash, Layers3, Pencil } from "lucide-react";
-import { useGetCount, useGetDoc, useGetList } from "@/hooks";
-import { useLanguage } from "@/hooks/useLanguage";
-import { buildLocalePath } from "@/i18n";
-import { BlogDepartment, Category, Post, Topic } from "@/types/blogs";
-import { Filter } from "@/types/hooks";
 import { AdminAccessDenied } from "@/components/layout/admin-access-denied";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
   TableBody,
@@ -23,9 +26,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { DepartmentForm } from "./DepartmentForm";
-import { notFound } from "next/navigation";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useGetCount, useGetDoc, useGetList } from "@/hooks";
+import { useLanguage } from "@/hooks/useLanguage";
+import { buildLocalePath } from "@/i18n";
+import { BlogDepartment, Category, Post, Topic } from "@/types/blogs";
+import { Filter } from "@/types/hooks";
 import { formatDate } from "date-fns";
+import { ArrowLeft, Eye, FolderTree, Hash, Layers3, Pencil } from "lucide-react";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import * as React from "react";
+import { DepartmentForm } from "./DepartmentForm";
 
 interface DepartmentDetailProps {
   departmentId: string;
@@ -369,6 +381,9 @@ export function DepartmentDetail({ departmentId }: DepartmentDetailProps) {
         <DialogContent className="max-w-xl">
           <DialogHeader>
             <DialogTitle>{t.blogDepartments.editDepartmentTitle}</DialogTitle>
+            <DialogDescription>
+              {t.blogDepartments.editDepartmentDescription}
+            </DialogDescription>
           </DialogHeader>
           <DepartmentForm
             department={department}

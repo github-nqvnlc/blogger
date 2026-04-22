@@ -6,7 +6,9 @@ export const blogTags = {
   emptyTitle: "No tags found",
   emptyDescription: "Try adjusting the filters or creating a new tag",
   addTagTitle: "Add a new tag",
+  addTagDescription: "Fill in the information below to create a new blog tag.",
   editTagTitle: "Edit tag",
+  editTagDescription: "Update the information for this blog tag.",
   deleteTitle: "Confirm deletion",
   deleteDescriptionStart: "Are you sure you want to delete the tag",
   deleteDescriptionEnd:

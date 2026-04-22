@@ -13,7 +13,7 @@ export const blogPosts = {
   creating: "Creating...",
   save: "Save changes",
   saving: "Saving...",
-  stepCounter: "Step {current}/3",
+  stepCounter: "Step {current}/{total}",
   steps: {
     metadata: {
       title: "Post details",

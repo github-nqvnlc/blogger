@@ -30,6 +30,7 @@ export const blogEditor = {
       alignJustify: "Căn đều",
       outdent: "Giảm thụt đầu dòng",
       indent: "Tăng thụt đầu dòng",
+      fontFamily: "Phông chữ",
       fontSize: "Cỡ chữ",
       textColor: "Màu chữ",
       highlightColor: "Màu nền chữ",

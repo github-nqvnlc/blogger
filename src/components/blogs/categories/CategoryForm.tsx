@@ -1,25 +1,31 @@
 "use client";
 
-import * as React from "react";
-import { useForm } from "react-hook-form";
-import { AlertCircle, Check, ChevronsUpDown } from "lucide-react";
-import { useCreateDoc, useGetDoc, useGetList, useUpdateDoc } from "@/hooks";
-import { useAuth } from "@/hooks/useAuth";
-import { BlogDepartment, Category, CategoryFormValues } from "@/types/blogs";
 import { DepartmentForm } from "@/components/blogs/departments/DepartmentForm";
-import { showCrudError, showCrudSuccess } from "@/lib/crud-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { useCreateDoc, useGetDoc, useGetList, useUpdateDoc } from "@/hooks";
+import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/hooks/useLanguage";
+import { showCrudError, showCrudSuccess } from "@/lib/crud-toast";
 import { cn } from "@/lib/utils";
+import { BlogDepartment, Category, CategoryFormValues } from "@/types/blogs";
 import { Filter } from "@/types/hooks";
+import { AlertCircle, Check, ChevronsUpDown } from "lucide-react";
+import * as React from "react";
+import { useForm } from "react-hook-form";
 
 interface CategoryFormProps {
   category: Category | null;
@@ -409,6 +415,9 @@ export function CategoryForm({ category, onSuccess, onCancel }: CategoryFormProp
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>{t.blogDepartments.addDepartmentTitle}</DialogTitle>
+            <DialogDescription>
+              {t.blogDepartments.addDepartmentDescription}
+            </DialogDescription>
           </DialogHeader>
           <DepartmentForm
             department={null}

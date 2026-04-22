@@ -6,7 +6,9 @@ export const blogTags = {
   emptyTitle: "Không tìm thấy nhãn nào",
   emptyDescription: "Thử thay đổi bộ lọc hoặc tạo mới",
   addTagTitle: "Thêm nhãn mới",
+  addTagDescription: "Điền thông tin bên dưới để tạo nhãn blog mới.",
   editTagTitle: "Chỉnh sửa nhãn",
+  editTagDescription: "Cập nhật thông tin cho nhãn blog này.",
   deleteTitle: "Xác nhận xóa",
   deleteDescriptionStart: "Bạn có chắc chắn muốn xóa nhãn",
   deleteDescriptionEnd:

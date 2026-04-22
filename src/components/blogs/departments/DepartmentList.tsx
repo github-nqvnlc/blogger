@@ -1,26 +1,9 @@
 "use client";
 
-import * as React from "react";
-import { flushSync } from "react-dom";
-import { useRouter } from "next/navigation";
-import { useGetList, useDeleteDoc, useGetCount } from "@/hooks";
-import { useLanguage } from "@/hooks/useLanguage";
-import { buildLocalePath } from "@/i18n";
-import { BlogDepartment } from "@/types/blogs";
-import { Filter } from "@/types/hooks";
-import { showCrudError, showCrudSuccess } from "@/lib/crud-toast";
-import { ColumnDef, PaginationState, RowSelectionState, SortingState } from "@tanstack/react-table";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Spinner } from "@/components/ui/spinner";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { getDepartmentColumns } from "@/components/blogs/departments/DepartmentColumns";
+import { DepartmentForm } from "@/components/blogs/departments/DepartmentForm";
+import { DepartmentTable } from "@/components/blogs/departments/DepartmentTable";
+import { AdminAccessDenied } from "@/components/layout/admin-access-denied";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,11 +14,33 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { AdminAccessDenied } from "@/components/layout/admin-access-denied";
-import { DepartmentForm } from "@/components/blogs/departments/DepartmentForm";
-import { DepartmentTable } from "@/components/blogs/departments/DepartmentTable";
-import { getDepartmentColumns } from "@/components/blogs/departments/DepartmentColumns";
-import { Search, Plus, Building2, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Spinner } from "@/components/ui/spinner";
+import { useDeleteDoc, useGetCount, useGetList } from "@/hooks";
+import { useLanguage } from "@/hooks/useLanguage";
+import { buildLocalePath } from "@/i18n";
+import { showCrudError, showCrudSuccess } from "@/lib/crud-toast";
+import { BlogDepartment } from "@/types/blogs";
+import { Filter } from "@/types/hooks";
+import { ColumnDef, PaginationState, RowSelectionState, SortingState } from "@tanstack/react-table";
+import { Building2, Plus, Search, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import * as React from "react";
 
 const PAGE_SIZE = 20;
 
@@ -202,17 +207,8 @@ export function DepartmentList() {
     [handleDeleteClick, handleOpenEditForm, handleToggleStatus, handleViewDetail]
   );
 
-  const resetPagination = React.useCallback(() => {
-    setPagination(prev => (prev.pageIndex === 0 ? { ...prev } : { ...prev, pageIndex: 0 }));
-  }, []);
-
-  React.useEffect(() => {
-    flushSync(() => {
-      resetPagination();
-    });
-  }, [apiFilters, orderBy, resetPagination]);
-
-  const statusCode = (error as { response?: { status?: number } } | null)?.response?.status;
+  const statusCode = (error as { response?: { status?: number } } | null)
+    ?.response?.status;
   const isForbidden = statusCode === 403;
 
   const columns: ColumnDef<BlogDepartment, unknown>[] = React.useMemo(
@@ -256,7 +252,12 @@ export function DepartmentList() {
 
           <Select
             value={statusFilter}
-            onValueChange={v => setStatusFilter(v as typeof statusFilter)}
+            onValueChange={(v) => {
+              setStatusFilter(v as typeof statusFilter);
+              setPagination((prev) =>
+                prev.pageIndex === 0 ? { ...prev } : { ...prev, pageIndex: 0 },
+              );
+            }}
           >
             <SelectTrigger className="w-full sm:w-[180px]">
               <SelectValue placeholder={t.common.status} />
@@ -293,9 +294,21 @@ export function DepartmentList() {
           isLoading={isLoading}
           totalCount={totalCount ?? 0}
           pagination={pagination}
-          onPaginationChange={setPagination}
+          onPaginationChange={(updater) => {
+            setPagination((prev) => {
+              const next =
+                typeof updater === "function" ? updater(prev) : updater;
+              if (next.pageIndex === 0) return next;
+              return { ...next, pageIndex: 0 };
+            });
+          }}
           sorting={sorting}
-          onSortingChange={setSorting}
+          onSortingChange={(updater) => {
+            setSorting(updater);
+            setPagination((prev) =>
+              prev.pageIndex === 0 ? { ...prev } : { ...prev, pageIndex: 0 },
+            );
+          }}
           rowSelection={rowSelection}
           onRowSelectionChange={setRowSelection}
           meta={columnMeta}
@@ -323,6 +336,11 @@ export function DepartmentList() {
             <DialogTitle>
               {editingDepartment ? copy.editDepartmentTitle : copy.addDepartmentTitle}
             </DialogTitle>
+            <DialogDescription>
+              {editingDepartment
+                ? copy.editDepartmentDescription
+                : copy.addDepartmentDescription}
+            </DialogDescription>
           </DialogHeader>
           <DepartmentForm
             department={editingDepartment}

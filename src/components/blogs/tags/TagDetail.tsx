@@ -1,22 +1,23 @@
 "use client";
 
-import * as React from "react";
-import Link from "next/link";
-import { ArrowLeft, BookOpen, FolderOpen, Hash, Pencil } from "lucide-react";
-import { formatDate } from "date-fns";
-import { notFound } from "next/navigation";
-import { useGetDoc, useGetList } from "@/hooks";
-import { useLanguage } from "@/hooks/useLanguage";
-import { buildLocalePath } from "@/i18n";
-import { Post, PostTag, Tag } from "@/types/blogs";
-import { Filter } from "@/types/hooks";
 import { AdminAccessDenied } from "@/components/layout/admin-access-denied";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { TagForm } from "./TagForm";
 import {
   Table,
   TableBody,
@@ -25,6 +26,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useGetDoc, useGetList } from "@/hooks";
+import { useLanguage } from "@/hooks/useLanguage";
+import { buildLocalePath } from "@/i18n";
+import { Post, PostTag, Tag } from "@/types/blogs";
+import { Filter } from "@/types/hooks";
+import { formatDate } from "date-fns";
+import { ArrowLeft, BookOpen, FolderOpen, Hash, Pencil } from "lucide-react";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import * as React from "react";
+import { TagForm } from "./TagForm";
 
 interface TagDetailProps {
   tagId: string;
@@ -244,9 +256,9 @@ export function TagDetail({ tagId }: TagDetailProps) {
                           {post.published_at
                             ? formatDate(new Date(post.published_at), " HH:mm dd/MM/yyyy")
                             : formatDate(
-                                new Date(post.creation ?? new Date()),
-                                " HH:mm dd/MM/yyyy"
-                              )}
+                              new Date(post.creation ?? new Date()),
+                              " HH:mm dd/MM/yyyy"
+                            )}
                         </p>
                       </div>
                     </TableCell>
@@ -266,6 +278,9 @@ export function TagDetail({ tagId }: TagDetailProps) {
         <DialogContent className="max-w-xl">
           <DialogHeader>
             <DialogTitle>{t.blogTags.editTagTitle}</DialogTitle>
+            <DialogDescription>
+              {t.blogTags.editTagDescription}
+            </DialogDescription>
           </DialogHeader>
           <TagForm
             tag={tag}

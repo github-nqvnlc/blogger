@@ -8,7 +8,10 @@ export const blogCategories = {
   emptyTitle: "No categories found",
   emptyDescription: "Try adjusting the filters or creating a new category",
   addCategoryTitle: "Add a new category",
+  addCategoryDescription:
+    "Fill in the information below to create a new blog category.",
   editCategoryTitle: "Edit category",
+  editCategoryDescription: "Update the information for this blog category.",
   deleteTitle: "Confirm deletion",
   deleteDescriptionStart: "Are you sure you want to delete the category",
   deleteDescriptionEnd:

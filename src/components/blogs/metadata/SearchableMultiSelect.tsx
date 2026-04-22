@@ -1,21 +1,21 @@
 "use client";
 
-import { useDeferredValue, useMemo, useState } from "react";
-import { Check, ChevronsUpDown, X } from "lucide-react";
-import { useGetList } from "@/hooks";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Command,
-  CommandEmpty,
   CommandGroup,
   CommandInput,
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Spinner } from "@/components/ui/spinner";
+import { useGetList } from "@/hooks";
 import { cn } from "@/lib/utils";
 import { Filter } from "@/types/hooks";
+import { Check, ChevronsUpDown, X } from "lucide-react";
+import { useDeferredValue, useMemo, useState } from "react";
 import type { SelectOption } from "./SearchableSingleSelect";
 
 interface SearchableMultiSelectProps {
@@ -38,6 +38,9 @@ interface SearchableMultiSelectProps {
   orderBy?: { field: string; order: "asc" | "desc" };
   limit?: number;
   selectedOptions?: SelectOption[];
+  emptyActionLabel?: string;
+  onEmptyAction?: (search: string) => void;
+  emptyActionDisabled?: boolean;
 }
 
 function normalizeOption(
@@ -93,6 +96,9 @@ export function SearchableMultiSelect({
   orderBy = { field: "creation", order: "desc" },
   limit = 20,
   selectedOptions = [],
+  emptyActionLabel,
+  onEmptyAction,
+  emptyActionDisabled,
 }: SearchableMultiSelectProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -106,7 +112,7 @@ export function SearchableMultiSelect({
     return searchFields.map(field => [field, "like", `%${deferredSearch}%`]);
   }, [deferredSearch, searchFields]);
 
-  const { data } = useGetList<Record<string, unknown>>(
+  const { data, isLoading, isValidating } = useGetList<Record<string, unknown>>(
     resource,
     {
       fields,
@@ -120,6 +126,9 @@ export function SearchableMultiSelect({
     }
   );
 
+  const isLoadingOptions =
+    open && enabled && !disabled && !data && (isLoading || isValidating);
+
   const options = useMemo(
     () =>
       (data ?? []).map(item =>
@@ -132,6 +141,14 @@ export function SearchableMultiSelect({
     () => mergeOptions(options, selectedOptions),
     [options, selectedOptions]
   );
+
+  const hasSelectableFetchedOptions = useMemo(
+    () => options.some((option) => !values.includes(option.value)),
+    [options, values],
+  );
+
+  const shouldShowCreateAction =
+    !isLoadingOptions && !hasSelectableFetchedOptions;
 
   const resolvedSelectedOptions = useMemo(
     () => mergedOptions.filter(option => values.includes(option.value)),
@@ -186,26 +203,58 @@ export function SearchableMultiSelect({
               onValueChange={setSearch}
             />
             <CommandList>
-              <CommandEmpty>{emptyText}</CommandEmpty>
-              <CommandGroup>
-                {mergedOptions.map(option => (
-                  <CommandItem
-                    key={option.value}
-                    value={option.value}
-                    onSelect={() => toggleValue(option.value)}
-                  >
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate font-medium">{option.label}</p>
-                    </div>
-                    <Check
-                      className={cn(
-                        "ml-2 size-4 shrink-0",
-                        values.includes(option.value) ? "opacity-100" : "opacity-0"
-                      )}
-                    />
-                  </CommandItem>
-                ))}
-              </CommandGroup>
+              {isLoadingOptions ? (
+                <div className="flex items-center justify-center gap-2 px-3 py-6 text-sm text-muted-foreground">
+                  <Spinner className="size-4" />
+                  <span>Loading...</span>
+                </div>
+              ) : null}
+
+              {shouldShowCreateAction ? (
+                <div className="border-b px-3 py-3">
+                  <div className="flex flex-col items-center gap-2 px-2">
+                    <p className="text-muted-foreground">{emptyText}</p>
+                    {onEmptyAction && emptyActionLabel ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={emptyActionDisabled}
+                        onClick={() => {
+                          onEmptyAction(search.trim());
+                          setOpen(false);
+                        }}
+                      >
+                        {emptyActionLabel}
+                      </Button>
+                    ) : null}
+                  </div>
+                </div>
+              ) : null}
+
+              {mergedOptions.length > 0 ? (
+                <CommandGroup>
+                  {mergedOptions.map((option) => (
+                    <CommandItem
+                      key={option.value}
+                      value={option.value}
+                      onSelect={() => toggleValue(option.value)}
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-medium">{option.label}</p>
+                      </div>
+                      <Check
+                        className={cn(
+                          "ml-2 size-4 shrink-0",
+                          values.includes(option.value)
+                            ? "opacity-100"
+                            : "opacity-0",
+                        )}
+                      />
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              ) : null}
             </CommandList>
           </Command>
         </PopoverContent>

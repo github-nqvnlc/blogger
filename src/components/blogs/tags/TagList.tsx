@@ -1,20 +1,9 @@
 "use client";
 
-import * as React from "react";
-import { flushSync } from "react-dom";
-import { useRouter } from "next/navigation";
-import { ColumnDef, PaginationState, RowSelectionState, SortingState } from "@tanstack/react-table";
-import { FolderOpen, Plus, Search, Trash2 } from "lucide-react";
-import { useDeleteDoc, useGetCount, useGetList } from "@/hooks";
-import { useLanguage } from "@/hooks/useLanguage";
-import { buildLocalePath } from "@/i18n";
-import { Tag } from "@/types/blogs";
-import { Filter } from "@/types/hooks";
-import { showCrudError, showCrudSuccess } from "@/lib/crud-toast";
-import { AdminAccessDenied } from "@/components/layout/admin-access-denied";
 import { getTagColumns, type TagColumnMeta } from "@/components/blogs/tags/TagColumns";
 import { TagForm } from "@/components/blogs/tags/TagForm";
 import { TagTable } from "@/components/blogs/tags/TagTable";
+import { AdminAccessDenied } from "@/components/layout/admin-access-denied";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,7 +15,13 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -36,6 +31,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
+import { useDeleteDoc, useGetCount, useGetList } from "@/hooks";
+import { useLanguage } from "@/hooks/useLanguage";
+import { buildLocalePath } from "@/i18n";
+import { showCrudError, showCrudSuccess } from "@/lib/crud-toast";
+import { Tag } from "@/types/blogs";
+import { Filter } from "@/types/hooks";
+import { ColumnDef, PaginationState, RowSelectionState, SortingState } from "@tanstack/react-table";
+import { FolderOpen, Plus, Search, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import * as React from "react";
 
 const PAGE_SIZE = 20;
 
@@ -202,16 +207,6 @@ export function TagList() {
     [handleDeleteClick, handleOpenEditForm, handleToggleStatus, handleViewDetail]
   );
 
-  const resetPagination = React.useCallback(() => {
-    setPagination(prev => (prev.pageIndex === 0 ? { ...prev } : { ...prev, pageIndex: 0 }));
-  }, []);
-
-  React.useEffect(() => {
-    flushSync(() => {
-      resetPagination();
-    });
-  }, [apiFilters, orderBy, resetPagination]);
-
   const statusCode = (error as { response?: { status?: number } } | null)?.response?.status;
 
   const columns: ColumnDef<Tag, unknown>[] = React.useMemo(() => getTagColumns(t), [t]);
@@ -289,9 +284,21 @@ export function TagList() {
           isLoading={isLoading}
           totalCount={totalCount ?? 0}
           pagination={pagination}
-          onPaginationChange={setPagination}
+          onPaginationChange={(updater) => {
+            setPagination((prev) => {
+              const next =
+                typeof updater === "function" ? updater(prev) : updater;
+              if (next.pageIndex === 0) return next;
+              return { ...next, pageIndex: 0 };
+            });
+          }}
           sorting={sorting}
-          onSortingChange={setSorting}
+          onSortingChange={(updater) => {
+            setSorting(updater);
+            setPagination((prev) =>
+              prev.pageIndex === 0 ? { ...prev } : { ...prev, pageIndex: 0 },
+            );
+          }}
           rowSelection={rowSelection}
           onRowSelectionChange={setRowSelection}
           meta={columnMeta as unknown as Record<string, unknown>}
@@ -316,7 +323,12 @@ export function TagList() {
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
-            <DialogTitle>{editingTag ? copy.editTagTitle : copy.addTagTitle}</DialogTitle>
+            <DialogTitle>
+              {editingTag ? copy.editTagTitle : copy.addTagTitle}
+            </DialogTitle>
+            <DialogDescription>
+              {editingTag ? copy.editTagDescription : copy.addTagDescription}
+            </DialogDescription>
           </DialogHeader>
           <TagForm
             tag={editingTag}
