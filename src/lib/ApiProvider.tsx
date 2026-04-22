@@ -3,7 +3,6 @@
 import React, { createContext, useContext, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ThemeProvider as NextThemesProvider } from "next-themes";
 import { createApiClient } from "./apiClient";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { Dictionary, Locale } from "@/i18n";
@@ -42,16 +41,14 @@ export function ApiProvider({ children, locale, dictionary }: ApiProviderProps) 
   }, []);
 
   return (
-    <NextThemesProvider attribute="class" defaultTheme="system" enableSystem>
-      <ApiContext.Provider value={{ url }}>
-        <QueryClientProvider client={queryClient}>
-          <LanguageProvider locale={locale} dictionary={dictionary}>
-            {children}
-            <Toaster position="top-center" />
-          </LanguageProvider>
-        </QueryClientProvider>
-      </ApiContext.Provider>
-    </NextThemesProvider>
+    <ApiContext.Provider value={{ url }}>
+      <QueryClientProvider client={queryClient}>
+        <LanguageProvider locale={locale} dictionary={dictionary}>
+          {children}
+          <Toaster position="top-center" />
+        </LanguageProvider>
+      </QueryClientProvider>
+    </ApiContext.Provider>
   );
 }
 

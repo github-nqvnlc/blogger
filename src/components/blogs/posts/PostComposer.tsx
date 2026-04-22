@@ -1,6 +1,9 @@
 "use client";
 
-import { BlogContentComposer } from "@/components/blogs/editor/blog-content-composer";
+import {
+  BlogContentComposer,
+  BlogContentComposerHandle,
+} from "@/components/blogs/editor/blog-content-composer";
 import { CoverImageField, CoverSource } from "@/components/blogs/metadata/CoverImageField";
 import { SearchableMultiSelect } from "@/components/blogs/metadata/SearchableMultiSelect";
 import {
@@ -9,6 +12,16 @@ import {
 } from "@/components/blogs/metadata/SearchableSingleSelect";
 import { PostContentPreview } from "@/components/blogs/posts/PostContentPreview";
 import { AdminAccessDenied } from "@/components/layout/admin-access-denied";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -57,9 +70,8 @@ import {
   Tag,
   Topic,
 } from "@/types/blogs";
-import Link from "next/link";
-import { notFound, useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { notFound, usePathname, useRouter } from "next/navigation";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 type StepNumber = 1 | 2 | 3;
@@ -86,6 +98,16 @@ type TagDraftValues = {
   tag_name: string;
   slug: string;
   description: string;
+};
+type PendingNavigationIntent = "cancel" | "leave";
+type PendingNavigation = {
+  href: string;
+  intent: PendingNavigationIntent;
+};
+type ComposerSnapshot = {
+  form: PostFormValues;
+  topicIds: string[];
+  tagIds: string[];
 };
 
 const INITIAL_FORM_STATE: PostFormValues = {
@@ -134,6 +156,55 @@ function getTrimmedLength(value: string): number {
   return value.trim().length;
 }
 
+function createComposerSnapshot(
+  form: PostFormValues,
+  topicIds: string[],
+  tagIds: string[]
+): ComposerSnapshot {
+  return {
+    form: { ...form },
+    topicIds: [...topicIds].sort(),
+    tagIds: [...tagIds].sort(),
+  };
+}
+
+function serializeComposerSnapshot(snapshot: ComposerSnapshot): string {
+  return JSON.stringify(snapshot);
+}
+
+function createHistoryGuardState(currentState: unknown) {
+  if (currentState && typeof currentState === "object" && !Array.isArray(currentState)) {
+    return {
+      ...currentState,
+      __postComposerGuard: true,
+    };
+  }
+
+  return {
+    __postComposerGuard: true,
+  };
+}
+
+function isHistoryGuardState(state: unknown): boolean {
+  return Boolean(
+    state &&
+    typeof state === "object" &&
+    !Array.isArray(state) &&
+    "__postComposerGuard" in state &&
+    (state as { __postComposerGuard?: boolean }).__postComposerGuard
+  );
+}
+
+function clearHistoryGuardState(state: unknown) {
+  if (state && typeof state === "object" && !Array.isArray(state)) {
+    const nextState = { ...(state as Record<string, unknown>) };
+    delete nextState.__postComposerGuard;
+    return nextState;
+  }
+
+  return {};
+}
+
 function focusField(fieldName: FieldName) {
   const selectors: Record<FieldName, string> = {
     title: "#post-title",
@@ -167,6 +238,7 @@ interface PostComposerProps {
 export function PostComposer({ mode = "create", postId }: PostComposerProps) {
   const isEditMode = mode === "edit";
   const router = useRouter();
+  const pathname = usePathname();
   const { locale, t } = useLanguage();
   const { currentUser, isLoading: isAuthLoading } = useAuth();
   const copy = t.blogPosts ?? getDictionary(locale).blogPosts;
@@ -208,6 +280,20 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
   const [slugEdited, setSlugEdited] = useState(false);
   const [hasInitializedEdit, setHasInitializedEdit] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<FieldName, string>>>({});
+  const [pendingNavigation, setPendingNavigation] = useState<PendingNavigation | null>(null);
+  const [initialSnapshot, setInitialSnapshot] = useState<ComposerSnapshot>(() =>
+    createComposerSnapshot(INITIAL_FORM_STATE, [], [])
+  );
+  const [transientCoverUploadCount, setTransientCoverUploadCount] = useState(0);
+  const [transientEditorUploadCount, setTransientEditorUploadCount] = useState(0);
+  const [editorHasTransientUploads, setEditorHasTransientUploads] = useState(false);
+  const editorRef = useRef<BlogContentComposerHandle>(null);
+  const shouldBlockNavigationRef = useRef(false);
+  const currentUrlRef = useRef(pathname);
+  const initialCoverFileNameRef = useRef<string | null>(null);
+  const transientCoverFileNamesRef = useRef<Set<string>>(new Set());
+  const transientEditorFileNamesRef = useRef<Set<string>>(new Set());
+  const skipNextPopstateRef = useRef(false);
 
   const {
     data: existingPost,
@@ -307,6 +393,7 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
   const deletePostTopic = useDeleteDoc("post_topics");
   const deletePostTag = useDeleteDoc("post_tags");
   const updateFile = useUpdateDoc<PostFileDoc>("File");
+  const deleteFile = useDeleteDoc("File");
   const updatePost = useUpdateDoc<Post>("posts");
 
   const selectedDepartmentOption = useMemo<SelectOption | null>(
@@ -434,6 +521,165 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
     return selectedTagIds.map(tagId => tagMap.get(tagId)).filter((tag): tag is Tag => Boolean(tag));
   }, [selectedTagIds, selectedTagsData]);
 
+  const currentSnapshot = useMemo(
+    () => createComposerSnapshot(form, selectedTopicIds, selectedTagIds),
+    [form, selectedTagIds, selectedTopicIds]
+  );
+
+  const hasUnsavedChanges = useMemo(
+    () => serializeComposerSnapshot(currentSnapshot) !== serializeComposerSnapshot(initialSnapshot),
+    [currentSnapshot, initialSnapshot]
+  );
+
+  const hasTransientUploads =
+    transientCoverUploadCount > 0 || transientEditorUploadCount > 0 || editorHasTransientUploads;
+  const shouldBlockNavigation = hasUnsavedChanges || hasTransientUploads;
+
+  useEffect(() => {
+    shouldBlockNavigationRef.current = shouldBlockNavigation;
+  }, [shouldBlockNavigation]);
+
+  useEffect(() => {
+    currentUrlRef.current =
+      typeof window === "undefined"
+        ? pathname
+        : `${window.location.pathname}${window.location.search}${window.location.hash}`;
+  }, [pathname]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const currentUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+    const hasGuardState = isHistoryGuardState(window.history.state);
+
+    if (shouldBlockNavigation) {
+      if (!hasGuardState) {
+        window.history.pushState(createHistoryGuardState(window.history.state), "", currentUrl);
+      }
+
+      currentUrlRef.current = currentUrl;
+      return;
+    }
+
+    if (hasGuardState) {
+      skipNextPopstateRef.current = true;
+      window.history.back();
+    }
+  }, [pathname, shouldBlockNavigation]);
+
+  const registerTransientCoverUpload = useCallback((file: PostFileDoc | null) => {
+    if (!file?.name || file.name === initialCoverFileNameRef.current) {
+      return;
+    }
+
+    const nextTrackedFiles = new Set(transientCoverFileNamesRef.current);
+    nextTrackedFiles.add(file.name);
+    transientCoverFileNamesRef.current = nextTrackedFiles;
+    setTransientCoverUploadCount(nextTrackedFiles.size);
+  }, []);
+
+  const clearTrackedTransientCoverUploads = useCallback(() => {
+    transientCoverFileNamesRef.current = new Set();
+    setTransientCoverUploadCount(0);
+  }, []);
+
+  const registerTransientEditorUpload = useCallback((fileName: string) => {
+    if (!fileName) {
+      return;
+    }
+
+    const nextTrackedFiles = new Set(transientEditorFileNamesRef.current);
+    nextTrackedFiles.add(fileName);
+    transientEditorFileNamesRef.current = nextTrackedFiles;
+    setTransientEditorUploadCount(nextTrackedFiles.size);
+    setEditorHasTransientUploads(true);
+  }, []);
+
+  const clearTrackedTransientEditorUploads = useCallback(() => {
+    transientEditorFileNamesRef.current = new Set();
+    setTransientEditorUploadCount(0);
+    setEditorHasTransientUploads(false);
+  }, []);
+
+  const cleanupTransientCoverUploads = useCallback(
+    async (keepFileNames: string[] = []) => {
+      const keepSet = new Set(keepFileNames.filter(Boolean));
+      const remainingFiles = new Set<string>();
+
+      for (const fileName of transientCoverFileNamesRef.current) {
+        if (keepSet.has(fileName)) {
+          remainingFiles.add(fileName);
+          continue;
+        }
+
+        try {
+          await deleteFile.deleteDoc(fileName);
+        } catch {}
+      }
+
+      transientCoverFileNamesRef.current = remainingFiles;
+      setTransientCoverUploadCount(remainingFiles.size);
+    },
+    [deleteFile]
+  );
+
+  const cleanupTransientEditorUploads = useCallback(
+    async (keepFileNames: string[] = []) => {
+      const keepSet = new Set(keepFileNames.filter(Boolean));
+      const remainingFiles = new Set<string>();
+
+      for (const fileName of transientEditorFileNamesRef.current) {
+        if (keepSet.has(fileName)) {
+          remainingFiles.add(fileName);
+          continue;
+        }
+
+        try {
+          await deleteFile.deleteDoc(fileName);
+        } catch {}
+      }
+
+      transientEditorFileNamesRef.current = remainingFiles;
+      setTransientEditorUploadCount(remainingFiles.size);
+      setEditorHasTransientUploads(remainingFiles.size > 0);
+    },
+    [deleteFile]
+  );
+
+  const cleanupTransientUploads = useCallback(
+    async (keepCoverFileNames: string[] = [], keepEditorFileNames: string[] = []) => {
+      await cleanupTransientCoverUploads(keepCoverFileNames);
+      await cleanupTransientEditorUploads(keepEditorFileNames);
+    },
+    [cleanupTransientCoverUploads, cleanupTransientEditorUploads]
+  );
+
+  const performNavigation = useCallback(
+    (href: string) => {
+      if (typeof window !== "undefined" && isHistoryGuardState(window.history.state)) {
+        window.history.replaceState(
+          clearHistoryGuardState(window.history.state),
+          "",
+          `${window.location.pathname}${window.location.search}${window.location.hash}`
+        );
+      }
+
+      if (href.startsWith("/")) {
+        router.push(href);
+        return;
+      }
+
+      window.location.href = href;
+    },
+    [router]
+  );
+
+  const requestNavigation = useCallback((href: string, intent: PendingNavigationIntent) => {
+    setPendingNavigation({ href, intent });
+  }, []);
+
   useEffect(() => {
     if (
       !isEditMode ||
@@ -446,8 +692,7 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
       return;
     }
 
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setForm({
+    const nextForm: PostFormValues = {
       title: existingPost.title ?? "",
       department:
         typeof existingPost.department === "string"
@@ -464,10 +709,15 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
       status: existingPost.status ?? "Draft",
       visibility: existingPost.visibility ?? "Public",
       content: existingPost.content ?? "",
-    });
-    setSelectedTopicIds((existingPostTopics ?? []).map(item => item.topic));
-    setSelectedTagIds((existingPostTags ?? []).map(item => item.tag));
-    setCoverSource(existingCoverFile ? "upload" : "url");
+    };
+    const nextTopicIds = (existingPostTopics ?? []).map(item => item.topic);
+    const nextTagIds = (existingPostTags ?? []).map(item => item.tag);
+    const nextCoverSource: CoverSource = existingCoverFile ? "upload" : "url";
+
+    setForm(nextForm);
+    setSelectedTopicIds(nextTopicIds);
+    setSelectedTagIds(nextTagIds);
+    setCoverSource(nextCoverSource);
     setCoverFileMeta(existingCoverFile);
     setCreatedCategoryOption(null);
     setCreatedTopicOptions([]);
@@ -475,8 +725,15 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
     setFieldErrors({});
     setCurrentStep(1);
     setSlugEdited(Boolean(existingPost.slug?.trim()));
+    setPendingNavigation(null);
+    clearTrackedTransientCoverUploads();
+    clearTrackedTransientEditorUploads();
+    initialCoverFileNameRef.current = existingCoverFile?.name ?? null;
+    setInitialSnapshot(createComposerSnapshot(nextForm, nextTopicIds, nextTagIds));
     setHasInitializedEdit(true);
   }, [
+    clearTrackedTransientCoverUploads,
+    clearTrackedTransientEditorUploads,
     existingCoverFile,
     existingPost,
     existingPostTags,
@@ -487,6 +744,140 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
     isLoadingExistingPostTags,
     isLoadingExistingPostTopics,
   ]);
+
+  useEffect(() => {
+    if (!coverFileMeta?.name) {
+      return;
+    }
+
+    registerTransientCoverUpload(coverFileMeta);
+  }, [coverFileMeta, registerTransientCoverUpload]);
+
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (!shouldBlockNavigationRef.current) return;
+
+      e.preventDefault();
+      e.returnValue = copy.browserLeavePrompt;
+      return copy.browserLeavePrompt;
+    };
+
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [copy.browserLeavePrompt]);
+
+  const safeNavigate = useCallback(
+    (
+      href: string,
+      options?: {
+        intent?: PendingNavigationIntent;
+        skipConfirm?: boolean;
+      }
+    ) => {
+      if (!options?.skipConfirm && shouldBlockNavigationRef.current) {
+        requestNavigation(href, options?.intent ?? "leave");
+        return;
+      }
+
+      performNavigation(href);
+    },
+    [performNavigation, requestNavigation]
+  );
+
+  useEffect(() => {
+    const handler = () => {
+      const nextUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+
+      if (skipNextPopstateRef.current) {
+        skipNextPopstateRef.current = false;
+        currentUrlRef.current = nextUrl;
+        return;
+      }
+
+      if (!shouldBlockNavigationRef.current) {
+        currentUrlRef.current = nextUrl;
+        return;
+      }
+
+      const confirmed = window.confirm(copy.browserLeavePrompt);
+
+      if (!confirmed) {
+        window.history.pushState(
+          createHistoryGuardState(window.history.state),
+          "",
+          currentUrlRef.current
+        );
+        return;
+      }
+
+      void cleanupTransientUploads().finally(() => {
+        skipNextPopstateRef.current = true;
+        window.history.back();
+      });
+    };
+
+    window.addEventListener("popstate", handler);
+    return () => window.removeEventListener("popstate", handler);
+  }, [cleanupTransientUploads, copy.browserLeavePrompt]);
+
+  useEffect(() => {
+    const handleDocumentClick = (event: MouseEvent) => {
+      if (!shouldBlockNavigationRef.current || event.defaultPrevented || event.button !== 0) {
+        return;
+      }
+
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+        return;
+      }
+
+      const eventTarget = event.target;
+      if (!(eventTarget instanceof Element)) {
+        return;
+      }
+
+      const anchor = eventTarget.closest("a[href]");
+      if (!(anchor instanceof HTMLAnchorElement)) {
+        return;
+      }
+
+      if ((anchor.target && anchor.target !== "_self") || anchor.hasAttribute("download")) {
+        return;
+      }
+
+      const rawHref = anchor.getAttribute("href");
+      if (
+        !rawHref ||
+        rawHref.startsWith("#") ||
+        rawHref.startsWith("mailto:") ||
+        rawHref.startsWith("tel:") ||
+        rawHref.startsWith("javascript:")
+      ) {
+        return;
+      }
+
+      const url = new URL(anchor.href, window.location.href);
+      if (url.origin !== window.location.origin) {
+        return;
+      }
+
+      const nextHref = `${url.pathname}${url.search}${url.hash}`;
+      const currentHref = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+      const currentRoute = `${window.location.pathname}${window.location.search}`;
+
+      if (
+        nextHref === currentHref ||
+        (`${url.pathname}${url.search}` === currentRoute && url.hash)
+      ) {
+        return;
+      }
+
+      event.preventDefault();
+      requestNavigation(nextHref, "leave");
+    };
+
+    document.addEventListener("click", handleDocumentClick, true);
+    return () => document.removeEventListener("click", handleDocumentClick, true);
+  }, [requestNavigation]);
 
   const clearFieldError = useCallback((field: FieldName) => {
     setFieldErrors(currentErrors => {
@@ -1126,13 +1517,23 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
         throw new Error(copy.toast.updateFailure);
       }
 
-      await syncCoverFile(targetPostId, form.thumb.trim());
+      const finalThumbUrl = await syncCoverFile(targetPostId, form.thumb.trim());
+      const persistedCoverFileName =
+        coverSource === "upload" ? (coverFileMeta?.name ?? null) : null;
+
+      await cleanupTransientCoverUploads(persistedCoverFileName ? [persistedCoverFileName] : []);
       await syncPostTopics(targetPostId);
       await syncPostTags(targetPostId);
 
+      clearTrackedTransientCoverUploads();
+      clearTrackedTransientEditorUploads();
+      setInitialSnapshot(
+        createComposerSnapshot({ ...form, thumb: finalThumbUrl }, selectedTopicIds, selectedTagIds)
+      );
       toast.success(isEditMode ? copy.toast.updateSuccess : copy.toast.createSuccess);
-      router.push(
-        buildLocalePath(locale, isEditMode ? `/admin/posts/${targetPostId}` : "/admin/posts")
+      safeNavigate(
+        buildLocalePath(locale, isEditMode ? `/admin/posts/${targetPostId}` : "/admin/posts"),
+        { skipConfirm: true }
       );
     } catch (error) {
       toast.error(
@@ -1145,6 +1546,22 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  async function handleConfirmNavigation() {
+    if (!pendingNavigation) {
+      return;
+    }
+
+    const target = pendingNavigation.href;
+    setPendingNavigation(null);
+
+    await cleanupTransientUploads();
+    performNavigation(target);
+  }
+
+  function handleStayOnPage() {
+    setPendingNavigation(null);
   }
 
   const statusCode = (existingPostError as { response?: { status?: number } } | null)?.response
@@ -1164,6 +1581,16 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
   const pageDescription = isEditMode ? copy.editDescription : copy.createDescription;
   const steps = isEditMode ? EDIT_STEPS : CREATE_STEPS;
   const totalSteps = steps.length;
+  const pendingNavigationTitle =
+    pendingNavigation?.intent === "cancel"
+      ? copy.cancelDraftConfirmTitle
+      : copy.unsavedNavigationTitle;
+  const pendingNavigationDescription =
+    pendingNavigation?.intent === "cancel"
+      ? hasTransientUploads
+        ? copy.cancelDraftConfirmWithUploadsDescription
+        : copy.cancelDraftConfirmDescription
+      : copy.unsavedNavigationDescription;
   const stepCounterText = copy.stepCounter
     .replace("{current}", String(currentStep))
     .replace("{total}", String(totalSteps));
@@ -1197,514 +1624,562 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
 
   return (
     <main className="flex flex-col gap-6">
-      <Card>
-        <CardHeader className="gap-3 px-4 sm:px-6">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div className="space-y-1">
-              <CardTitle className="text-2xl tracking-tight">{pageTitle}</CardTitle>
-              <CardDescription>{pageDescription}</CardDescription>
+      <div className="flex flex-col lg:grid grid-cols-3 gap-6">
+        <Card className="col-span-1">
+          <CardHeader className="gap-3 px-4 sm:px-6">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div className="space-y-1">
+                <CardTitle className="text-2xl tracking-tight">{pageTitle}</CardTitle>
+                <CardDescription>{pageDescription}</CardDescription>
+              </div>
+            </div>
+            <div className={cn("grid gap-2", isEditMode ? "md:grid-cols-1" : "md:grid-cols-1")}>
+              {steps.map(stepItem => {
+                const stepCopy = copy.steps[stepItem.titleKey];
+                const isActive = currentStep === stepItem.step;
+                const isCompleted = currentStep > stepItem.step;
+
+                return (
+                  <div
+                    key={stepItem.step}
+                    className={cn(
+                      "rounded-lg border px-3 py-3 transition-colors",
+                      isActive && "border-primary bg-primary/5",
+                      isCompleted && "border-emerald-500 bg-emerald-500/5"
+                    )}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div
+                        className={cn(
+                          "flex size-6 shrink-0 items-center justify-center rounded-full border text-xs font-semibold",
+                          isActive && "border-primary bg-primary text-primary-foreground",
+                          isCompleted && "border-emerald-500 bg-emerald-500 text-white"
+                        )}
+                      >
+                        {stepItem.step}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium leading-none">{stepCopy.title}</p>
+                        <p className="mt-1 text-xs text-muted-foreground">{stepCopy.description}</p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
 
-            <Button asChild variant="outline" size="sm" type="button">
-              <Link href={cancelHref}>{copy.cancel}</Link>
+            <Button
+              variant="outline"
+              size="sm"
+              type="button"
+              onClick={() => safeNavigate(cancelHref, { intent: "cancel" })}
+            >
+              {copy.cancel}
             </Button>
-          </div>
-
-          <div className={cn("grid gap-2", isEditMode ? "md:grid-cols-2" : "md:grid-cols-3")}>
-            {steps.map(stepItem => {
-              const stepCopy = copy.steps[stepItem.titleKey];
-              const isActive = currentStep === stepItem.step;
-              const isCompleted = currentStep > stepItem.step;
-
-              return (
-                <div
-                  key={stepItem.step}
-                  className={cn(
-                    "rounded-lg border px-3 py-3 transition-colors",
-                    isActive && "border-primary bg-primary/5",
-                    isCompleted && "border-emerald-500 bg-emerald-500/5"
-                  )}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <div
-                      className={cn(
-                        "flex size-6 shrink-0 items-center justify-center rounded-full border text-xs font-semibold",
-                        isActive && "border-primary bg-primary text-primary-foreground",
-                        isCompleted && "border-emerald-500 bg-emerald-500 text-white"
-                      )}
-                    >
-                      {stepItem.step}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium leading-none">{stepCopy.title}</p>
-                      <p className="mt-1 text-xs text-muted-foreground">{stepCopy.description}</p>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </CardHeader>
-      </Card>
-
-      {currentStep === 1 ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>{copy.steps.metadata.title}</CardTitle>
-            <CardDescription>{copy.steps.metadata.description}</CardDescription>
           </CardHeader>
-
-          <CardContent className="space-y-6">
-            <div className="grid space-y-6 space-x-4 md:grid-cols-2">
-              {/* Title */}
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="post-title">{copy.form.title}</Label>
-                <Input
-                  id="post-title"
-                  value={form.title}
-                  onChange={event => handleTitleChange(event.target.value)}
-                  placeholder={copy.form.titlePlaceholder}
-                  aria-invalid={Boolean(fieldErrors.title)}
-                  className={cn(fieldErrors.title && "border-destructive")}
-                />
-                <p className="text-sm text-muted-foreground">{getTrimmedLength(form.title)}/200</p>
-              </div>
-
-              {/* Excerpt */}
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="post-excerpt">{copy.form.excerpt}</Label>
-                <Textarea
-                  id="post-excerpt"
-                  rows={4}
-                  value={form.excerpt}
-                  onChange={event => updateField("excerpt", event.target.value)}
-                  placeholder={copy.form.excerptPlaceholder}
-                  aria-invalid={Boolean(fieldErrors.excerpt)}
-                  className={cn(fieldErrors.excerpt && "border-destructive")}
-                />
-                <p className="text-sm text-muted-foreground">
-                  {getTrimmedLength(form.excerpt)}/500
-                </p>
-              </div>
-
-              {/* Slug */}
-              <div className="space-y-2 md:col-span-2">
-                <div className="flex items-center justify-between gap-3">
-                  <Label htmlFor="post-slug">{copy.form.slug}</Label>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      const nextSlug = slugify(form.title);
-                      setSlugEdited(true);
-                      updateField("slug", nextSlug);
-                    }}
-                    disabled={!form.title.trim()}
-                    className="h-7 text-xs"
-                  >
-                    {copy.form.generateSlug}
-                  </Button>
-                </div>
-                <Input
-                  id="post-slug"
-                  value={form.slug}
-                  onChange={event => {
-                    setSlugEdited(true);
-                    updateField("slug", slugify(event.target.value));
-                  }}
-                  placeholder={copy.form.slugPlaceholder}
-                  aria-invalid={Boolean(fieldErrors.slug)}
-                  className={cn(fieldErrors.slug && "border-destructive")}
-                />
-                <p className="text-xs text-muted-foreground">{copy.form.slugHelp}</p>
-              </div>
-
-              {/* Department */}
-              <div className="space-y-2">
-                <Label htmlFor="post-department">{copy.form.department}</Label>
-                <div id="post-department">
-                  <SearchableSingleSelect
-                    value={form.department}
-                    resource="blog_departments"
-                    fields={[
-                      "name",
-                      "department_name",
-                      "department_code",
-                      "description",
-                      "creation",
-                    ]}
-                    filters={[["is_active", "=", 1]]}
-                    searchFields={["department_name", "department_code", "description"]}
-                    valueField="name"
-                    labelField="department_name"
-                    descriptionField="department_code"
-                    keywordFields={["department_code", "description"]}
-                    onChange={value => {
-                      updateField("department", value);
-                      updateField("category", "");
-                      setCreatedCategoryOption(null);
-                      setCreatedTopicOptions([]);
-                      setSelectedTopicIds([]);
-                      clearFieldError("department");
-                      clearFieldError("category");
-                      clearFieldError("topics");
-                    }}
-                    placeholder={copy.form.departmentPlaceholder}
-                    searchPlaceholder={copy.selector.searchDepartment}
-                    emptyText={copy.selector.noDepartment}
-                    invalid={Boolean(fieldErrors.department)}
-                    disabled={isSubmitting}
-                    selectedOption={selectedDepartmentOption}
-                  />
-                </div>
-              </div>
-
-              {/* Category */}
-              <div className="space-y-2">
-                <Label htmlFor="post-category">{copy.form.category}</Label>
-                <div id="post-category">
-                  <SearchableSingleSelect
-                    value={form.category}
-                    resource="categories"
-                    fields={["name", "category", "slug", "description", "department", "creation"]}
-                    filters={
-                      form.department
-                        ? [
-                            ["is_active", "=", 1],
-                            ["department", "=", form.department],
-                          ]
-                        : undefined
-                    }
-                    searchFields={["category", "slug", "description"]}
-                    valueField="name"
-                    labelField="category"
-                    descriptionField="slug"
-                    keywordFields={["slug", "description"]}
-                    onChange={value => {
-                      updateField("category", value);
-                      if (createdCategoryOption?.value !== value) {
-                        setCreatedCategoryOption(null);
-                      }
-                      clearFieldError("category");
-                    }}
-                    placeholder={
-                      form.department
-                        ? copy.form.categoryPlaceholder
-                        : copy.selector.selectDepartmentFirst
-                    }
-                    searchPlaceholder={copy.selector.searchCategory}
-                    emptyText={
-                      form.department
-                        ? copy.selector.noCategory
-                        : copy.selector.selectDepartmentFirst
-                    }
-                    invalid={Boolean(fieldErrors.category)}
-                    disabled={isSubmitting || !form.department}
-                    enabled={!!form.department}
-                    selectedOption={effectiveSelectedCategoryOption}
-                    emptyActionLabel={categoryCopy.addCategory}
-                    onEmptyAction={openCreateCategoryDialog}
-                  />
-                </div>
-              </div>
-
-              {/* Topics */}
-              <div className="space-y-2">
-                <Label htmlFor="post-topics">{copy.form.topics}</Label>
-                <div id="post-topics">
-                  <SearchableMultiSelect
-                    values={selectedTopicIds}
-                    resource="topics"
-                    fields={["name", "topic", "slug", "desc", "department", "creation"]}
-                    filters={
-                      form.department
-                        ? [
-                            ["is_active", "=", 1],
-                            ["department", "=", form.department],
-                          ]
-                        : undefined
-                    }
-                    searchFields={["topic", "slug", "desc"]}
-                    valueField="name"
-                    labelField="topic"
-                    descriptionField="slug"
-                    keywordFields={["slug", "desc"]}
-                    onChange={values => {
-                      setSelectedTopicIds(values);
-                      clearFieldError("topics");
-                    }}
-                    placeholder={copy.form.topics}
-                    searchPlaceholder={copy.selector.searchTopic}
-                    emptyText={
-                      form.department ? copy.selector.noTopic : copy.selector.selectDepartmentFirst
-                    }
-                    emptySelectionText={copy.previewSection.emptyTopics}
-                    disabled={isSubmitting || !form.department}
-                    enabled={!!form.department}
-                    selectedOptions={effectiveSelectedTopicOptions}
-                    emptyActionLabel={topicCopy.addTopic}
-                    onEmptyAction={openCreateTopicDialog}
-                  />
-                </div>
-              </div>
-
-              {/* Tags */}
-              <div className="space-y-2">
-                <Label htmlFor="post-tags">{copy.form.tags}</Label>
-
-                <div id="post-tags">
-                  <SearchableMultiSelect
-                    values={selectedTagIds}
-                    resource="tags"
-                    fields={["name", "tag_name", "slug", "description", "creation"]}
-                    filters={[["is_active", "=", 1]]}
-                    searchFields={["tag_name", "slug", "description"]}
-                    valueField="name"
-                    labelField="tag_name"
-                    descriptionField="slug"
-                    keywordFields={["slug", "description"]}
-                    onChange={values => {
-                      setSelectedTagIds(values);
-                      clearFieldError("tags");
-                    }}
-                    placeholder={copy.form.tags}
-                    searchPlaceholder={copy.selector.searchTag}
-                    emptyText={copy.selector.noTag}
-                    emptySelectionText={copy.previewSection.emptyTags}
-                    disabled={isSubmitting}
-                    selectedOptions={effectiveSelectedTagOptions}
-                    emptyActionLabel={tagCopy.addTag}
-                    onEmptyAction={openCreateTagDialog}
-                  />
-                </div>
-              </div>
-
-              {/* Status */}
-              <div className="space-y-2">
-                <Label>{copy.form.status}</Label>
-                <Select
-                  value={form.status || undefined}
-                  onValueChange={value => updateField("status", value as PostFormValues["status"])}
-                >
-                  <SelectTrigger
-                    className={cn("w-full", fieldErrors.status && "border-destructive")}
-                    aria-invalid={Boolean(fieldErrors.status)}
-                    data-post-status-trigger=""
-                  >
-                    <SelectValue placeholder={copy.form.statusPlaceholder} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {POST_STATUS_VALUES.map(status => (
-                      <SelectItem key={status} value={status}>
-                        {formatPostStatusLabel(status, statusLabels)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Visibility */}
-              <div className="space-y-2">
-                <Label>{copy.form.visibility}</Label>
-                <Select
-                  value={form.visibility || undefined}
-                  onValueChange={value =>
-                    updateField("visibility", value as PostFormValues["visibility"])
-                  }
-                >
-                  <SelectTrigger
-                    className={cn("w-full", fieldErrors.visibility && "border-destructive")}
-                    aria-invalid={Boolean(fieldErrors.visibility)}
-                    data-post-visibility-trigger=""
-                  >
-                    <SelectValue placeholder={copy.form.visibilityPlaceholder} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {POST_VISIBILITY_VALUES.map(visibility => (
-                      <SelectItem key={visibility} value={visibility}>
-                        {formatPostVisibilityLabel(visibility, visibilityLabels)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Cover Image */}
-              <div className="space-y-2 md:col-span-2">
-                <CoverImageField
-                  id="post-cover-field"
-                  value={form.thumb}
-                  visibility={form.visibility}
-                  disabled={isSubmitting}
-                  invalid={Boolean(fieldErrors.thumb)}
-                  source={coverSource}
-                  fileMeta={coverFileMeta}
-                  onChange={value => {
-                    updateField("thumb", value);
-                    clearFieldError("thumb");
-                  }}
-                  onSourceChange={setCoverSource}
-                  onFileMetaChange={setCoverFileMeta}
-                  onBusyChange={setIsCoverBusy}
-                />
-              </div>
-
-              {/* Thumbnail Description */}
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="post-thumb-desc">{copy.form.thumbDesc}</Label>
-                <Textarea
-                  id="post-thumb-desc"
-                  rows={4}
-                  value={form.thumb_desc}
-                  onChange={event => updateField("thumb_desc", event.target.value)}
-                  placeholder={copy.form.thumbDescPlaceholder}
-                  aria-invalid={Boolean(fieldErrors.thumb_desc)}
-                  className={cn(fieldErrors.thumb_desc && "border-destructive")}
-                />
-                <p className="text-sm text-muted-foreground">
-                  {getTrimmedLength(form.thumb_desc)}/300
-                </p>
-              </div>
-            </div>
-          </CardContent>
         </Card>
-      ) : null}
-
-      {currentStep === 2 ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>{copy.steps.content.title}</CardTitle>
-            <CardDescription>{copy.steps.content.description}</CardDescription>
-          </CardHeader>
-
-          <CardContent className="grid grid-cols-3 space-y-4">
-            <div className="col-span-2">
-              <BlogContentComposer
-                id="post-content-editor"
-                value={form.content}
-                onChange={value => {
-                  updateField("content", value);
-                  clearFieldError("content");
-                }}
-                disabled={isSubmitting}
-                invalid={Boolean(fieldErrors.content)}
-              />
-            </div>
-          </CardContent>
-        </Card>
-      ) : null}
-
-      {!isEditMode && currentStep === 3 ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>{copy.previewSection.title}</CardTitle>
-            <CardDescription>{copy.steps.review.description}</CardDescription>
-          </CardHeader>
-
-          <CardContent className="space-y-6">
-            {form.thumb ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={form.thumb.includes("https") ? form.thumb : `${getBaseUrl()}${form.thumb}`}
-                alt={form.title || copy.cover.previewAlt}
-                className="max-h-[420px] w-full rounded-2xl border object-cover"
-              />
-            ) : null}
-
-            <div className="space-y-4">
-              <div className="flex flex-wrap items-center gap-2">
-                <Badge>{formatPostStatusLabel(form.status, statusLabels)}</Badge>
-                <Badge variant="outline">
-                  {formatPostVisibilityLabel(form.visibility, visibilityLabels)}
-                </Badge>
-                {selectedDepartment ? (
-                  <Badge variant="secondary">{selectedDepartment.department_name}</Badge>
-                ) : null}
-                {selectedCategory ? (
-                  <Badge variant="outline">{getCategoryName(selectedCategory)}</Badge>
-                ) : null}
-                {coverSource === "upload" && coverFileMeta ? (
-                  <Badge variant="secondary">
-                    {coverFileMeta.is_private ? copy.cover.privateFile : copy.cover.publicFile}
-                  </Badge>
-                ) : null}
-              </div>
-
-              <div className="space-y-3">
-                <h1 className="text-4xl font-semibold tracking-tight">{form.title}</h1>
-                {form.excerpt ? (
-                  <p className="text-lg leading-8 text-muted-foreground">{form.excerpt}</p>
-                ) : null}
-                {form.thumb_desc ? (
-                  <p className="text-sm text-muted-foreground">{form.thumb_desc}</p>
-                ) : null}
-              </div>
-
-              <div className="space-y-3">
-                <div className="space-y-2">
-                  <p className="text-sm font-medium">{copy.form.topics}</p>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedTopics.length > 0 ? (
-                      selectedTopics.map(topic => (
-                        <Badge key={topic.name} variant="outline">
-                          {topic.topic}
-                        </Badge>
-                      ))
-                    ) : (
-                      <Badge variant="outline">{copy.previewSection.emptyTopics}</Badge>
-                    )}
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <p className="text-sm font-medium">{copy.form.tags}</p>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedTags.length > 0 ? (
-                      selectedTags.map(tag => (
-                        <Badge key={tag.name} variant="outline">
-                          {tag.tag_name}
-                        </Badge>
-                      ))
-                    ) : (
-                      <Badge variant="outline">{copy.previewSection.emptyTags}</Badge>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-2xl border p-5">
-                <PostContentPreview
-                  value={form.content}
-                  emptyText={copy.previewSection.emptyContent}
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      ) : null}
-
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="text-sm text-muted-foreground">{stepCounterText}</div>
-
-        <div className="flex flex-wrap gap-2">
+        <div className="col-span-2">
           {currentStep === 1 ? (
-            <>
-              <Button asChild variant="outline" type="button">
-                <Link href={cancelHref}>{copy.cancel}</Link>
-              </Button>
-              <Button type="button" onClick={() => validateStepOne() && setCurrentStep(2)}>
-                {copy.continue}
-              </Button>
-            </>
+            <Card>
+              <CardHeader>
+                <CardTitle>{copy.steps.metadata.title}</CardTitle>
+                <CardDescription>{copy.steps.metadata.description}</CardDescription>
+              </CardHeader>
+
+              <CardContent className="space-y-6">
+                <div className="grid space-y-6 space-x-4 md:grid-cols-2">
+                  {/* Title */}
+                  <div className="space-y-2 md:col-span-2">
+                    <Label htmlFor="post-title">{copy.form.title}</Label>
+                    <Input
+                      id="post-title"
+                      value={form.title}
+                      onChange={event => handleTitleChange(event.target.value)}
+                      placeholder={copy.form.titlePlaceholder}
+                      aria-invalid={Boolean(fieldErrors.title)}
+                      className={cn(fieldErrors.title && "border-destructive")}
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      {getTrimmedLength(form.title)}/200
+                    </p>
+                  </div>
+
+                  {/* Excerpt */}
+                  <div className="space-y-2 md:col-span-2">
+                    <Label htmlFor="post-excerpt">{copy.form.excerpt}</Label>
+                    <Textarea
+                      id="post-excerpt"
+                      rows={4}
+                      value={form.excerpt}
+                      onChange={event => updateField("excerpt", event.target.value)}
+                      placeholder={copy.form.excerptPlaceholder}
+                      aria-invalid={Boolean(fieldErrors.excerpt)}
+                      className={cn(fieldErrors.excerpt && "border-destructive")}
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      {getTrimmedLength(form.excerpt)}/500
+                    </p>
+                  </div>
+
+                  {/* Slug */}
+                  <div className="space-y-2 md:col-span-2">
+                    <div className="flex items-center justify-between gap-3">
+                      <Label htmlFor="post-slug">{copy.form.slug}</Label>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          const nextSlug = slugify(form.title);
+                          setSlugEdited(true);
+                          updateField("slug", nextSlug);
+                        }}
+                        disabled={!form.title.trim()}
+                        className="h-7 text-xs"
+                      >
+                        {copy.form.generateSlug}
+                      </Button>
+                    </div>
+                    <Input
+                      id="post-slug"
+                      value={form.slug}
+                      onChange={event => {
+                        setSlugEdited(true);
+                        updateField("slug", slugify(event.target.value));
+                      }}
+                      placeholder={copy.form.slugPlaceholder}
+                      aria-invalid={Boolean(fieldErrors.slug)}
+                      className={cn(fieldErrors.slug && "border-destructive")}
+                    />
+                    <p className="text-xs text-muted-foreground">{copy.form.slugHelp}</p>
+                  </div>
+
+                  {/* Department */}
+                  <div className="space-y-2">
+                    <Label htmlFor="post-department">{copy.form.department}</Label>
+                    <div id="post-department">
+                      <SearchableSingleSelect
+                        value={form.department}
+                        resource="blog_departments"
+                        fields={[
+                          "name",
+                          "department_name",
+                          "department_code",
+                          "description",
+                          "creation",
+                        ]}
+                        filters={[["is_active", "=", 1]]}
+                        searchFields={["department_name", "department_code", "description"]}
+                        valueField="name"
+                        labelField="department_name"
+                        descriptionField="department_code"
+                        keywordFields={["department_code", "description"]}
+                        onChange={value => {
+                          updateField("department", value);
+                          updateField("category", "");
+                          setCreatedCategoryOption(null);
+                          setCreatedTopicOptions([]);
+                          setSelectedTopicIds([]);
+                          clearFieldError("department");
+                          clearFieldError("category");
+                          clearFieldError("topics");
+                        }}
+                        placeholder={copy.form.departmentPlaceholder}
+                        searchPlaceholder={copy.selector.searchDepartment}
+                        emptyText={copy.selector.noDepartment}
+                        invalid={Boolean(fieldErrors.department)}
+                        disabled={isSubmitting}
+                        selectedOption={selectedDepartmentOption}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Category */}
+                  <div className="space-y-2">
+                    <Label htmlFor="post-category">{copy.form.category}</Label>
+                    <div id="post-category">
+                      <SearchableSingleSelect
+                        value={form.category}
+                        resource="categories"
+                        fields={[
+                          "name",
+                          "category",
+                          "slug",
+                          "description",
+                          "department",
+                          "creation",
+                        ]}
+                        filters={
+                          form.department
+                            ? [
+                                ["is_active", "=", 1],
+                                ["department", "=", form.department],
+                              ]
+                            : undefined
+                        }
+                        searchFields={["category", "slug", "description"]}
+                        valueField="name"
+                        labelField="category"
+                        descriptionField="slug"
+                        keywordFields={["slug", "description"]}
+                        onChange={value => {
+                          updateField("category", value);
+                          if (createdCategoryOption?.value !== value) {
+                            setCreatedCategoryOption(null);
+                          }
+                          clearFieldError("category");
+                        }}
+                        placeholder={
+                          form.department
+                            ? copy.form.categoryPlaceholder
+                            : copy.selector.selectDepartmentFirst
+                        }
+                        searchPlaceholder={copy.selector.searchCategory}
+                        emptyText={
+                          form.department
+                            ? copy.selector.noCategory
+                            : copy.selector.selectDepartmentFirst
+                        }
+                        invalid={Boolean(fieldErrors.category)}
+                        disabled={isSubmitting || !form.department}
+                        enabled={!!form.department}
+                        selectedOption={effectiveSelectedCategoryOption}
+                        emptyActionLabel={categoryCopy.addCategory}
+                        onEmptyAction={openCreateCategoryDialog}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Topics */}
+                  <div className="space-y-2">
+                    <Label htmlFor="post-topics">{copy.form.topics}</Label>
+                    <div id="post-topics">
+                      <SearchableMultiSelect
+                        values={selectedTopicIds}
+                        resource="topics"
+                        fields={["name", "topic", "slug", "desc", "department", "creation"]}
+                        filters={
+                          form.department
+                            ? [
+                                ["is_active", "=", 1],
+                                ["department", "=", form.department],
+                              ]
+                            : undefined
+                        }
+                        searchFields={["topic", "slug", "desc"]}
+                        valueField="name"
+                        labelField="topic"
+                        descriptionField="slug"
+                        keywordFields={["slug", "desc"]}
+                        onChange={values => {
+                          setSelectedTopicIds(values);
+                          clearFieldError("topics");
+                        }}
+                        placeholder={copy.form.topics}
+                        searchPlaceholder={copy.selector.searchTopic}
+                        emptyText={
+                          form.department
+                            ? copy.selector.noTopic
+                            : copy.selector.selectDepartmentFirst
+                        }
+                        emptySelectionText={copy.previewSection.emptyTopics}
+                        disabled={isSubmitting || !form.department}
+                        enabled={!!form.department}
+                        selectedOptions={effectiveSelectedTopicOptions}
+                        emptyActionLabel={topicCopy.addTopic}
+                        onEmptyAction={openCreateTopicDialog}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Tags */}
+                  <div className="space-y-2">
+                    <Label htmlFor="post-tags">{copy.form.tags}</Label>
+
+                    <div id="post-tags">
+                      <SearchableMultiSelect
+                        values={selectedTagIds}
+                        resource="tags"
+                        fields={["name", "tag_name", "slug", "description", "creation"]}
+                        filters={[["is_active", "=", 1]]}
+                        searchFields={["tag_name", "slug", "description"]}
+                        valueField="name"
+                        labelField="tag_name"
+                        descriptionField="slug"
+                        keywordFields={["slug", "description"]}
+                        onChange={values => {
+                          setSelectedTagIds(values);
+                          clearFieldError("tags");
+                        }}
+                        placeholder={copy.form.tags}
+                        searchPlaceholder={copy.selector.searchTag}
+                        emptyText={copy.selector.noTag}
+                        emptySelectionText={copy.previewSection.emptyTags}
+                        disabled={isSubmitting}
+                        selectedOptions={effectiveSelectedTagOptions}
+                        emptyActionLabel={tagCopy.addTag}
+                        onEmptyAction={openCreateTagDialog}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Status */}
+                  <div className="space-y-2">
+                    <Label>{copy.form.status}</Label>
+                    <Select
+                      value={form.status || undefined}
+                      onValueChange={value =>
+                        updateField("status", value as PostFormValues["status"])
+                      }
+                    >
+                      <SelectTrigger
+                        className={cn("w-full", fieldErrors.status && "border-destructive")}
+                        aria-invalid={Boolean(fieldErrors.status)}
+                        data-post-status-trigger=""
+                      >
+                        <SelectValue placeholder={copy.form.statusPlaceholder} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {POST_STATUS_VALUES.map(status => (
+                          <SelectItem key={status} value={status}>
+                            {formatPostStatusLabel(status, statusLabels)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Visibility */}
+                  <div className="space-y-2">
+                    <Label>{copy.form.visibility}</Label>
+                    <Select
+                      value={form.visibility || undefined}
+                      onValueChange={value =>
+                        updateField("visibility", value as PostFormValues["visibility"])
+                      }
+                    >
+                      <SelectTrigger
+                        className={cn("w-full", fieldErrors.visibility && "border-destructive")}
+                        aria-invalid={Boolean(fieldErrors.visibility)}
+                        data-post-visibility-trigger=""
+                      >
+                        <SelectValue placeholder={copy.form.visibilityPlaceholder} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {POST_VISIBILITY_VALUES.map(visibility => (
+                          <SelectItem key={visibility} value={visibility}>
+                            {formatPostVisibilityLabel(visibility, visibilityLabels)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Cover Image */}
+                  <div className="space-y-2 md:col-span-2">
+                    <CoverImageField
+                      id="post-cover-field"
+                      value={form.thumb}
+                      visibility={form.visibility}
+                      disabled={isSubmitting}
+                      invalid={Boolean(fieldErrors.thumb)}
+                      source={coverSource}
+                      fileMeta={coverFileMeta}
+                      onChange={value => {
+                        updateField("thumb", value);
+                        clearFieldError("thumb");
+                      }}
+                      onSourceChange={setCoverSource}
+                      onFileMetaChange={setCoverFileMeta}
+                      onBusyChange={setIsCoverBusy}
+                    />
+                  </div>
+
+                  {/* Thumbnail Description */}
+                  <div className="space-y-2 md:col-span-2">
+                    <Label htmlFor="post-thumb-desc">{copy.form.thumbDesc}</Label>
+                    <Textarea
+                      id="post-thumb-desc"
+                      rows={4}
+                      value={form.thumb_desc}
+                      onChange={event => updateField("thumb_desc", event.target.value)}
+                      placeholder={copy.form.thumbDescPlaceholder}
+                      aria-invalid={Boolean(fieldErrors.thumb_desc)}
+                      className={cn(fieldErrors.thumb_desc && "border-destructive")}
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      {getTrimmedLength(form.thumb_desc)}/300
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           ) : null}
 
           {currentStep === 2 ? (
-            <>
-              <Button type="button" variant="outline" onClick={() => setCurrentStep(1)}>
-                {copy.back}
-              </Button>
-              {isEditMode ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>{copy.steps.content.title}</CardTitle>
+                <CardDescription>{copy.steps.content.description}</CardDescription>
+              </CardHeader>
+
+              <CardContent className="grid grid-cols-3 space-y-4">
+                <div className="col-span-3">
+                  <BlogContentComposer
+                    ref={editorRef}
+                    id="post-content-editor"
+                    value={form.content}
+                    onChange={value => {
+                      updateField("content", value);
+                      clearFieldError("content");
+                    }}
+                    onTransientImageUpload={registerTransientEditorUpload}
+                    onTransientUploadsChange={setEditorHasTransientUploads}
+                    disabled={isSubmitting}
+                    invalid={Boolean(fieldErrors.content)}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          ) : null}
+
+          {!isEditMode && currentStep === 3 ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>{copy.previewSection.title}</CardTitle>
+                <CardDescription>{copy.steps.review.description}</CardDescription>
+              </CardHeader>
+
+              <CardContent className="space-y-6">
+                {form.thumb ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={form.thumb.includes("https") ? form.thumb : `${getBaseUrl()}${form.thumb}`}
+                    alt={form.title || copy.cover.previewAlt}
+                    className="max-h-[420px] w-full rounded-2xl border object-cover"
+                  />
+                ) : null}
+
+                <div className="space-y-4">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge>{formatPostStatusLabel(form.status, statusLabels)}</Badge>
+                    <Badge variant="outline">
+                      {formatPostVisibilityLabel(form.visibility, visibilityLabels)}
+                    </Badge>
+                    {selectedDepartment ? (
+                      <Badge variant="secondary">{selectedDepartment.department_name}</Badge>
+                    ) : null}
+                    {selectedCategory ? (
+                      <Badge variant="outline">{getCategoryName(selectedCategory)}</Badge>
+                    ) : null}
+                    {coverSource === "upload" && coverFileMeta ? (
+                      <Badge variant="secondary">
+                        {coverFileMeta.is_private ? copy.cover.privateFile : copy.cover.publicFile}
+                      </Badge>
+                    ) : null}
+                  </div>
+
+                  <div className="space-y-3">
+                    <h1 className="text-4xl font-semibold tracking-tight">{form.title}</h1>
+                    {form.excerpt ? (
+                      <p className="text-lg leading-8 text-muted-foreground">{form.excerpt}</p>
+                    ) : null}
+                    {form.thumb_desc ? (
+                      <p className="text-sm text-muted-foreground">{form.thumb_desc}</p>
+                    ) : null}
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium">{copy.form.topics}</p>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedTopics.length > 0 ? (
+                          selectedTopics.map(topic => (
+                            <Badge key={topic.name} variant="outline">
+                              {topic.topic}
+                            </Badge>
+                          ))
+                        ) : (
+                          <Badge variant="outline">{copy.previewSection.emptyTopics}</Badge>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium">{copy.form.tags}</p>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedTags.length > 0 ? (
+                          selectedTags.map(tag => (
+                            <Badge key={tag.name} variant="outline">
+                              {tag.tag_name}
+                            </Badge>
+                          ))
+                        ) : (
+                          <Badge variant="outline">{copy.previewSection.emptyTags}</Badge>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl border p-5">
+                    <PostContentPreview
+                      value={form.content}
+                      emptyText={copy.previewSection.emptyContent}
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ) : null}
+        </div>
+      </div>
+
+      <div className="sticky bottom-0 z-10 rounded-2xl border shadow-lg bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/10">
+        <div className="flex flex-wrap items-center justify-between gap-3 p-3">
+          <div className="text-sm text-primary">{stepCounterText}</div>
+
+          <div className="flex flex-wrap gap-2">
+            {currentStep === 1 ? (
+              <>
+                <Button
+                  variant="outline"
+                  type="button"
+                  onClick={() => safeNavigate(cancelHref, { intent: "cancel" })}
+                >
+                  {copy.cancel}
+                </Button>
+                <Button type="button" onClick={() => validateStepOne() && setCurrentStep(2)}>
+                  {copy.continue}
+                </Button>
+              </>
+            ) : null}
+
+            {currentStep === 2 ? (
+              <>
+                <Button type="button" variant="outline" onClick={() => setCurrentStep(1)}>
+                  {copy.back}
+                </Button>
+                {isEditMode ? (
+                  <Button
+                    type="button"
+                    onClick={handleSubmitPost}
+                    disabled={isSubmitting || isCoverBusy}
+                  >
+                    {submitLabel}
+                  </Button>
+                ) : (
+                  <Button type="button" onClick={() => validateStepTwo() && setCurrentStep(3)}>
+                    {copy.preview}
+                  </Button>
+                )}
+              </>
+            ) : null}
+
+            {!isEditMode && currentStep === 3 ? (
+              <>
+                <Button type="button" variant="outline" onClick={() => setCurrentStep(2)}>
+                  {copy.back}
+                </Button>
                 <Button
                   type="button"
                   onClick={handleSubmitPost}
@@ -1712,31 +2187,11 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
                 >
                   {submitLabel}
                 </Button>
-              ) : (
-                <Button type="button" onClick={() => validateStepTwo() && setCurrentStep(3)}>
-                  {copy.preview}
-                </Button>
-              )}
-            </>
-          ) : null}
-
-          {!isEditMode && currentStep === 3 ? (
-            <>
-              <Button type="button" variant="outline" onClick={() => setCurrentStep(2)}>
-                {copy.back}
-              </Button>
-              <Button
-                type="button"
-                onClick={handleSubmitPost}
-                disabled={isSubmitting || isCoverBusy}
-              >
-                {submitLabel}
-              </Button>
-            </>
-          ) : null}
+              </>
+            ) : null}
+          </div>
         </div>
       </div>
-
       <Dialog
         open={isCreateCategoryDialogOpen}
         onOpenChange={nextOpen => {
@@ -2082,6 +2537,26 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
           </form>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog
+        open={!!pendingNavigation}
+        onOpenChange={open => {
+          if (!open) handleStayOnPage();
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{pendingNavigationTitle}</AlertDialogTitle>
+            <AlertDialogDescription>{pendingNavigationDescription}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleStayOnPage}>{copy.no}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmNavigation}>
+              {t.common?.confirm ?? "Confirm"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </main>
   );
 }

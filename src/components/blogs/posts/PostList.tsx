@@ -1,19 +1,12 @@
-/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
-import * as React from "react";
-import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { ColumnDef, PaginationState, RowSelectionState, SortingState } from "@tanstack/react-table";
-import { Archive, FolderOpen, Plus, Search, Send, SquarePen, Trash2 } from "lucide-react";
-import { useDeleteDoc, useGetCount, useGetList, useUpdateDoc } from "@/hooks";
-import { useLanguage } from "@/hooks/useLanguage";
-import { buildLocalePath } from "@/i18n";
-import { BlogDepartment, Category, Post, PostStatus } from "@/types/blogs";
-import { Filter } from "@/types/hooks";
-import { AdminAccessDenied } from "@/components/layout/admin-access-denied";
 import { getPostColumns, type PostColumnMeta } from "@/components/blogs/posts/PostColumns";
 import { PostTable } from "@/components/blogs/posts/PostTable";
+import { CategoryFilterCombobox } from "@/components/common/CategoryFilterCombobox";
+import { DepartmentFilterCombobox } from "@/components/common/DepartmentFilterCombobox";
+import { TagFilterCombobox } from "@/components/common/TagFilterCombobox";
+import { TopicFilterCombobox } from "@/components/common/TopicFilterCombobox";
+import { AdminAccessDenied } from "@/components/layout/admin-access-denied";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,12 +26,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { showCrudError, showCrudSuccess } from "@/lib/crud-toast";
+import { useDeleteDoc, useGetCount, useGetList, useUpdateDoc } from "@/hooks";
+import { useLanguage } from "@/hooks/useLanguage";
+import { buildLocalePath } from "@/i18n";
 import { formatFrappeDatetime } from "@/lib/blog-posts";
-import { DepartmentFilterCombobox } from "@/components/common/DepartmentFilterCombobox";
-import { CategoryFilterCombobox } from "@/components/common/CategoryFilterCombobox";
-import { TopicFilterCombobox } from "@/components/common/TopicFilterCombobox";
-import { TagFilterCombobox } from "@/components/common/TagFilterCombobox";
+import { showCrudError, showCrudSuccess } from "@/lib/crud-toast";
+import { BlogDepartment, Category, Post, PostStatus } from "@/types/blogs";
+import { Filter } from "@/types/hooks";
+import { ColumnDef, PaginationState, RowSelectionState, SortingState } from "@tanstack/react-table";
+import { Archive, FolderOpen, Plus, Search, Send, SquarePen, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import * as React from "react";
 const PAGE_SIZE = 20;
 
 function mapQueryStatus(value: string | null): "all" | PostStatus {
@@ -388,84 +387,86 @@ export function PostList() {
         </Button>
       </div>
 
-      <div className="flex gap-3">
-        <div className="relative w-full lg:w-1/2">
-          <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder={copy.filters.searchPlaceholder}
-            value={search}
-            onChange={event => setSearch(event.target.value)}
-            className="pl-9"
+      <div className="space-y-3">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+          <div className="relative w-full">
+            <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder={copy.filters.searchPlaceholder}
+              value={search}
+              onChange={event => setSearch(event.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <Select
+              value={statusFilter}
+              onValueChange={value => setStatusFilter(value as typeof statusFilter)}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder={copy.filters.status} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{copy.filters.allStatuses}</SelectItem>
+                <SelectItem value="Draft">{copy.status.Draft}</SelectItem>
+                <SelectItem value="Published">{copy.status.Published}</SelectItem>
+                <SelectItem value="Archived">{copy.status.Archived}</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={visibilityFilter}
+              onValueChange={value => setVisibilityFilter(value as typeof visibilityFilter)}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder={copy.filters.visibility} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{copy.filters.allVisibility}</SelectItem>
+                <SelectItem value="Public">{copy.visibility.Public}</SelectItem>
+                <SelectItem value="Internal">{copy.visibility.Internal}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+          <DepartmentFilterCombobox
+            value={departmentFilter}
+            onChange={setDepartmentFilter}
+            onDepartmentsChange={setDepartments}
+            isLoading={isLoading}
+            placeholder={copy.filters.department}
+            allLabel={copy.filters.allDepartments}
+          />
+
+          <CategoryFilterCombobox
+            departmentValue={departmentFilter}
+            value={categoryFilter}
+            onChange={setCategoryFilter}
+            onCategoriesChange={setCategories}
+            isLoading={isLoading}
+            placeholder={copy.filters.category}
+            allLabel={copy.filters.allCategories}
+          />
+
+          <TopicFilterCombobox
+            departmentValue={departmentFilter}
+            value={topicFilter}
+            onChange={setTopicFilter}
+            isLoading={isLoading}
+            placeholder={copy.filters.topic}
+            allLabel={copy.filters.allTopics}
+          />
+
+          <TagFilterCombobox
+            value={tagFilter}
+            onChange={setTagFilter}
+            isLoading={isLoading}
+            placeholder={copy.filters.tag}
+            allLabel={copy.filters.allTags}
           />
         </div>
-        <div className="flex gap-3 lg:w-1/2">
-          <Select
-            value={statusFilter}
-            onValueChange={value => setStatusFilter(value as typeof statusFilter)}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder={copy.filters.status} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{copy.filters.allStatuses}</SelectItem>
-              <SelectItem value="Draft">{copy.status.Draft}</SelectItem>
-              <SelectItem value="Published">{copy.status.Published}</SelectItem>
-              <SelectItem value="Archived">{copy.status.Archived}</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select
-            value={visibilityFilter}
-            onValueChange={value => setVisibilityFilter(value as typeof visibilityFilter)}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder={copy.filters.visibility} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{copy.filters.allVisibility}</SelectItem>
-              <SelectItem value="Public">{copy.visibility.Public}</SelectItem>
-              <SelectItem value="Internal">{copy.visibility.Internal}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-4 gap-3">
-        <DepartmentFilterCombobox
-          value={departmentFilter}
-          onChange={setDepartmentFilter}
-          onDepartmentsChange={setDepartments}
-          isLoading={isLoading}
-          placeholder={copy.filters.department}
-          allLabel={copy.filters.allDepartments}
-        />
-
-        <CategoryFilterCombobox
-          departmentValue={departmentFilter}
-          value={categoryFilter}
-          onChange={setCategoryFilter}
-          onCategoriesChange={setCategories}
-          isLoading={isLoading}
-          placeholder={copy.filters.category}
-          allLabel={copy.filters.allCategories}
-        />
-
-        <TopicFilterCombobox
-          departmentValue={departmentFilter}
-          value={topicFilter}
-          onChange={setTopicFilter}
-          isLoading={isLoading}
-          placeholder={copy.filters.topic}
-          allLabel={copy.filters.allTopics}
-        />
-
-        <TagFilterCombobox
-          value={tagFilter}
-          onChange={setTagFilter}
-          isLoading={isLoading}
-          placeholder={copy.filters.tag}
-          allLabel={copy.filters.allTags}
-        />
       </div>
 
       {Object.keys(rowSelection).length > 0 ? (

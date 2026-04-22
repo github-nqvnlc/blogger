@@ -1,10 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { ColumnDef } from "@tanstack/react-table";
-import { Archive, Eye, MoreHorizontal, Pencil, Send, SquarePen, Trash2 } from "lucide-react";
-import { formatDate } from "date-fns";
-import { Post } from "@/types/blogs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -16,10 +12,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { Dictionary } from "@/i18n";
-import { cn, getBaseUrl } from "@/lib/utils";
-import { formatPostStatusLabel, formatPostVisibilityLabel } from "@/lib/blog-posts";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import type { Dictionary } from "@/i18n";
+import { formatPostStatusLabel, formatPostVisibilityLabel } from "@/lib/blog-posts";
+import { cn, getBaseUrl } from "@/lib/utils";
+import { Post } from "@/types/blogs";
+import { ColumnDef } from "@tanstack/react-table";
+import { formatDate } from "date-fns";
+import { Archive, Eye, MoreHorizontal, Pencil, Send, SquarePen, Trash2 } from "lucide-react";
 
 export interface PostColumnMeta {
   onView: (post: Post) => void;
@@ -90,7 +90,7 @@ export function getPostColumns(t: Dictionary): ColumnDef<Post, unknown>[] {
             <img
               src={`${getBaseUrl()}${post.thumb}`}
               alt={post.title}
-              className="w-auto h-30 rounded-sm aspect-video object-cover"
+              className="min-w-56 h-auto rounded-sm aspect-video object-cover"
             />
           </div>
         );
@@ -108,7 +108,7 @@ export function getPostColumns(t: Dictionary): ColumnDef<Post, unknown>[] {
 
         return (
           <div
-            className="max-w-[500px] cursor-pointer space-y-1 overflow-hidden"
+            className="max-w-[300px] lg:max-w-[500px] cursor-pointer space-y-1 overflow-hidden"
             onClick={() => meta.onView(post)}
           >
             <Tooltip>

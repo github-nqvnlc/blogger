@@ -6,7 +6,17 @@ export const blogPosts = {
   editTitle: "Chỉnh sửa bài viết",
   editDescription:
     "Cập nhật metadata, nội dung, ảnh bìa và các liên kết của bài viết trước khi lưu.",
+  no: "Không",
   cancel: "Hủy",
+  browserLeavePrompt: "Bạn có thay đổi chưa lưu. Bạn có chắc chắn muốn rời khỏi trang này không?",
+  unsavedNavigationTitle: "Rời khỏi trang này?",
+  unsavedNavigationDescription:
+    "Bạn đang có thay đổi chưa lưu cho bài viết này. Nếu rời trang bây giờ, các thay đổi sẽ bị hủy.",
+  cancelDraftConfirmTitle: "Hủy tạo bài viết?",
+  cancelDraftConfirmDescription:
+    "Bạn đang có thay đổi chưa lưu cho bài viết này. Bạn có chắc chắn muốn hủy không?",
+  cancelDraftConfirmWithUploadsDescription:
+    "Bạn đang có thay đổi chưa lưu và các tệp đã tải lên sẽ bị xóa. Bạn có chắc chắn muốn hủy không?",
   continue: "Tiếp tục",
   back: "Quay lại",
   preview: "Xem trước",

@@ -1,20 +1,20 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { ImagePlus } from "lucide-react";
-import { useFileUpload } from "@/hooks";
-import { useLanguage } from "@/hooks/useLanguage";
-import { getDictionary } from "@/i18n";
-import type { PostFileDoc, PostVisibilityOption } from "@/types/blogs";
-import { getPrivateFlag, isSupportedImageUrl, normalizePostFileDoc } from "@/lib/blog-posts";
-import { cn, getBaseUrl } from "@/lib/utils";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useFileUpload } from "@/hooks";
+import { useLanguage } from "@/hooks/useLanguage";
+import { getDictionary } from "@/i18n";
+import { getPrivateFlag, isSupportedImageUrl, normalizePostFileDoc } from "@/lib/blog-posts";
+import { cn, getBaseUrl } from "@/lib/utils";
+import type { PostFileDoc, PostVisibilityOption } from "@/types/blogs";
+import { ImagePlus } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 export type CoverSource = "url" | "upload" | null;
 
@@ -85,6 +85,15 @@ export function CoverImageField({
       <div className="space-y-1">
         <Label htmlFor={id}>{copy.title}</Label>
       </div>
+
+      {value ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={value.includes("https") ? value : `${getBaseUrl()}${value}`}
+          alt={copy.previewAlt}
+          className="max-h-100  w-full rounded-xl border object-contain"
+        />
+      ) : null}
 
       <Tabs
         value={source ?? "url"}
@@ -172,15 +181,6 @@ export function CoverImageField({
           </div>
         </TabsContent>
       </Tabs>
-
-      {value ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={value.includes("https") ? value : `${getBaseUrl()}${value}`}
-          alt={copy.previewAlt}
-          className="max-h-100  w-full rounded-xl border object-contain"
-        />
-      ) : null}
     </div>
   );
 }

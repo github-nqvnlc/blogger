@@ -31,4 +31,5 @@ export const common = {
   all: "All status",
   selected: "selected",
   deleteSelected: "Delete selected",
+  confirm: "Confirm",
 } as const;

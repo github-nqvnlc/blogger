@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ApiProvider } from "@/lib/ApiProvider";
+import { ThemeProviderWrapper } from "@/components/providers/ThemeProviderWrapper";
 import { getDictionary, isValidLocale, localizeMetadataPath } from "@/i18n";
 
 export function generateStaticParams() {
@@ -48,8 +49,10 @@ export default async function LocaleLayout({
   const dictionary = getDictionary(locale);
 
   return (
-    <ApiProvider locale={locale} dictionary={dictionary}>
-      {children}
-    </ApiProvider>
+    <ThemeProviderWrapper>
+      <ApiProvider locale={locale} dictionary={dictionary}>
+        {children}
+      </ApiProvider>
+    </ThemeProviderWrapper>
   );
 }

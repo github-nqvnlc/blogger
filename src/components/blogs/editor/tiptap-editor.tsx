@@ -1,14 +1,35 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { EditorContent, useEditor, useEditorState } from "@tiptap/react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
+import { Spinner } from "@/components/ui/spinner";
+import { useFileUpload, useDeleteDoc } from "@/hooks";
+import { useLanguage } from "@/hooks/useLanguage";
+import {
+  isSupportedImageUrl,
+  normalizeBlogMediaUrl,
+  parseVideoMediaUrl,
+  restoreEmbeddedMediaHtml,
+} from "@/lib/blog-posts";
 import { Extension, mergeAttributes, Node } from "@tiptap/core";
-import StarterKit from "@tiptap/starter-kit";
+import Color from "@tiptap/extension-color";
+import Highlight from "@tiptap/extension-highlight";
 import Image from "@tiptap/extension-image";
 import TextAlign from "@tiptap/extension-text-align";
 import { TextStyle } from "@tiptap/extension-text-style";
-import Color from "@tiptap/extension-color";
-import Highlight from "@tiptap/extension-highlight";
+import { EditorContent, useEditor, useEditorState } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
 import {
   AlignCenter,
   AlignJustify,
@@ -30,40 +51,26 @@ import {
   Quote,
   Redo2,
   Type,
-  Undo2,
   UnderlineIcon,
+  Undo2,
   Upload,
   Video,
 } from "lucide-react";
-import { useFileUpload } from "@/hooks";
-import { useLanguage } from "@/hooks/useLanguage";
-import {
-  isSupportedImageUrl,
-  normalizeBlogMediaUrl,
-  parseVideoMediaUrl,
-  restoreEmbeddedMediaHtml,
-} from "@/lib/blog-posts";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Progress } from "@/components/ui/progress";
-import { Spinner } from "@/components/ui/spinner";
+import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 
 type MediaDialogKind = "link" | "image" | "video";
 
 type BlogEditorProps = {
   value: string;
   onChange: (value: string) => void;
+  onTransientImageUpload?: (fileName: string) => void;
+  onTransientUploadsChange?: (hasUploads: boolean) => void;
   disabled?: boolean;
+};
+
+export type BlogEditorHandle = {
+  cleanupUploadedImages: () => Promise<void>;
+  hasUploadedImages: () => boolean;
 };
 
 type TextAlignValue = "left" | "center" | "right" | "justify";
@@ -437,676 +444,730 @@ function ToolbarButton({ active, disabled, onClick, title, children }: ToolbarBu
   );
 }
 
-export function TiptapEditor({ value, onChange, disabled }: BlogEditorProps) {
-  const { t } = useLanguage();
-  const msg = t.blogEditor.editor;
-  const msgDialog = msg.dialog;
-  const uploadImageInputRef = useRef<HTMLInputElement | null>(null);
-  const inlineUpload = useFileUpload();
-  const [dialogKind, setDialogKind] = useState<MediaDialogKind | null>(null);
-  const [dialogValue, setDialogValue] = useState("");
-  const [dialogError, setDialogError] = useState<string | null>(null);
-  const [inlineUploadError, setInlineUploadError] = useState<string | null>(null);
+export const TiptapEditor = forwardRef<BlogEditorHandle, BlogEditorProps>(
+  ({ value, onChange, onTransientImageUpload, onTransientUploadsChange, disabled }, ref) => {
+    const { t } = useLanguage();
+    const msg = t.blogEditor.editor;
+    const msgDialog = msg.dialog;
+    const uploadImageInputRef = useRef<HTMLInputElement | null>(null);
+    const inlineUpload = useFileUpload();
+    const deleteFile = useDeleteDoc("File");
+    const [dialogKind, setDialogKind] = useState<MediaDialogKind | null>(null);
+    const [dialogValue, setDialogValue] = useState("");
+    const [dialogError, setDialogError] = useState<string | null>(null);
+    const [inlineUploadError, setInlineUploadError] = useState<string | null>(null);
+    const [uploadedImageNames, setUploadedImageNames] = useState<string[]>([]);
 
-  const editor = useEditor({
-    immediatelyRender: false,
-    extensions: [
-      StarterKit.configure({
-        heading: {
-          levels: [2, 3],
-        },
-      }),
-      TextStyle,
-      Color,
-      FontFamily,
-      Highlight.configure({
-        multicolor: true,
-      }),
-      FontSize,
-      Indent,
-      TextAlign.configure({
-        types: ["heading", "paragraph", "blockquote", "codeBlock"],
-      }),
-      Image.configure({
-        HTMLAttributes: {
-          class: "rounded-xl",
-        },
-      }),
-      EmbeddedMedia,
-    ],
-    content: normalizeEditorHtml(restoreEmbeddedMediaHtml(value)),
-    editable: !disabled,
-    editorProps: {
-      attributes: {
-        class:
-          "min-h-72 px-4 py-3 focus:outline-none [&_.ProseMirror-selectednode]:ring-2 [&_.ProseMirror-selectednode]:ring-primary [&_a]:cursor-pointer [&_a]:text-primary [&_a]:underline [&_blockquote]:border-l [&_blockquote]:pl-4 [&_blockquote]:italic [&_figure]:my-6 [&_iframe]:aspect-video [&_iframe]:w-full [&_iframe]:rounded-xl [&_ol]:list-decimal [&_ol]:pl-6 [&_pre]:overflow-x-auto [&_pre]:rounded-xl [&_pre]:bg-muted [&_pre]:p-4 [&_ul]:list-disc [&_ul]:pl-6 [&_video]:w-full [&_video]:rounded-xl",
-      },
-    },
-    onUpdate({ editor: currentEditor }) {
-      onChange(normalizeEditorHtml(currentEditor.getHTML()));
-    },
-  });
-
-  useEffect(() => {
-    if (!editor) {
-      return;
-    }
-
-    editor.setEditable(!disabled);
-  }, [disabled, editor]);
-
-  useEffect(() => {
-    if (!editor) {
-      return;
-    }
-
-    const currentValue = normalizeEditorHtml(editor.getHTML());
-    const nextValue = normalizeEditorHtml(restoreEmbeddedMediaHtml(value));
-
-    if (currentValue !== nextValue) {
-      editor.commands.setContent(nextValue || "", {
-        emitUpdate: false,
-      });
-    }
-  }, [editor, value]);
-
-  const editorState =
-    useEditorState({
-      editor,
-      selector: ({ editor: currentEditor }) => {
-        if (!currentEditor) {
-          return DEFAULT_EDITOR_STATE;
+    useImperativeHandle(ref, () => ({
+      async cleanupUploadedImages() {
+        for (const name of uploadedImageNames) {
+          try {
+            await deleteFile.deleteDoc(name);
+          } catch {}
         }
-
-        const blockAttributes = getActiveBlockAttributes(currentEditor);
-        const textStyleAttributes = currentEditor.getAttributes("textStyle");
-        const highlightAttributes = currentEditor.getAttributes("highlight");
-
-        return {
-          isBold: currentEditor.isActive("bold"),
-          isItalic: currentEditor.isActive("italic"),
-          isUnderline: currentEditor.isActive("underline"),
-          isHeading2: currentEditor.isActive("heading", { level: 2 }),
-          isHeading3: currentEditor.isActive("heading", { level: 3 }),
-          isBulletList: currentEditor.isActive("bulletList"),
-          isOrderedList: currentEditor.isActive("orderedList"),
-          isBlockquote: currentEditor.isActive("blockquote"),
-          isCodeBlock: currentEditor.isActive("codeBlock"),
-          canUndo: currentEditor.can().undo(),
-          canRedo: currentEditor.can().redo(),
-          textAlign: (blockAttributes.textAlign as TextAlignValue) || "left",
-          fontFamily: (textStyleAttributes.fontFamily as string) || "",
-          fontSize: (textStyleAttributes.fontSize as string) || "",
-          textColor: (textStyleAttributes.color as string) || "",
-          highlightColor: (highlightAttributes.color as string) || "",
-          indent: Number(blockAttributes.indent ?? 0),
-        };
+        setUploadedImageNames([]);
       },
-    }) ?? DEFAULT_EDITOR_STATE;
+      hasUploadedImages() {
+        return uploadedImageNames.length > 0;
+      },
+    }));
 
-  const dialogText = useMemo(() => {
-    switch (dialogKind) {
-      case "link":
-        return {
-          title: msgDialog.link.title,
-          description: msgDialog.link.description,
-          label: msgDialog.link.label,
-          placeholder: msgDialog.link.placeholder,
-          submitLabel: msgDialog.link.submit,
-        };
-      case "image":
-        return {
-          title: msgDialog.image.title,
-          description: msgDialog.image.description,
-          label: msgDialog.image.label,
-          placeholder: msgDialog.image.placeholder,
-          submitLabel: msgDialog.image.submit,
-        };
-      case "video":
-        return {
-          title: msgDialog.video.title,
-          description: msgDialog.video.description,
-          label: msgDialog.video.label,
-          placeholder: msgDialog.video.placeholder,
-          submitLabel: msgDialog.video.submit,
-        };
-      default:
-        return null;
+    useEffect(() => {
+      onTransientUploadsChange?.(uploadedImageNames.length > 0);
+    }, [onTransientUploadsChange, uploadedImageNames]);
+
+    const editor = useEditor({
+      immediatelyRender: false,
+      extensions: [
+        StarterKit.configure({
+          heading: {
+            levels: [2, 3],
+          },
+        }),
+        TextStyle,
+        Color,
+        FontFamily,
+        Highlight.configure({
+          multicolor: true,
+        }),
+        FontSize,
+        Indent,
+        TextAlign.configure({
+          types: ["heading", "paragraph", "blockquote", "codeBlock"],
+        }),
+        Image.configure({
+          HTMLAttributes: {
+            class: "rounded-xl",
+          },
+        }),
+        EmbeddedMedia,
+      ],
+      content: normalizeEditorHtml(restoreEmbeddedMediaHtml(value)),
+      editable: !disabled,
+      editorProps: {
+        attributes: {
+          class:
+            "min-h-72 px-4 py-3 focus:outline-none [&_.ProseMirror-selectednode]:ring-2 [&_.ProseMirror-selectednode]:ring-primary [&_a]:cursor-pointer [&_a]:text-primary [&_a]:underline [&_blockquote]:border-l [&_blockquote]:pl-4 [&_blockquote]:italic [&_figure]:my-6 [&_iframe]:aspect-video [&_iframe]:w-full [&_iframe]:rounded-xl [&_ol]:list-decimal [&_ol]:pl-6 [&_pre]:overflow-x-auto [&_pre]:rounded-xl [&_pre]:bg-muted [&_pre]:p-4 [&_ul]:list-disc [&_ul]:pl-6 [&_video]:w-full [&_video]:rounded-xl",
+        },
+      },
+      onUpdate({ editor: currentEditor }) {
+        onChange(normalizeEditorHtml(currentEditor.getHTML()));
+      },
+    });
+
+    useEffect(() => {
+      if (!editor) {
+        return;
+      }
+
+      editor.setEditable(!disabled);
+    }, [disabled, editor]);
+
+    useEffect(() => {
+      if (!editor) {
+        return;
+      }
+
+      const currentValue = normalizeEditorHtml(editor.getHTML());
+      const nextValue = normalizeEditorHtml(restoreEmbeddedMediaHtml(value));
+
+      if (currentValue !== nextValue) {
+        editor.commands.setContent(nextValue || "", {
+          emitUpdate: false,
+        });
+      }
+    }, [editor, value]);
+
+    const editorState =
+      useEditorState({
+        editor,
+        selector: ({ editor: currentEditor }) => {
+          if (!currentEditor) {
+            return DEFAULT_EDITOR_STATE;
+          }
+
+          const blockAttributes = getActiveBlockAttributes(currentEditor);
+          const textStyleAttributes = currentEditor.getAttributes("textStyle");
+          const highlightAttributes = currentEditor.getAttributes("highlight");
+
+          return {
+            isBold: currentEditor.isActive("bold"),
+            isItalic: currentEditor.isActive("italic"),
+            isUnderline: currentEditor.isActive("underline"),
+            isHeading2: currentEditor.isActive("heading", { level: 2 }),
+            isHeading3: currentEditor.isActive("heading", { level: 3 }),
+            isBulletList: currentEditor.isActive("bulletList"),
+            isOrderedList: currentEditor.isActive("orderedList"),
+            isBlockquote: currentEditor.isActive("blockquote"),
+            isCodeBlock: currentEditor.isActive("codeBlock"),
+            canUndo: currentEditor.can().undo(),
+            canRedo: currentEditor.can().redo(),
+            textAlign: (blockAttributes.textAlign as TextAlignValue) || "left",
+            fontFamily: (textStyleAttributes.fontFamily as string) || "",
+            fontSize: (textStyleAttributes.fontSize as string) || "",
+            textColor: (textStyleAttributes.color as string) || "",
+            highlightColor: (highlightAttributes.color as string) || "",
+            indent: Number(blockAttributes.indent ?? 0),
+          };
+        },
+      }) ?? DEFAULT_EDITOR_STATE;
+
+    const dialogText = useMemo(() => {
+      switch (dialogKind) {
+        case "link":
+          return {
+            title: msgDialog.link.title,
+            description: msgDialog.link.description,
+            label: msgDialog.link.label,
+            placeholder: msgDialog.link.placeholder,
+            submitLabel: msgDialog.link.submit,
+          };
+        case "image":
+          return {
+            title: msgDialog.image.title,
+            description: msgDialog.image.description,
+            label: msgDialog.image.label,
+            placeholder: msgDialog.image.placeholder,
+            submitLabel: msgDialog.image.submit,
+          };
+        case "video":
+          return {
+            title: msgDialog.video.title,
+            description: msgDialog.video.description,
+            label: msgDialog.video.label,
+            placeholder: msgDialog.video.placeholder,
+            submitLabel: msgDialog.video.submit,
+          };
+        default:
+          return null;
+      }
+    }, [dialogKind, msgDialog]);
+
+    function openDialog(kind: MediaDialogKind) {
+      setDialogKind(kind);
+      setDialogValue("");
+      setDialogError(null);
     }
-  }, [dialogKind, msgDialog]);
 
-  function openDialog(kind: MediaDialogKind) {
-    setDialogKind(kind);
-    setDialogValue("");
-    setDialogError(null);
-  }
-
-  function closeDialog() {
-    setDialogKind(null);
-    setDialogValue("");
-    setDialogError(null);
-  }
-
-  function insertLink() {
-    if (!editor) {
-      return;
+    function closeDialog() {
+      setDialogKind(null);
+      setDialogValue("");
+      setDialogError(null);
     }
 
-    const normalized = normalizeBlogMediaUrl(dialogValue);
-    if (!normalized) {
-      setDialogError(msg.error.invalidLinkUrl);
-      return;
+    function insertLink() {
+      if (!editor) {
+        return;
+      }
+
+      const normalized = normalizeBlogMediaUrl(dialogValue);
+      if (!normalized) {
+        setDialogError(msg.error.invalidLinkUrl);
+        return;
+      }
+
+      if (!/^https?:\/\//i.test(normalized) && !normalized.startsWith("/")) {
+        setDialogError(msg.error.invalidLinkProtocol);
+        return;
+      }
+
+      const { empty } = editor.state.selection;
+      const linkAttributes = {
+        href: normalized,
+        target: "_blank",
+        rel: "noopener noreferrer",
+      };
+
+      if (empty) {
+        editor
+          .chain()
+          .focus()
+          .insertContent({
+            type: "text",
+            text: normalized,
+            marks: [
+              {
+                type: "link",
+                attrs: linkAttributes,
+              },
+            ],
+          })
+          .run();
+      } else {
+        editor.chain().focus().extendMarkRange("link").setLink(linkAttributes).run();
+      }
+
+      closeDialog();
     }
 
-    if (!/^https?:\/\//i.test(normalized) && !normalized.startsWith("/")) {
-      setDialogError(msg.error.invalidLinkProtocol);
-      return;
+    function insertImageFromUrl() {
+      if (!editor) {
+        return;
+      }
+
+      const normalized = normalizeBlogMediaUrl(dialogValue);
+      if (!normalized || !isSupportedImageUrl(normalized)) {
+        setDialogError(msg.error.invalidImageUrl);
+        return;
+      }
+
+      editor.chain().focus().setImage({ src: normalized }).run();
+      closeDialog();
     }
 
-    const { empty } = editor.state.selection;
-    const linkAttributes = {
-      href: normalized,
-      target: "_blank",
-      rel: "noopener noreferrer",
-    };
+    function insertVideoFromUrl() {
+      if (!editor) {
+        return;
+      }
 
-    if (empty) {
+      const parsed = parseVideoMediaUrl(dialogValue);
+      if (!parsed) {
+        setDialogError(msg.error.invalidVideoUrl);
+        return;
+      }
+
       editor
         .chain()
         .focus()
         .insertContent({
-          type: "text",
-          text: normalized,
-          marks: [
-            {
-              type: "link",
-              attrs: linkAttributes,
-            },
-          ],
+          type: "embeddedMedia",
+          attrs: parsed,
         })
         .run();
-    } else {
-      editor.chain().focus().extendMarkRange("link").setLink(linkAttributes).run();
+      closeDialog();
     }
 
-    closeDialog();
-  }
+    function handleDialogSubmit(event: React.FormEvent<HTMLFormElement>) {
+      event.preventDefault();
 
-  function insertImageFromUrl() {
-    if (!editor) {
-      return;
+      if (dialogKind === "link") {
+        insertLink();
+        return;
+      }
+
+      if (dialogKind === "image") {
+        insertImageFromUrl();
+        return;
+      }
+
+      if (dialogKind === "video") {
+        insertVideoFromUrl();
+      }
     }
 
-    const normalized = normalizeBlogMediaUrl(dialogValue);
-    if (!normalized || !isSupportedImageUrl(normalized)) {
-      setDialogError(msg.error.invalidImageUrl);
-      return;
+    async function handleInlineImageUpload(event: React.ChangeEvent<HTMLInputElement>) {
+      const file = event.target.files?.[0];
+      event.target.value = "";
+
+      if (!editor || !file) {
+        return;
+      }
+
+      if (!file.type.startsWith("image/")) {
+        setInlineUploadError(msg.error.invalidImageType);
+        return;
+      }
+
+      setInlineUploadError(null);
+
+      try {
+        const uploaded = await inlineUpload.upload(file, {
+          isPrivate: false,
+        });
+
+        if (uploaded.name) {
+          setUploadedImageNames(prev => [...prev, uploaded.name]);
+          onTransientImageUpload?.(uploaded.name);
+        }
+
+        editor
+          .chain()
+          .focus()
+          .setImage({
+            src: uploaded.file_url,
+            alt: uploaded.file_name || file.name,
+          })
+          .run();
+      } catch (error) {
+        setInlineUploadError(error instanceof Error ? error.message : msg.error.uploadFailed);
+      }
     }
 
-    editor.chain().focus().setImage({ src: normalized }).run();
-    closeDialog();
-  }
-
-  function insertVideoFromUrl() {
-    if (!editor) {
-      return;
-    }
-
-    const parsed = parseVideoMediaUrl(dialogValue);
-    if (!parsed) {
-      setDialogError(msg.error.invalidVideoUrl);
-      return;
-    }
-
-    editor
-      .chain()
-      .focus()
-      .insertContent({
-        type: "embeddedMedia",
-        attrs: parsed,
-      })
-      .run();
-    closeDialog();
-  }
-
-  function handleDialogSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    if (dialogKind === "link") {
-      insertLink();
-      return;
-    }
-
-    if (dialogKind === "image") {
-      insertImageFromUrl();
-      return;
-    }
-
-    if (dialogKind === "video") {
-      insertVideoFromUrl();
-    }
-  }
-
-  async function handleInlineImageUpload(event: React.ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-    event.target.value = "";
-
-    if (!editor || !file) {
-      return;
-    }
-
-    if (!file.type.startsWith("image/")) {
-      setInlineUploadError(msg.error.invalidImageType);
-      return;
-    }
-
-    setInlineUploadError(null);
-
-    try {
-      const uploaded = await inlineUpload.upload(file, {
-        isPrivate: false,
-      });
-
-      editor
-        .chain()
-        .focus()
-        .setImage({
-          src: uploaded.file_url,
-          alt: uploaded.file_name || file.name,
-        })
-        .run();
-    } catch (error) {
-      setInlineUploadError(error instanceof Error ? error.message : msg.error.uploadFailed);
-    }
-  }
-
-  const mediaPreview = useMemo(() => {
-    if (!dialogKind || dialogKind === "link") {
-      return null;
-    }
-
-    if (dialogKind === "image") {
-      const normalized = normalizeBlogMediaUrl(dialogValue);
-      if (!normalized || !isSupportedImageUrl(normalized)) {
+    const mediaPreview = useMemo(() => {
+      if (!dialogKind || dialogKind === "link") {
         return null;
+      }
+
+      if (dialogKind === "image") {
+        const normalized = normalizeBlogMediaUrl(dialogValue);
+        if (!normalized || !isSupportedImageUrl(normalized)) {
+          return null;
+        }
+
+        return (
+          <div className="overflow-hidden rounded-xl border">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={normalized} alt="Image preview" className="max-h-60 w-full object-cover" />
+          </div>
+        );
+      }
+
+      const parsed = parseVideoMediaUrl(dialogValue);
+      if (!parsed) {
+        return null;
+      }
+
+      if (parsed.kind === "embed") {
+        return (
+          <div className="overflow-hidden rounded-xl border">
+            <iframe
+              src={parsed.src}
+              title={parsed.title}
+              className="aspect-video w-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+            />
+          </div>
+        );
       }
 
       return (
         <div className="overflow-hidden rounded-xl border">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={normalized} alt="Image preview" className="max-h-60 w-full object-cover" />
+          <video src={parsed.src} controls playsInline preload="metadata" className="w-full" />
         </div>
       );
-    }
-
-    const parsed = parseVideoMediaUrl(dialogValue);
-    if (!parsed) {
-      return null;
-    }
-
-    if (parsed.kind === "embed") {
-      return (
-        <div className="overflow-hidden rounded-xl border">
-          <iframe
-            src={parsed.src}
-            title={parsed.title}
-            className="aspect-video w-full"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            allowFullScreen
-          />
-        </div>
-      );
-    }
+    }, [dialogKind, dialogValue]);
 
     return (
-      <div className="overflow-hidden rounded-xl border">
-        <video src={parsed.src} controls playsInline preload="metadata" className="w-full" />
+      <div className="space-y-3">
+        <div className="flex flex-wrap items-center gap-2 rounded-xl border bg-muted/30 p-3">
+          {/* Heading2 Button */}
+          <ToolbarButton
+            active={editorState.isHeading2}
+            disabled={!editor || disabled}
+            onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}
+            title={msg.toolbar.heading2}
+          >
+            <Heading2 />
+          </ToolbarButton>
+
+          {/* Heading3 Button */}
+          <ToolbarButton
+            active={editorState.isHeading3}
+            disabled={!editor || disabled}
+            onClick={() => editor?.chain().focus().toggleHeading({ level: 3 }).run()}
+            title={msg.toolbar.heading3}
+          >
+            <Heading3 />
+          </ToolbarButton>
+
+          {/* Bold Button */}
+          <ToolbarButton
+            active={editorState.isBold}
+            disabled={!editor || disabled}
+            onClick={() => editor?.chain().focus().toggleBold().run()}
+            title={msg.toolbar.bold}
+          >
+            <Bold />
+          </ToolbarButton>
+
+          {/* Italic Button */}
+          <ToolbarButton
+            active={editorState.isItalic}
+            disabled={!editor || disabled}
+            onClick={() => editor?.chain().focus().toggleItalic().run()}
+            title={msg.toolbar.italic}
+          >
+            <Italic />
+          </ToolbarButton>
+
+          {/* Underline Button */}
+          <ToolbarButton
+            active={editorState.isUnderline}
+            disabled={!editor || disabled}
+            onClick={() => editor?.chain().focus().toggleUnderline().run()}
+            title={msg.toolbar.underline}
+          >
+            <UnderlineIcon />
+          </ToolbarButton>
+
+          {/* Align Left Button */}
+          <ToolbarButton
+            active={editorState.textAlign === "left"}
+            disabled={!editor || disabled}
+            onClick={() => editor?.chain().focus().setTextAlign("left").run()}
+            title={msg.toolbar.alignLeft}
+          >
+            <AlignLeft />
+          </ToolbarButton>
+
+          {/* Align Center Button */}
+          <ToolbarButton
+            active={editorState.textAlign === "center"}
+            disabled={!editor || disabled}
+            onClick={() => editor?.chain().focus().setTextAlign("center").run()}
+            title={msg.toolbar.alignCenter}
+          >
+            <AlignCenter />
+          </ToolbarButton>
+
+          {/* Align Right Button */}
+          <ToolbarButton
+            active={editorState.textAlign === "right"}
+            disabled={!editor || disabled}
+            onClick={() => editor?.chain().focus().setTextAlign("right").run()}
+            title={msg.toolbar.alignRight}
+          >
+            <AlignRight />
+          </ToolbarButton>
+
+          {/* Align Justify Button */}
+          <ToolbarButton
+            active={editorState.textAlign === "justify"}
+            disabled={!editor || disabled}
+            onClick={() => editor?.chain().focus().setTextAlign("justify").run()}
+            title={msg.toolbar.alignJustify}
+          >
+            <AlignJustify />
+          </ToolbarButton>
+
+          {/* Outdent Button */}
+          <ToolbarButton
+            disabled={!editor || disabled}
+            onClick={() => editor?.chain().focus().outdent().run()}
+            title={msg.toolbar.outdent}
+          >
+            <IndentDecrease />
+          </ToolbarButton>
+
+          {/* Indent Button */}
+          <ToolbarButton
+            disabled={!editor || disabled || editorState.indent >= 5}
+            onClick={() => editor?.chain().focus().indent().run()}
+            title={msg.toolbar.indent}
+          >
+            <IndentIncrease />
+          </ToolbarButton>
+
+          {/* Font Family Select */}
+          <label className="flex items-center gap-2 rounded-md border bg-background px-2 py-1.5 text-sm text-muted-foreground">
+            <Type className="size-4" />
+            <select
+              className="max-w-28 bg-transparent text-sm outline-none"
+              disabled={!editor || disabled}
+              value={editorState.fontFamily}
+              onChange={event => {
+                const nextValue = event.target.value;
+                if (!editor) {
+                  return;
+                }
+
+                if (!nextValue) {
+                  editor.chain().focus().unsetFontFamily().run();
+                  return;
+                }
+
+                editor.chain().focus().setFontFamily(nextValue).run();
+              }}
+            >
+              <option value="">{msg.toolbar.fontFamily}</option>
+              {FONT_FAMILY_OPTIONS.map(fontFamily => (
+                <option key={fontFamily.value} value={fontFamily.value}>
+                  {fontFamily.label}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          {/* Font Size Select */}
+          <label className="flex items-center gap-2 rounded-md border bg-background px-2 py-1.5 text-sm text-muted-foreground">
+            <Type className="size-4" />
+            <select
+              className="bg-transparent text-sm outline-none"
+              disabled={!editor || disabled}
+              value={editorState.fontSize}
+              onChange={event => {
+                const nextValue = event.target.value;
+                if (!editor) {
+                  return;
+                }
+
+                if (!nextValue) {
+                  editor.chain().focus().unsetFontSize().run();
+                  return;
+                }
+
+                editor.chain().focus().setFontSize(nextValue).run();
+              }}
+            >
+              <option value="">{msg.toolbar.fontSize}</option>
+              {FONT_SIZE_OPTIONS.map(fontSize => (
+                <option key={fontSize} value={fontSize}>
+                  {fontSize.replace("px", "")}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          {/* Text Color Picker */}
+          <label className="flex items-center gap-2 rounded-md border bg-background px-2 py-0 text-sm text-muted-foreground">
+            <Palette className="size-4" />
+            <input
+              type="color"
+              title={msg.toolbar.textColor}
+              disabled={!editor || disabled}
+              value={editorState.textColor || DEFAULT_TEXT_COLOR}
+              onChange={event => editor?.chain().focus().setColor(event.target.value).run()}
+              className="h-8 w-10 rounded border-0 bg-transparent p-0"
+            />
+          </label>
+
+          {/* Highlight Color Picker */}
+          <label className="flex items-center gap-2 rounded-md border bg-background px-2 py-0 text-sm text-muted-foreground">
+            <Highlighter className="size-4" />
+            <input
+              type="color"
+              title={msg.toolbar.highlightColor}
+              disabled={!editor || disabled}
+              value={editorState.highlightColor || DEFAULT_HIGHLIGHT_COLOR}
+              onChange={event =>
+                editor?.chain().focus().setHighlight({ color: event.target.value }).run()
+              }
+              className="h-8 w-10 rounded border-0 bg-transparent p-0"
+            />
+          </label>
+
+          {/* Bullet List Button */}
+          <ToolbarButton
+            active={editorState.isBulletList}
+            disabled={!editor || disabled}
+            onClick={() => editor?.chain().focus().toggleBulletList().run()}
+            title={msg.toolbar.bulletList}
+          >
+            <List />
+          </ToolbarButton>
+
+          {/* Ordered List Button */}
+          <ToolbarButton
+            active={editorState.isOrderedList}
+            disabled={!editor || disabled}
+            onClick={() => editor?.chain().focus().toggleOrderedList().run()}
+            title={msg.toolbar.orderedList}
+          >
+            <ListOrdered />
+          </ToolbarButton>
+
+          {/* Blockquote Button */}
+          <ToolbarButton
+            active={editorState.isBlockquote}
+            disabled={!editor || disabled}
+            onClick={() => editor?.chain().focus().toggleBlockquote().run()}
+            title={msg.toolbar.blockquote}
+          >
+            <Quote />
+          </ToolbarButton>
+
+          {/* Code Block Button */}
+          <ToolbarButton
+            active={editorState.isCodeBlock}
+            disabled={!editor || disabled}
+            onClick={() => editor?.chain().focus().toggleCodeBlock().run()}
+            title={msg.toolbar.codeBlock}
+          >
+            <Code2 />
+          </ToolbarButton>
+
+          {/* Insert Link Button */}
+          <ToolbarButton
+            disabled={!editor || disabled}
+            onClick={() => openDialog("link")}
+            title={msg.toolbar.insertLink}
+          >
+            <Link2 />
+          </ToolbarButton>
+
+          {/* Insert Image Button */}
+          <ToolbarButton
+            disabled={!editor || disabled}
+            onClick={() => openDialog("image")}
+            title={msg.toolbar.insertImageUrl}
+          >
+            <ImagePlus />
+          </ToolbarButton>
+
+          {/* Upload Image Button */}
+          <ToolbarButton
+            disabled={!editor || disabled || inlineUpload.loading}
+            onClick={() => uploadImageInputRef.current?.click()}
+            title={msg.toolbar.uploadImage}
+          >
+            {inlineUpload.loading ? <Spinner /> : <Upload />}
+          </ToolbarButton>
+
+          {/* Insert Video Button */}
+          <ToolbarButton
+            disabled={!editor || disabled}
+            onClick={() => openDialog("video")}
+            title={msg.toolbar.insertVideoUrl}
+          >
+            <Video />
+          </ToolbarButton>
+
+          {/* Undo Button */}
+          <ToolbarButton
+            disabled={!editor || disabled || !editorState.canUndo}
+            onClick={() => editor?.chain().focus().undo().run()}
+            title={msg.toolbar.undo}
+          >
+            <Undo2 />
+          </ToolbarButton>
+
+          {/* Redo Button */}
+          <ToolbarButton
+            disabled={!editor || disabled || !editorState.canRedo}
+            onClick={() => editor?.chain().focus().redo().run()}
+            title={msg.toolbar.redo}
+          >
+            <Redo2 />
+          </ToolbarButton>
+
+          <input
+            ref={uploadImageInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleInlineImageUpload}
+          />
+        </div>
+
+        {inlineUpload.loading && (
+          <div className="space-y-2 rounded-xl border bg-muted/20 p-3">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Spinner />
+              <span>{msg.uploading}</span>
+            </div>
+            <Progress value={inlineUpload.progress} />
+          </div>
+        )}
+
+        {(inlineUploadError || inlineUpload.error) && (
+          <Alert variant="destructive">
+            <AlertDescription>{inlineUploadError || inlineUpload.error?.message}</AlertDescription>
+          </Alert>
+        )}
+
+        <div className="overflow-hidden rounded-xl border bg-background">
+          <EditorContent editor={editor} />
+        </div>
+
+        <Dialog
+          open={dialogKind !== null}
+          onOpenChange={open => {
+            if (!open) {
+              closeDialog();
+            }
+          }}
+        >
+          <DialogContent>
+            {dialogText && (
+              <form className="space-y-4" onSubmit={handleDialogSubmit}>
+                <DialogHeader>
+                  <DialogTitle>{dialogText.title}</DialogTitle>
+                  <DialogDescription>{dialogText.description}</DialogDescription>
+                </DialogHeader>
+
+                <div className="space-y-2">
+                  <Label htmlFor="media-url">{dialogText.label}</Label>
+                  <Input
+                    id="media-url"
+                    value={dialogValue}
+                    onChange={event => setDialogValue(event.target.value)}
+                    placeholder={dialogText.placeholder}
+                    autoFocus
+                  />
+                </div>
+
+                {mediaPreview}
+
+                {dialogError && (
+                  <Alert variant="destructive">
+                    <AlertDescription>{dialogError}</AlertDescription>
+                  </Alert>
+                )}
+
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={closeDialog}>
+                    {msgDialog.cancel}
+                  </Button>
+                  <Button type="submit">{dialogText.submitLabel}</Button>
+                </DialogFooter>
+              </form>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     );
-  }, [dialogKind, dialogValue]);
+  }
+);
 
-  return (
-    <div className="space-y-3">
-      <div className="flex flex-wrap items-center gap-2 rounded-xl border bg-muted/30 p-3">
-        <ToolbarButton
-          active={editorState.isHeading2}
-          disabled={!editor || disabled}
-          onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}
-          title={msg.toolbar.heading2}
-        >
-          <Heading2 />
-        </ToolbarButton>
-
-        <ToolbarButton
-          active={editorState.isHeading3}
-          disabled={!editor || disabled}
-          onClick={() => editor?.chain().focus().toggleHeading({ level: 3 }).run()}
-          title={msg.toolbar.heading3}
-        >
-          <Heading3 />
-        </ToolbarButton>
-
-        <ToolbarButton
-          active={editorState.isBold}
-          disabled={!editor || disabled}
-          onClick={() => editor?.chain().focus().toggleBold().run()}
-          title={msg.toolbar.bold}
-        >
-          <Bold />
-        </ToolbarButton>
-
-        <ToolbarButton
-          active={editorState.isItalic}
-          disabled={!editor || disabled}
-          onClick={() => editor?.chain().focus().toggleItalic().run()}
-          title={msg.toolbar.italic}
-        >
-          <Italic />
-        </ToolbarButton>
-
-        <ToolbarButton
-          active={editorState.isUnderline}
-          disabled={!editor || disabled}
-          onClick={() => editor?.chain().focus().toggleUnderline().run()}
-          title={msg.toolbar.underline}
-        >
-          <UnderlineIcon />
-        </ToolbarButton>
-
-        <ToolbarButton
-          active={editorState.textAlign === "left"}
-          disabled={!editor || disabled}
-          onClick={() => editor?.chain().focus().setTextAlign("left").run()}
-          title={msg.toolbar.alignLeft}
-        >
-          <AlignLeft />
-        </ToolbarButton>
-
-        <ToolbarButton
-          active={editorState.textAlign === "center"}
-          disabled={!editor || disabled}
-          onClick={() => editor?.chain().focus().setTextAlign("center").run()}
-          title={msg.toolbar.alignCenter}
-        >
-          <AlignCenter />
-        </ToolbarButton>
-
-        <ToolbarButton
-          active={editorState.textAlign === "right"}
-          disabled={!editor || disabled}
-          onClick={() => editor?.chain().focus().setTextAlign("right").run()}
-          title={msg.toolbar.alignRight}
-        >
-          <AlignRight />
-        </ToolbarButton>
-
-        <ToolbarButton
-          active={editorState.textAlign === "justify"}
-          disabled={!editor || disabled}
-          onClick={() => editor?.chain().focus().setTextAlign("justify").run()}
-          title={msg.toolbar.alignJustify}
-        >
-          <AlignJustify />
-        </ToolbarButton>
-
-        <ToolbarButton
-          disabled={!editor || disabled}
-          onClick={() => editor?.chain().focus().outdent().run()}
-          title={msg.toolbar.outdent}
-        >
-          <IndentDecrease />
-        </ToolbarButton>
-
-        <ToolbarButton
-          disabled={!editor || disabled || editorState.indent >= 5}
-          onClick={() => editor?.chain().focus().indent().run()}
-          title={msg.toolbar.indent}
-        >
-          <IndentIncrease />
-        </ToolbarButton>
-
-        <label className="flex items-center gap-2 rounded-md border bg-background px-2 py-1.5 text-sm text-muted-foreground">
-          <Type className="size-4" />
-          <select
-            className="max-w-28 bg-transparent text-sm outline-none"
-            disabled={!editor || disabled}
-            value={editorState.fontFamily}
-            onChange={event => {
-              const nextValue = event.target.value;
-              if (!editor) {
-                return;
-              }
-
-              if (!nextValue) {
-                editor.chain().focus().unsetFontFamily().run();
-                return;
-              }
-
-              editor.chain().focus().setFontFamily(nextValue).run();
-            }}
-          >
-            <option value="">{msg.toolbar.fontFamily}</option>
-            {FONT_FAMILY_OPTIONS.map(fontFamily => (
-              <option key={fontFamily.value} value={fontFamily.value}>
-                {fontFamily.label}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="flex items-center gap-2 rounded-md border bg-background px-2 py-1.5 text-sm text-muted-foreground">
-          <Type className="size-4" />
-          <select
-            className="bg-transparent text-sm outline-none"
-            disabled={!editor || disabled}
-            value={editorState.fontSize}
-            onChange={event => {
-              const nextValue = event.target.value;
-              if (!editor) {
-                return;
-              }
-
-              if (!nextValue) {
-                editor.chain().focus().unsetFontSize().run();
-                return;
-              }
-
-              editor.chain().focus().setFontSize(nextValue).run();
-            }}
-          >
-            <option value="">{msg.toolbar.fontSize}</option>
-            {FONT_SIZE_OPTIONS.map(fontSize => (
-              <option key={fontSize} value={fontSize}>
-                {fontSize.replace("px", "")}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="flex items-center gap-2 rounded-md border bg-background px-2 py-0 text-sm text-muted-foreground">
-          <Palette className="size-4" />
-          <input
-            type="color"
-            title={msg.toolbar.textColor}
-            disabled={!editor || disabled}
-            value={editorState.textColor || DEFAULT_TEXT_COLOR}
-            onChange={event => editor?.chain().focus().setColor(event.target.value).run()}
-            className="h-8 w-10 rounded border-0 bg-transparent p-0"
-          />
-        </label>
-
-        <label className="flex items-center gap-2 rounded-md border bg-background px-2 py-0 text-sm text-muted-foreground">
-          <Highlighter className="size-4" />
-          <input
-            type="color"
-            title={msg.toolbar.highlightColor}
-            disabled={!editor || disabled}
-            value={editorState.highlightColor || DEFAULT_HIGHLIGHT_COLOR}
-            onChange={event =>
-              editor?.chain().focus().setHighlight({ color: event.target.value }).run()
-            }
-            className="h-8 w-10 rounded border-0 bg-transparent p-0"
-          />
-        </label>
-
-        <ToolbarButton
-          active={editorState.isBulletList}
-          disabled={!editor || disabled}
-          onClick={() => editor?.chain().focus().toggleBulletList().run()}
-          title={msg.toolbar.bulletList}
-        >
-          <List />
-        </ToolbarButton>
-
-        <ToolbarButton
-          active={editorState.isOrderedList}
-          disabled={!editor || disabled}
-          onClick={() => editor?.chain().focus().toggleOrderedList().run()}
-          title={msg.toolbar.orderedList}
-        >
-          <ListOrdered />
-        </ToolbarButton>
-
-        <ToolbarButton
-          active={editorState.isBlockquote}
-          disabled={!editor || disabled}
-          onClick={() => editor?.chain().focus().toggleBlockquote().run()}
-          title={msg.toolbar.blockquote}
-        >
-          <Quote />
-        </ToolbarButton>
-
-        <ToolbarButton
-          active={editorState.isCodeBlock}
-          disabled={!editor || disabled}
-          onClick={() => editor?.chain().focus().toggleCodeBlock().run()}
-          title={msg.toolbar.codeBlock}
-        >
-          <Code2 />
-        </ToolbarButton>
-
-        <ToolbarButton
-          disabled={!editor || disabled}
-          onClick={() => openDialog("link")}
-          title={msg.toolbar.insertLink}
-        >
-          <Link2 />
-        </ToolbarButton>
-
-        <ToolbarButton
-          disabled={!editor || disabled}
-          onClick={() => openDialog("image")}
-          title={msg.toolbar.insertImageUrl}
-        >
-          <ImagePlus />
-        </ToolbarButton>
-
-        <ToolbarButton
-          disabled={!editor || disabled || inlineUpload.loading}
-          onClick={() => uploadImageInputRef.current?.click()}
-          title={msg.toolbar.uploadImage}
-        >
-          {inlineUpload.loading ? <Spinner /> : <Upload />}
-        </ToolbarButton>
-
-        <ToolbarButton
-          disabled={!editor || disabled}
-          onClick={() => openDialog("video")}
-          title={msg.toolbar.insertVideoUrl}
-        >
-          <Video />
-        </ToolbarButton>
-
-        <ToolbarButton
-          disabled={!editor || disabled || !editorState.canUndo}
-          onClick={() => editor?.chain().focus().undo().run()}
-          title={msg.toolbar.undo}
-        >
-          <Undo2 />
-        </ToolbarButton>
-
-        <ToolbarButton
-          disabled={!editor || disabled || !editorState.canRedo}
-          onClick={() => editor?.chain().focus().redo().run()}
-          title={msg.toolbar.redo}
-        >
-          <Redo2 />
-        </ToolbarButton>
-
-        <input
-          ref={uploadImageInputRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={handleInlineImageUpload}
-        />
-      </div>
-
-      {inlineUpload.loading && (
-        <div className="space-y-2 rounded-xl border bg-muted/20 p-3">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Spinner />
-            <span>{msg.uploading}</span>
-          </div>
-          <Progress value={inlineUpload.progress} />
-        </div>
-      )}
-
-      {(inlineUploadError || inlineUpload.error) && (
-        <Alert variant="destructive">
-          <AlertDescription>{inlineUploadError || inlineUpload.error?.message}</AlertDescription>
-        </Alert>
-      )}
-
-      <div className="overflow-hidden rounded-xl border bg-background">
-        <EditorContent editor={editor} />
-      </div>
-
-      <Dialog
-        open={dialogKind !== null}
-        onOpenChange={open => {
-          if (!open) {
-            closeDialog();
-          }
-        }}
-      >
-        <DialogContent>
-          {dialogText && (
-            <form className="space-y-4" onSubmit={handleDialogSubmit}>
-              <DialogHeader>
-                <DialogTitle>{dialogText.title}</DialogTitle>
-                <DialogDescription>{dialogText.description}</DialogDescription>
-              </DialogHeader>
-
-              <div className="space-y-2">
-                <Label htmlFor="media-url">{dialogText.label}</Label>
-                <Input
-                  id="media-url"
-                  value={dialogValue}
-                  onChange={event => setDialogValue(event.target.value)}
-                  placeholder={dialogText.placeholder}
-                  autoFocus
-                />
-              </div>
-
-              {mediaPreview}
-
-              {dialogError && (
-                <Alert variant="destructive">
-                  <AlertDescription>{dialogError}</AlertDescription>
-                </Alert>
-              )}
-
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={closeDialog}>
-                  {msgDialog.cancel}
-                </Button>
-                <Button type="submit">{dialogText.submitLabel}</Button>
-              </DialogFooter>
-            </form>
-          )}
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-}
+TiptapEditor.displayName = "TiptapEditor";

@@ -5,7 +5,17 @@ export const blogPosts = {
     "Compose a blog post step by step with metadata, content, and a final preview.",
   editTitle: "Edit post",
   editDescription: "Update the metadata, content, cover image, and post relations before saving.",
+  no: "No",
   cancel: "Cancel",
+  browserLeavePrompt: "You have unsaved changes. Are you sure you want to leave?",
+  unsavedNavigationTitle: "Leave this page?",
+  unsavedNavigationDescription:
+    "You have unsaved changes in this post. Leaving now will discard them.",
+  cancelDraftConfirmTitle: "Cancel post creation?",
+  cancelDraftConfirmDescription:
+    "You have unsaved changes in this post. Are you sure you want to cancel?",
+  cancelDraftConfirmWithUploadsDescription:
+    "You have unsaved changes and uploaded files that will be deleted. Are you sure you want to cancel?",
   continue: "Continue",
   back: "Back",
   preview: "Preview",

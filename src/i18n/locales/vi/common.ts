@@ -31,4 +31,5 @@ export const common = {
   all: "Tất cả trạng thái",
   selected: "đã chọn",
   deleteSelected: "Xóa đã chọn",
+  confirm: "Xác nhận",
 } as const;
