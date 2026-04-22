@@ -72,6 +72,7 @@ export const blogTags = {
   detail: {
     pageTitle: "Chi tiết nhãn",
     backToList: "Quay lại danh sách",
+    createdAt: "Ngày tạo",
     slug: "Slug",
     noSlug: "Không có slug",
     description: "Mô tả",

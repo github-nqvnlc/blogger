@@ -9,6 +9,8 @@ export type { FrappeUser } from "./useAuth";
 export { useGetDoc } from "./useGetDoc";
 export { useGetList } from "./useGetList";
 export { useGetCount } from "./useGetCount";
+export { useLazyLoadList } from "./useLazyLoadList";
+export type { UseLazyLoadListArgs, UseLazyLoadListResult } from "./useLazyLoadList";
 
 // ── Document (Write) ──────────────────────────────────────────────────────────
 export { useCreateDoc } from "./useCreateDoc";

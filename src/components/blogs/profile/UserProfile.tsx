@@ -175,13 +175,13 @@ export function UserProfile() {
       <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
         <div className="space-y-6">
           <Card className="overflow-hidden">
-            <div className="h-12 bg-linear-to-r from-primary/20 to-primary/5" />
-            <CardHeader className="-mt-10 items-center text-center">
+            <CardHeader className="items-center text-center">
               <div className="flex flex-col items-center justify-center">
                 <Avatar className="h-32 w-32 border-4 border-background shadow-md">
                   <AvatarImage
                     src={`${process.env.NEXT_PUBLIC_FRAPPE_URL || ""}${userProfile.user_image}`}
                     alt={userProfile.full_name}
+                    className="object-cover w-full h-full"
                   />
                   <AvatarFallback>{getInitials(userProfile.full_name)}</AvatarFallback>
                 </Avatar>
@@ -199,7 +199,7 @@ export function UserProfile() {
             </CardHeader>
           </Card>
 
-          <Card className="border-primary/15">
+          <Card className="">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
@@ -237,7 +237,7 @@ export function UserProfile() {
         </div>
 
         <div className="space-y-6">
-          <Card className="border-primary/20">
+          <Card className="">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
@@ -305,7 +305,7 @@ export function UserProfile() {
             <CardContent>
               <div className="flex flex-wrap gap-2.5 max-h-[150px] overflow-y-auto">
                 {userProfile.roles?.length ? (
-                  userProfile.roles.map(item => (
+                  userProfile.roles.map((item: UserRole) => (
                     <Badge
                       key={item.role}
                       variant="outline"

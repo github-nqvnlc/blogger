@@ -325,7 +325,9 @@ export function CategoryList() {
               variant="destructive"
               size="sm"
               onClick={() =>
-                handleBulkDeleteClick(categories?.filter((_, i) => rowSelection[i] === true) ?? [])
+                handleBulkDeleteClick(
+                  categories?.filter((_: Category, i: number) => rowSelection[i] === true) ?? []
+                )
               }
             >
               <Trash2 className="mr-2 h-4 w-4" />

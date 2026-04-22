@@ -3,7 +3,6 @@
 import { AdminAccessDenied } from "@/components/layout/admin-access-denied";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -21,17 +20,27 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useGetCount, useGetDoc, useGetList } from "@/hooks";
+import { useGetDoc, useLazyLoadList } from "@/hooks";
 import { useLanguage } from "@/hooks/useLanguage";
 import { buildLocalePath } from "@/i18n";
 import { BlogDepartment, Category, Post, Topic } from "@/types/blogs";
 import { Filter } from "@/types/hooks";
 import { formatDate } from "date-fns";
-import { ArrowLeft, Eye, FolderTree, Hash, Layers3, Pencil } from "lucide-react";
+import {
+  ArrowLeft,
+  BookOpen,
+  FolderOpen,
+  FolderTree,
+  Hash,
+  Layers3,
+  Lightbulb,
+  Pencil,
+} from "lucide-react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, useRouter } from "next/navigation";
 import * as React from "react";
 import { DepartmentForm } from "./DepartmentForm";
+import { StatusBadge as StatusBadgePost } from "@/components/ui/badge-status";
 
 interface DepartmentDetailProps {
   departmentId: string;
@@ -84,29 +93,9 @@ function EmptyState({ icon: Icon, label }: { icon: React.ElementType; label: str
   );
 }
 
-function StatCard({
-  title,
-  value,
-  icon: Icon,
-}: {
-  title: string;
-  value?: number;
-  icon: React.ElementType;
-}) {
-  return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
-        <Icon className="h-4 w-4 text-muted-foreground" />
-      </CardHeader>
-      <CardContent>
-        <div className="text-3xl font-semibold">{value ?? 0}</div>
-      </CardContent>
-    </Card>
-  );
-}
-
 export function DepartmentDetail({ departmentId }: DepartmentDetailProps) {
+  const router = useRouter();
+  const PAGE_SIZE = 10;
   const { locale, t } = useLanguage();
   const copy = t.blogDepartments.detail;
   const common = t.common;
@@ -124,30 +113,47 @@ export function DepartmentDetail({ departmentId }: DepartmentDetailProps) {
     [departmentId]
   );
 
-  const { data: categories, isLoading: isLoadingCategories } = useGetList<Category>("categories", {
+  const {
+    loadedItems: loadedCategories,
+    isLoading: isLoadingCategories,
+    total: totalCategories,
+    scrollRef: categoriesScrollRef,
+    handleScroll: handleCategoriesScroll,
+  } = useLazyLoadList<Category>({
+    resource: "categories",
     fields: ["name", "category", "description", "slug", "is_active", "creation"],
-    filters: [...departmentFilter],
+    filters: departmentFilter,
     orderBy: { field: "creation", order: "desc" },
-    limit: 100,
+    pageSize: PAGE_SIZE,
   });
 
-  const { data: topics, isLoading: isLoadingTopics } = useGetList<Topic>("topics", {
+  const {
+    loadedItems: loadedTopics,
+    isLoading: isLoadingTopics,
+    total: totalTopics,
+    scrollRef: topicsScrollRef,
+    handleScroll: handleTopicsScroll,
+  } = useLazyLoadList<Topic>({
+    resource: "topics",
     fields: ["name", "topic", "desc", "slug", "is_active", "creation"],
-    filters: [...departmentFilter],
+    filters: departmentFilter,
     orderBy: { field: "creation", order: "desc" },
-    limit: 100,
+    pageSize: PAGE_SIZE,
   });
 
-  const { data: posts, isLoading: isLoadingPosts } = useGetList<Post>("posts", {
+  const {
+    loadedItems: loadedPosts,
+    isLoading: isLoadingPosts,
+    total: totalPosts,
+    scrollRef: postsScrollRef,
+    handleScroll: handlePostsScroll,
+  } = useLazyLoadList<Post>({
+    resource: "posts",
     fields: ["name", "title", "category", "status", "visibility", "published_at", "creation"],
-    filters: [...departmentFilter],
+    filters: departmentFilter,
     orderBy: { field: "creation", order: "desc" },
-    limit: 100,
+    pageSize: PAGE_SIZE,
   });
-
-  const { data: totalCategories } = useGetCount("categories", [...departmentFilter]);
-  const { data: totalTopics } = useGetCount("topics", [...departmentFilter]);
-  const { data: totalPosts } = useGetCount("posts", [...departmentFilter]);
 
   const statusCode = (departmentError as { response?: { status?: number } } | null)?.response
     ?.status;
@@ -166,208 +172,259 @@ export function DepartmentDetail({ departmentId }: DepartmentDetailProps) {
 
   return (
     <div className="space-y-6">
-      <div className="space-y-2">
-        <div className="flex flex-col gap-4 sm:flex-row-reverse sm:items-start sm:justify-between">
-          <Button asChild variant="ghost" size="sm" className="w-fit px-0">
-            <Link href={buildLocalePath(locale, "/admin/blog-departments")}>
-              <ArrowLeft className="h-4 w-4" />
-              {copy.backToList}
-            </Link>
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">{department.department_name}</h1>
+      <Button asChild variant="ghost" size="sm" className="w-fit px-0">
+        <Link href={buildLocalePath(locale, "/admin/blog-departments")}>
+          <ArrowLeft className="h-4 w-4" />
+          {copy.backToList}
+        </Link>
+      </Button>
+
+      <div className="-mt-4 flex flex-col gap-4 sm:flex-row-reverse sm:items-start sm:justify-between">
+        <Button size="sm" onClick={() => setEditDialogOpen(true)}>
+          Chỉnh sửa
+          <Pencil className="h-4 w-4 ml-2" />
+        </Button>
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">{department.department_name}</h1>
+          <p className="mt-1 text-muted-foreground">
+            {department.description || copy.noDescription}
+          </p>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap justify-between items-center gap-4 rounded-lg border px-4 py-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-2">
+            <FolderOpen className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm font-medium">{copy.totalCategories}:</span>
+            <span className="text-sm font-bold">{totalCategories ?? 0}</span>
+          </div>
+          <div className="h-4 w-px bg-border" />
+          <div className="flex items-center gap-2">
+            <Lightbulb className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm font-medium">{copy.totalTopics}:</span>
+            <span className="text-sm font-bold">{totalTopics ?? 0}</span>
+          </div>
+          <div className="h-4 w-px bg-border" />
+          <div className="flex items-center gap-2">
+            <BookOpen className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm font-medium">{copy.totalPosts}:</span>
+            <span className="text-sm font-bold">{totalPosts ?? 0}</span>
           </div>
         </div>
-        <div className="flex flex-row items-center justify-between gap-2">
-          <div className="flex flex-row items-center gap-2 ">
-            <StatusBadge
-              active={department.is_active === 1}
-              activeLabel={t.blogDepartments.table.active}
-              inactiveLabel={t.blogDepartments.table.inactive}
-            />
+        <div>
+          <div className="flex flex-row items-center gap-3 ">
             <p className="font-semibold text-sm italic text-muted-foreground">
               {department.creation
                 ? formatDate(new Date(department.creation), " HH:mm - dd/MM/yyyy")
                 : "-"}
             </p>
+            <div className="h-4 w-px bg-border" />
+            <StatusBadge
+              active={department.is_active === 1}
+              activeLabel={t.blogDepartments.table.active}
+              inactiveLabel={t.blogDepartments.table.inactive}
+            />
           </div>
-
-          <Button size="sm" onClick={() => setEditDialogOpen(true)}>
-            Chỉnh sửa
-            <Pencil className="h-4 w-4 ml-2" />
-          </Button>
         </div>
       </div>
-
-      <div className="grid gap-4 md:grid-cols-3">
-        <StatCard title={copy.totalCategories} value={totalCategories} icon={FolderTree} />
-        <StatCard title={copy.totalTopics} value={totalTopics} icon={Hash} />
-        <StatCard title={copy.totalPosts} value={totalPosts} icon={Eye} />
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>{copy.description}</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-2">
-          <CardDescription>{department.description || copy.noDescription}</CardDescription>
-        </CardContent>
-      </Card>
 
       <Tabs
         defaultValue="categories"
         className="space-y-2 bg-card rounded-xl p-2 lg:p-4 shadow-2xl"
       >
-        <TabsList variant="line" className="w-full justify-start ">
-          <TabsTrigger value="categories">{copy.categories}</TabsTrigger>
-          <TabsTrigger value="topics">{copy.topics}</TabsTrigger>
-          <TabsTrigger value="posts">{copy.posts}</TabsTrigger>
+        <TabsList variant="line" className="w-full justify-start">
+          <TabsTrigger
+            value="categories"
+            className="data-[state=active]:text-primary font-bold after:bg-primary cursor-pointer"
+          >
+            {copy.categories}
+          </TabsTrigger>
+          <TabsTrigger
+            value="topics"
+            className="data-[state=active]:text-primary font-bold after:bg-primary cursor-pointer"
+          >
+            {copy.topics}
+          </TabsTrigger>
+          <TabsTrigger
+            value="posts"
+            className="data-[state=active]:text-primary font-bold after:bg-primary cursor-pointer"
+          >
+            {copy.posts}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="categories">
-          <Card>
-            <CardHeader>
-              <CardTitle>{copy.categories}</CardTitle>
-              <CardDescription>
-                {copy.totalCategories}: {totalCategories ?? 0}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {isLoadingCategories ? (
-                <Skeleton className="h-48 w-full rounded-xl" />
-              ) : !categories?.length ? (
-                <EmptyState icon={FolderTree} label={copy.noCategories} />
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{copy.categories}</TableHead>
-                      <TableHead>{copy.description}</TableHead>
-                      <TableHead>{common.status}</TableHead>
+          {isLoadingCategories && !loadedCategories.length ? (
+            <Skeleton className="h-48 w-full rounded-xl" />
+          ) : !loadedCategories.length ? (
+            <EmptyState icon={FolderTree} label={copy.noCategories} />
+          ) : (
+            <div
+              ref={categoriesScrollRef}
+              onScroll={handleCategoriesScroll}
+              className="max-h-96 overflow-y-auto rounded-md border"
+            >
+              <Table noWrapper>
+                <TableHeader className="sticky top-0 z-10 bg-background">
+                  <TableRow>
+                    <TableHead>{copy.categories}</TableHead>
+                    <TableHead>{copy.description}</TableHead>
+                    <TableHead>{common.status}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {loadedCategories.map(category => (
+                    <TableRow
+                      key={category.name}
+                      onClick={() =>
+                        router.push(buildLocalePath(locale, `/admin/categories/${category.name}`))
+                      }
+                      className="cursor-pointer"
+                    >
+                      <TableCell>
+                        <div className="space-y-1">
+                          <p className="font-medium">{category.category}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {category.description || copy.noDescription}
+                      </TableCell>
+                      <TableCell>
+                        <StatusBadge
+                          active={category.is_active === 1}
+                          activeLabel={t.blogDepartments.table.active}
+                          inactiveLabel={t.blogDepartments.table.inactive}
+                        />
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {categories.map(category => (
-                      <TableRow key={category.name}>
-                        <TableCell>
-                          <div className="space-y-1">
-                            <p className="font-medium">{category.category}</p>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {category.description || copy.noDescription}
-                        </TableCell>
-                        <TableCell>
-                          <StatusBadge
-                            active={category.is_active === 1}
-                            activeLabel={t.blogDepartments.table.active}
-                            inactiveLabel={t.blogDepartments.table.inactive}
-                          />
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
+                  ))}
+                  {isLoadingCategories && loadedCategories.length > 0 && (
+                    <TableRow>
+                      <TableCell colSpan={3}>
+                        <Skeleton className="h-8 w-full rounded-md" />
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="topics">
-          <Card>
-            <CardHeader>
-              <CardTitle>{copy.topics}</CardTitle>
-              <CardDescription>
-                {copy.totalTopics}: {totalTopics ?? 0}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {isLoadingTopics ? (
-                <Skeleton className="h-48 w-full rounded-xl" />
-              ) : !topics?.length ? (
-                <EmptyState icon={Hash} label={copy.noTopics} />
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{copy.topics}</TableHead>
-                      <TableHead>{copy.description}</TableHead>
-                      <TableHead>{common.status}</TableHead>
+          {isLoadingTopics && !loadedTopics.length ? (
+            <Skeleton className="h-48 w-full rounded-xl" />
+          ) : !loadedTopics.length ? (
+            <EmptyState icon={Hash} label={copy.noTopics} />
+          ) : (
+            <div
+              ref={topicsScrollRef}
+              onScroll={handleTopicsScroll}
+              className="max-h-96 overflow-y-auto rounded-md border"
+            >
+              <Table noWrapper>
+                <TableHeader className="sticky top-0 z-10 bg-background">
+                  <TableRow>
+                    <TableHead>{copy.topics}</TableHead>
+                    <TableHead>{copy.description}</TableHead>
+                    <TableHead>{common.status}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {loadedTopics.map(topic => (
+                    <TableRow
+                      key={topic.name}
+                      onClick={() =>
+                        router.push(buildLocalePath(locale, `/admin/topics/${topic.name}`))
+                      }
+                      className="cursor-pointer"
+                    >
+                      <TableCell>
+                        <div className="space-y-1">
+                          <p className="font-medium">{topic.topic}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {topic.desc || copy.noDescription}
+                      </TableCell>
+                      <TableCell>
+                        <StatusBadge
+                          active={topic.is_active === 1}
+                          activeLabel={t.blogDepartments.table.active}
+                          inactiveLabel={t.blogDepartments.table.inactive}
+                        />
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {topics.map(topic => (
-                      <TableRow key={topic.name}>
-                        <TableCell>
-                          <div className="space-y-1">
-                            <p className="font-medium">{topic.topic}</p>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {topic.desc || copy.noDescription}
-                        </TableCell>
-                        <TableCell>
-                          <StatusBadge
-                            active={topic.is_active === 1}
-                            activeLabel={t.blogDepartments.table.active}
-                            inactiveLabel={t.blogDepartments.table.inactive}
-                          />
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
+                  ))}
+                  {isLoadingTopics && loadedTopics.length > 0 && (
+                    <TableRow>
+                      <TableCell colSpan={3}>
+                        <Skeleton className="h-8 w-full rounded-md" />
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="posts">
-          <Card>
-            <CardHeader>
-              <CardTitle>{copy.posts}</CardTitle>
-              <CardDescription>
-                {copy.totalPosts}: {totalPosts ?? 0}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {isLoadingPosts ? (
-                <Skeleton className="h-48 w-full rounded-xl" />
-              ) : !posts?.length ? (
-                <EmptyState icon={Layers3} label={copy.noPosts} />
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{copy.posts}</TableHead>
-                      <TableHead>{copy.categories}</TableHead>
-                      <TableHead>{common.status}</TableHead>
+          {isLoadingPosts && !loadedPosts.length ? (
+            <Skeleton className="h-48 w-full rounded-xl" />
+          ) : !loadedPosts.length ? (
+            <EmptyState icon={Layers3} label={copy.noPosts} />
+          ) : (
+            <div
+              ref={postsScrollRef}
+              onScroll={handlePostsScroll}
+              className="max-h-[480px] overflow-y-auto rounded-md border"
+            >
+              <Table noWrapper>
+                <TableHeader className="sticky top-0 z-10 bg-background">
+                  <TableRow>
+                    <TableHead>{copy.posts}</TableHead>
+                    <TableHead>{copy.categories}</TableHead>
+                    <TableHead>{common.status}</TableHead>
+                    <TableHead>{copy.createdAt}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {loadedPosts.map(post => (
+                    <TableRow key={post.name}>
+                      <TableCell
+                        onClick={() =>
+                          router.push(buildLocalePath(locale, `/admin/posts/${post.name}`))
+                        }
+                        className="cursor-pointer"
+                      >
+                        <p className="font-medium">{post.title}</p>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {typeof post.category === "string" ? post.category : post.category.category}
+                      </TableCell>
+                      <TableCell>
+                        <StatusBadgePost status={post.status} t={t} />
+                      </TableCell>
+                      <TableCell className="text-sm italic text-muted-foreground">
+                        {post.creation
+                          ? formatDate(new Date(post.creation), " HH:mm - dd/MM/yyyy")
+                          : "-"}
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {posts.map(post => (
-                      <TableRow key={post.name}>
-                        <TableCell>
-                          <div className="space-y-1">
-                            <p className="font-medium">{post.title}</p>
-                            <p className="text-xs text-muted-foreground">{post.visibility}</p>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {typeof post.category === "string"
-                            ? post.category
-                            : post.category.category}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{post.status}</Badge>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
+                  ))}
+                  {isLoadingPosts && loadedPosts.length > 0 && (
+                    <TableRow>
+                      <TableCell colSpan={3}>
+                        <Skeleton className="h-8 w-full rounded-md" />
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </TabsContent>
       </Tabs>
 

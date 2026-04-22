@@ -93,5 +93,6 @@ export const blogCategories = {
     totalPosts: "Total posts",
     noPosts: "No posts",
     visibility: "Visibility",
+    creation: "Creation date",
   },
 } as const;

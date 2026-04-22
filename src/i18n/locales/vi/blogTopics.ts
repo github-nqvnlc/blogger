@@ -78,6 +78,7 @@ export const blogTopics = {
   detail: {
     pageTitle: "Chi tiết chủ đề",
     backToList: "Quay lại danh sách",
+    createdAt: "Ngày tạo",
     department: "Bộ phận nội dung",
     slug: "Slug",
     noSlug: "Không có slug",

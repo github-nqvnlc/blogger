@@ -3,7 +3,6 @@
 import { AdminAccessDenied } from "@/components/layout/admin-access-denied";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -20,17 +19,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useGetDoc, useGetList } from "@/hooks";
+import { useGetDoc, useGetList, useLazyLoadList } from "@/hooks";
 import { useLanguage } from "@/hooks/useLanguage";
 import { buildLocalePath } from "@/i18n";
 import { Post, PostTag, Tag } from "@/types/blogs";
 import { Filter } from "@/types/hooks";
 import { formatDate } from "date-fns";
-import { ArrowLeft, BookOpen, FolderOpen, Hash, Pencil } from "lucide-react";
+import { ArrowLeft, BookOpen, FolderOpen, Pencil } from "lucide-react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, useRouter } from "next/navigation";
 import * as React from "react";
 import { TagForm } from "./TagForm";
+import { StatusBadge as StatusBadgePost } from "@/components/ui/badge-status";
 
 interface TagDetailProps {
   tagId: string;
@@ -83,29 +83,9 @@ function EmptyState({ icon: Icon, label }: { icon: React.ElementType; label: str
   );
 }
 
-function StatCard({
-  title,
-  value,
-  icon: Icon,
-}: {
-  title: string;
-  value?: number | string;
-  icon: React.ElementType;
-}) {
-  return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
-        <Icon className="h-4 w-4 text-muted-foreground" />
-      </CardHeader>
-      <CardContent>
-        <div className="text-3xl font-semibold">{value ?? 0}</div>
-      </CardContent>
-    </Card>
-  );
-}
-
 export function TagDetail({ tagId }: TagDetailProps) {
+  const router = useRouter();
+  const PAGE_SIZE = 5;
   const { locale, t } = useLanguage();
   const copy = t.blogTags.detail;
   const common = t.common;
@@ -120,21 +100,23 @@ export function TagDetail({ tagId }: TagDetailProps) {
 
   const tagFilter = React.useMemo(() => [["tag", "=", tagId]] as Filter[], [tagId]);
 
-  const { data: postTags, isLoading: isLoadingPostTags } = useGetList<PostTag>(
-    "post_tags",
-    {
-      fields: ["name", "post", "tag"],
-      filters: tagFilter,
-      limit: 100,
-    },
-    {
-      enabled: !!tag,
-    }
-  );
+  const {
+    loadedItems: accumulatedPostTags,
+    isLoading: isLoadingPostTags,
+    total: totalPosts,
+    scrollRef: postsScrollRef,
+    handleScroll: handlePostsScroll,
+  } = useLazyLoadList<PostTag>({
+    resource: "post_tags",
+    fields: ["name", "post", "tag"],
+    filters: tagFilter,
+    pageSize: PAGE_SIZE,
+    enabled: !!tag,
+  });
 
   const relatedPostIds = React.useMemo(
-    () => Array.from(new Set((postTags ?? []).map(item => item.post))),
-    [postTags]
+    () => Array.from(new Set(accumulatedPostTags.map(item => item.post))),
+    [accumulatedPostTags]
   );
 
   const relatedPostsFilter = React.useMemo<Filter[]>(() => {
@@ -142,7 +124,7 @@ export function TagDetail({ tagId }: TagDetailProps) {
     return [["name", "in", relatedPostIds]];
   }, [relatedPostIds]);
 
-  const { data: posts, isLoading: isLoadingPosts } = useGetList<Post>(
+  const { data: loadedPosts } = useGetList<Post>(
     "posts",
     {
       fields: ["name", "title", "status", "visibility", "published_at", "creation"],
@@ -150,12 +132,8 @@ export function TagDetail({ tagId }: TagDetailProps) {
       orderBy: { field: "creation", order: "desc" },
       limit: relatedPostIds.length || 100,
     },
-    {
-      enabled: relatedPostIds.length > 0,
-    }
+    { enabled: relatedPostIds.length > 0 }
   );
-
-  const totalPosts = posts?.length ?? 0;
 
   const statusCode = (tagError as { response?: { status?: number } } | null)?.response?.status;
 
@@ -173,100 +151,96 @@ export function TagDetail({ tagId }: TagDetailProps) {
 
   return (
     <div className="space-y-6">
-      <div className="space-y-2">
-        <div className="flex flex-col gap-4 sm:flex-row-reverse sm:items-start sm:justify-between">
-          <Button asChild variant="ghost" size="sm" className="w-fit px-0">
-            <Link href={buildLocalePath(locale, "/admin/tags")}>
-              <ArrowLeft className="h-4 w-4" />
-              {copy.backToList}
-            </Link>
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">{tag.tag_name}</h1>
-          </div>
-        </div>
-        <div className="flex flex-row items-center justify-between gap-2">
-          <div className="flex flex-row items-center gap-2">
-            <StatusBadge
-              active={tag.is_active === 1}
-              activeLabel={t.blogTags.table.active}
-              inactiveLabel={t.blogTags.table.inactive}
-            />
-            <p className="text-sm font-semibold italic text-muted-foreground">
-              {tag.creation ? formatDate(new Date(tag.creation), " HH:mm - dd/MM/yyyy") : "-"}
-            </p>
-          </div>
-          <Button size="sm" onClick={() => setEditDialogOpen(true)}>
-            Chỉnh sửa
-            <Pencil className="h-4 w-4 ml-2" />
-          </Button>
+      <Button asChild variant="ghost" size="sm" className="w-fit px-0">
+        <Link href={buildLocalePath(locale, "/admin/tags")}>
+          <ArrowLeft className="h-4 w-4" />
+          {copy.backToList}
+        </Link>
+      </Button>
+      <div className="-mt-4 flex flex-col gap-4 sm:flex-row-reverse sm:items-start sm:justify-between">
+        <Button size="sm" onClick={() => setEditDialogOpen(true)}>
+          Chỉnh sửa
+          <Pencil className="h-4 w-4 ml-2" />
+        </Button>
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">{tag.tag_name}</h1>
+          <p className="mt-1 text-muted-foreground">{tag.description || copy.noDescription}</p>
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <StatCard title={copy.totalPosts} value={totalPosts} icon={BookOpen} />
-        <StatCard title={copy.slug} value={tag.slug || copy.noSlug} icon={Hash} />
+      <div className="flex flex-wrap justify-between items-center gap-4 rounded-lg border px-4 py-3">
+        <div className="flex justify-between items-center gap-2">
+          <BookOpen className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm font-medium">{copy.totalPosts}:</span>
+          <span className="text-sm font-bold">{totalPosts}</span>
+        </div>
+        <div className="flex flex-row items-center gap-3">
+          <p className="text-sm font-semibold italic text-muted-foreground">
+            {tag.creation ? formatDate(new Date(tag.creation), " HH:mm - dd/MM/yyyy") : "-"}
+          </p>
+          <div className="h-4 w-px bg-border" />
+          <StatusBadge
+            active={tag.is_active === 1}
+            activeLabel={t.blogTags.table.active}
+            inactiveLabel={t.blogTags.table.inactive}
+          />
+        </div>
       </div>
 
-      <div className="w-full">
-        <Card>
-          <CardHeader>
-            <CardTitle>{copy.description}</CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-4 md:grid-cols-2">
-            <CardDescription>{tag.description || copy.noDescription}</CardDescription>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>{copy.posts}</CardTitle>
-          <CardDescription>
-            {copy.totalPosts}: {totalPosts}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoadingPostTags || (relatedPostIds.length > 0 && isLoadingPosts) ? (
-            <Skeleton className="h-48 w-full rounded-xl" />
-          ) : !posts?.length ? (
-            <EmptyState icon={FolderOpen} label={copy.noPosts} />
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{copy.posts}</TableHead>
-                  <TableHead>{common.status}</TableHead>
-                  <TableHead>{copy.visibility}</TableHead>
+      {isLoadingPostTags && !loadedPosts?.length ? (
+        <Skeleton className="h-48 w-full rounded-xl" />
+      ) : !loadedPosts?.length ? (
+        <EmptyState icon={FolderOpen} label={copy.noPosts} />
+      ) : (
+        <div
+          ref={postsScrollRef}
+          onScroll={handlePostsScroll}
+          className="max-h-[550px] overflow-y-auto rounded-md border"
+        >
+          <Table noWrapper>
+            <TableHeader className="sticky top-0 z-10 bg-background">
+              <TableRow>
+                <TableHead>{copy.posts}</TableHead>
+                <TableHead>{common.status}</TableHead>
+                <TableHead>{copy.visibility}</TableHead>
+                <TableHead>{copy.createdAt}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {(loadedPosts ?? []).map((post: Post) => (
+                <TableRow key={post.name}>
+                  <TableCell
+                    onClick={() =>
+                      router.push(buildLocalePath(locale, `/admin/posts/${post.name}`))
+                    }
+                    className="cursor-pointer"
+                  >
+                    <p className="font-medium">{post.title}</p>
+                  </TableCell>
+                  <TableCell>
+                    <StatusBadgePost status={post.status} t={t} />
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">{post.visibility}</TableCell>
+                  <TableCell>
+                    <p className="text-sm italic text-muted-foreground">
+                      {post.creation
+                        ? formatDate(new Date(post.creation), " HH:mm - dd/MM/yyyy")
+                        : "-"}
+                    </p>
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {posts.map(post => (
-                  <TableRow key={post.name}>
-                    <TableCell>
-                      <div className="space-y-1">
-                        <p className="font-medium">{post.title}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {post.published_at
-                            ? formatDate(new Date(post.published_at), " HH:mm dd/MM/yyyy")
-                            : formatDate(
-                                new Date(post.creation ?? new Date()),
-                                " HH:mm dd/MM/yyyy"
-                              )}
-                        </p>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{post.status}</Badge>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">{post.visibility}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+              ))}
+              {isLoadingPostTags && loadedPosts.length > 0 && (
+                <TableRow>
+                  <TableCell colSpan={3}>
+                    <Skeleton className="h-8 w-full rounded-md" />
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      )}
 
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent className="max-w-xl">
