@@ -22,6 +22,10 @@ export const blogTopics = {
   bulkDeleteTitle: "Confirm bulk deletion",
   bulkDeleteSuccessDescription: "Successfully deleted {count} topics",
   itemsWillBeDeleted: "This action cannot be undone.",
+  deleteBlockedTitle: "Cannot delete topic",
+  deleteBlockedDescription:
+    "This topic is still associated with the following items. Please delete or reassign them first.",
+  deleteBlockedLinkPosts: "Posts using this topic",
   form: {
     updateSuccess: "Topic updated successfully",
     updateFailure: "Failed to update topic",

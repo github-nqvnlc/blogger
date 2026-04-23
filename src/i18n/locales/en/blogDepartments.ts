@@ -17,6 +17,12 @@ export const blogDepartments = {
   deleteFailure: "Failed to delete department",
   deleteFailureDescription: "This department could not be deleted. Please try again.",
   deleteSuccessDescriptionPrefix: "Deleted content department",
+  deleteBlockedTitle: "Cannot delete",
+  deleteBlockedDescription:
+    "This content department is linked to the items below. Please delete or move them to another department first.",
+  deleteBlockedLinkCategories: "Categories",
+  deleteBlockedLinkTopics: "Topics",
+  deleteBlockedLinkPosts: "Posts",
   bulkDeleteTitle: "Confirm bulk deletion",
   bulkDeleteSuccessDescription: "Successfully deleted {count} content departments",
   itemsWillBeDeleted: "This action cannot be undone.",

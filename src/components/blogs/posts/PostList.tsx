@@ -31,7 +31,8 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { buildLocalePath } from "@/i18n";
 import { formatFrappeDatetime } from "@/lib/blog-posts";
 import { showCrudError, showCrudSuccess } from "@/lib/crud-toast";
-import { BlogDepartment, Category, Post, PostStatus } from "@/types/blogs";
+import { getApiClient } from "@/lib/apiClient";
+import { BlogDepartment, Category, Post, PostStatus, PostTag, PostTopic } from "@/types/blogs";
 import { Filter } from "@/types/hooks";
 import { ColumnDef, PaginationState, RowSelectionState, SortingState } from "@tanstack/react-table";
 import { Archive, FolderOpen, Plus, Search, Send, SquarePen, Trash2 } from "lucide-react";
@@ -164,6 +165,8 @@ export function PostList() {
   const [categories, setCategories] = React.useState<Category[]>([]);
   const { updateDoc: updatePost } = useUpdateDoc<Post>("posts");
   const { deleteDoc: deletePost } = useDeleteDoc("posts");
+  const { deleteDoc: deletePostTopic } = useDeleteDoc("post_topics");
+  const { deleteDoc: deletePostTag } = useDeleteDoc("post_tags");
 
   const departmentLabelMap = React.useMemo(
     () => new Map(departments.map(item => [item.name, item.department_name])),
@@ -240,10 +243,40 @@ export function PostList() {
     ]
   );
 
+  const fetchAndDeleteRelations = React.useCallback(
+    async (postName: string) => {
+      const apiClient = getApiClient();
+      await Promise.all([
+        apiClient
+          .get<{ data: PostTopic[] }>("/api/resource/post_topics", {
+            params: {
+              fields: '["name"]',
+              filters: JSON.stringify([["post", "=", postName]]),
+              limit: 100,
+            },
+          })
+          .then(res => Promise.all((res.data.data ?? []).map(pt => deletePostTopic(pt.name))))
+          .catch(() => {}),
+        apiClient
+          .get<{ data: PostTag[] }>("/api/resource/post_tags", {
+            params: {
+              fields: '["name"]',
+              filters: JSON.stringify([["post", "=", postName]]),
+              limit: 100,
+            },
+          })
+          .then(res => Promise.all((res.data.data ?? []).map(pt => deletePostTag(pt.name))))
+          .catch(() => {}),
+      ]);
+    },
+    [deletePostTag, deletePostTopic]
+  );
+
   const handleDeleteConfirm = React.useCallback(async () => {
     if (!deletingPost) return;
 
     try {
+      await fetchAndDeleteRelations(deletingPost.name);
       await deletePost(deletingPost.name);
       showCrudSuccess(
         copy.toast.deleteSuccess,
@@ -261,6 +294,7 @@ export function PostList() {
     copy.toast.deleteSuccessDescription,
     deletePost,
     deletingPost,
+    fetchAndDeleteRelations,
     refetch,
   ]);
 
@@ -268,6 +302,7 @@ export function PostList() {
     if (bulkDeletingPosts.length === 0) return;
 
     try {
+      await Promise.all(bulkDeletingPosts.map(post => fetchAndDeleteRelations(post.name)));
       await Promise.all(bulkDeletingPosts.map(post => deletePost(post.name)));
       showCrudSuccess(
         copy.toast.deleteSuccess,
@@ -286,6 +321,7 @@ export function PostList() {
     copy.toast.deleteFailureDescription,
     copy.toast.deleteSuccess,
     deletePost,
+    fetchAndDeleteRelations,
     refetch,
   ]);
 

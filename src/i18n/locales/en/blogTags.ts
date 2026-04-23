@@ -20,6 +20,10 @@ export const blogTags = {
   bulkDeleteTitle: "Confirm bulk deletion",
   bulkDeleteSuccessDescription: "Successfully deleted {count} tags",
   itemsWillBeDeleted: "This action cannot be undone.",
+  deleteBlockedTitle: "Cannot delete tag",
+  deleteBlockedDescription:
+    "This tag is still associated with the following items. Please delete or reassign them first.",
+  deleteBlockedLinkPosts: "Posts using this tag",
   form: {
     updateSuccess: "Tag updated successfully",
     updateFailure: "Failed to update tag",

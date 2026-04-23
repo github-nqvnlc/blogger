@@ -1,7 +1,18 @@
 "use client";
 
 import { AdminAccessDenied } from "@/components/layout/admin-access-denied";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
+import { StatusBadge as StatusBadgePost } from "@/components/ui/badge-status";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,6 +22,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
 import {
   Table,
   TableBody,
@@ -20,9 +32,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useGetDoc, useLazyLoadList } from "@/hooks";
+import { useDeleteDoc, useGetDoc, useLazyLoadList } from "@/hooks";
 import { useLanguage } from "@/hooks/useLanguage";
 import { buildLocalePath } from "@/i18n";
+import { getApiClient } from "@/lib/apiClient";
+import { showCrudError, showCrudSuccess } from "@/lib/crud-toast";
 import { BlogDepartment, Category, Post, Topic } from "@/types/blogs";
 import { Filter } from "@/types/hooks";
 import { formatDate } from "date-fns";
@@ -35,12 +49,53 @@ import {
   Layers3,
   Lightbulb,
   Pencil,
+  Trash2,
 } from "lucide-react";
 import Link from "next/link";
 import { notFound, useRouter } from "next/navigation";
 import * as React from "react";
 import { DepartmentForm } from "./DepartmentForm";
-import { StatusBadge as StatusBadgePost } from "@/components/ui/badge-status";
+
+type RelationItem = { name: string; category?: string; title?: string };
+
+async function getRelationCount(
+  resource: string,
+  filterField: string,
+  filterValue: string
+): Promise<number> {
+  const apiClient = getApiClient();
+  const res = await apiClient.get(`/api/resource/${resource}`, {
+    params: {
+      fields: JSON.stringify(["name"]),
+      filters: JSON.stringify([[filterField, "=", filterValue]]),
+      limit_page_length: 99999,
+      limit_start: 0,
+    },
+  });
+  const raw = (res.data ?? []) as { data?: unknown[] } | unknown[];
+  const list = Array.isArray(raw) ? raw : (raw.data ?? []);
+  return list.length;
+}
+
+async function getRelationItems(
+  resource: string,
+  filterField: string,
+  filterValue: string,
+  labelField: string
+): Promise<RelationItem[]> {
+  const apiClient = getApiClient();
+  const res = await apiClient.get(`/api/resource/${resource}`, {
+    params: {
+      fields: JSON.stringify(["name", labelField]),
+      filters: JSON.stringify([[filterField, "=", filterValue]]),
+      limit_page_length: 99999,
+      limit_start: 0,
+    },
+  });
+  const raw = (res.data ?? []) as { data?: RelationItem[] } | RelationItem[];
+  const list = Array.isArray(raw) ? raw : (raw.data ?? []);
+  return list;
+}
 
 interface DepartmentDetailProps {
   departmentId: string;
@@ -99,7 +154,70 @@ export function DepartmentDetail({ departmentId }: DepartmentDetailProps) {
   const { locale, t } = useLanguage();
   const copy = t.blogDepartments.detail;
   const common = t.common;
+  const copyList = t.blogDepartments;
   const [editDialogOpen, setEditDialogOpen] = React.useState(false);
+  const [deletingDepartment, setDeletingDepartment] = React.useState<BlogDepartment | null>(null);
+  const [blockedDepartment, setBlockedDepartment] = React.useState<BlogDepartment | null>(null);
+  const [blockedItems, setBlockedItems] = React.useState<{
+    categories: RelationItem[];
+    topics: RelationItem[];
+    posts: RelationItem[];
+  }>({ categories: [], topics: [], posts: [] });
+  const { deleteDoc: deleteDepartment, loading: isDeleting } = useDeleteDoc("blog_departments");
+
+  const checkDepartmentRelations = React.useCallback(async (deptName: string) => {
+    const [[categories, categoryItems], [topics, topicItems], [posts, postItems]] =
+      await Promise.all([
+        Promise.all([
+          getRelationCount("categories", "department", deptName),
+          getRelationItems("categories", "department", deptName, "category"),
+        ]),
+        Promise.all([
+          getRelationCount("topics", "department", deptName),
+          getRelationItems("topics", "department", deptName, "topic"),
+        ]),
+        Promise.all([
+          getRelationCount("posts", "department", deptName),
+          getRelationItems("posts", "department", deptName, "title"),
+        ]),
+      ]);
+    return {
+      counts: { categories, topics, posts },
+      items: { categories: categoryItems, topics: topicItems, posts: postItems },
+    };
+  }, []);
+
+  const handleDeleteClick = React.useCallback(
+    async (dept: BlogDepartment) => {
+      try {
+        const { counts, items } = await checkDepartmentRelations(dept.name);
+        if (counts.categories > 0 || counts.topics > 0 || counts.posts > 0) {
+          setBlockedItems(items);
+          setBlockedDepartment(dept);
+        } else {
+          setDeletingDepartment(dept);
+        }
+      } catch {
+        setDeletingDepartment(dept);
+      }
+    },
+    [checkDepartmentRelations]
+  );
+
+  const handleDeleteConfirm = React.useCallback(async () => {
+    if (!deletingDepartment) return;
+    try {
+      await deleteDepartment(deletingDepartment.name);
+      showCrudSuccess(
+        copyList.deleteSuccess,
+        `${copyList.deleteSuccessDescriptionPrefix} "${deletingDepartment.department_name}"`
+      );
+      setDeletingDepartment(null);
+      router.push(buildLocalePath(locale, "/admin/blog-departments"));
+    } catch (err) {
+      showCrudError(copyList.deleteFailure, err, copyList.deleteFailureDescription);
+    }
+  }, [copyList, deleteDepartment, deletingDepartment, locale, router]);
 
   const {
     data: department,
@@ -180,10 +298,16 @@ export function DepartmentDetail({ departmentId }: DepartmentDetailProps) {
       </Button>
 
       <div className="-mt-4 flex flex-col gap-4 sm:flex-row-reverse sm:items-start sm:justify-between">
-        <Button size="sm" onClick={() => setEditDialogOpen(true)}>
-          Chỉnh sửa
-          <Pencil className="h-4 w-4 ml-2" />
-        </Button>
+        <div className="flex gap-2">
+          <Button size="sm" variant="destructive" onClick={() => handleDeleteClick(department)}>
+            <Trash2 className="h-4 w-4 mr-2" />
+            {t.common.delete}
+          </Button>
+          <Button size="sm" onClick={() => setEditDialogOpen(true)}>
+            <Pencil className="h-4 w-4 mr-2" />
+            {t.common.edit}
+          </Button>
+        </div>
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{department.department_name}</h1>
           <p className="mt-1 text-muted-foreground">
@@ -444,6 +568,109 @@ export function DepartmentDetail({ departmentId }: DepartmentDetailProps) {
           />
         </DialogContent>
       </Dialog>
+
+      <AlertDialog
+        open={!!deletingDepartment}
+        onOpenChange={open => !open && setDeletingDepartment(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{copyList.deleteTitle}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {copyList.deleteDescriptionStart} &ldquo;{deletingDepartment?.department_name}&rdquo;?{" "}
+              {copyList.deleteDescriptionEnd}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t.common.cancel}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={isDeleting}
+            >
+              {isDeleting ? <Spinner /> : null}
+              {t.common.delete}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={!!blockedDepartment}
+        onOpenChange={open => !open && setBlockedDepartment(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{copyList.deleteBlockedTitle}</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-6">
+              <span className="block">{copyList.deleteBlockedDescription}</span>
+              {blockedItems.categories.length > 0 && (
+                <div className="space-y-1">
+                  <span className="text-sm font-medium text-muted-foreground">
+                    {copyList.deleteBlockedLinkCategories} ({blockedItems.categories.length})
+                  </span>
+                  <ul className="pl-4 space-y-1 max-h-32 overflow-y-auto">
+                    {blockedItems.categories.map(item => (
+                      <li key={item.name}>
+                        <Link
+                          href={buildLocalePath(locale, `/admin/categories/${item.name}`)}
+                          className="text-foreground underline underline-offset-3 hover:text-muted-foreground text-sm"
+                          onClick={() => setBlockedDepartment(null)}
+                        >
+                          {item.category || item.name}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {blockedItems.topics.length > 0 && (
+                <div className="space-y-1">
+                  <span className="text-sm font-medium text-muted-foreground">
+                    {copyList.deleteBlockedLinkTopics} ({blockedItems.topics.length})
+                  </span>
+                  <ul className="pl-4 space-y-1 max-h-32 overflow-y-auto">
+                    {blockedItems.topics.map(item => (
+                      <li key={item.name}>
+                        <Link
+                          href={buildLocalePath(locale, `/admin/topics/${item.name}`)}
+                          className="text-foreground underline underline-offset-3 hover:text-muted-foreground text-sm"
+                          onClick={() => setBlockedDepartment(null)}
+                        >
+                          {item.title || item.name}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {blockedItems.posts.length > 0 && (
+                <div className="space-y-1">
+                  <span className="text-sm font-medium text-muted-foreground">
+                    {copyList.deleteBlockedLinkPosts} ({blockedItems.posts.length})
+                  </span>
+                  <ul className="pl-4 space-y-1 max-h-32 overflow-y-auto">
+                    {blockedItems.posts.map(item => (
+                      <li key={item.name}>
+                        <Link
+                          href={buildLocalePath(locale, `/admin/posts/${item.name}`)}
+                          className="text-foreground underline underline-offset-3 hover:text-muted-foreground text-sm"
+                          onClick={() => setBlockedDepartment(null)}
+                        >
+                          {item.title || item.name}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t.common.close}</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

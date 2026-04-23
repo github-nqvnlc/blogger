@@ -17,6 +17,12 @@ export const blogDepartments = {
   deleteFailure: "Xóa thất bại",
   deleteFailureDescription: "Không thể xóa bộ phận nội dung này. Vui lòng thử lại.",
   deleteSuccessDescriptionPrefix: "Đã xóa bộ phận nội dung",
+  deleteBlockedTitle: "Không thể xóa",
+  deleteBlockedDescription:
+    "Bộ phận nội dung này đang được liên kết với các mục bên dưới. Vui lòng xóa hoặc chuyển chúng sang bộ phận khác trước.",
+  deleteBlockedLinkCategories: "Danh mục",
+  deleteBlockedLinkTopics: "Chủ đề",
+  deleteBlockedLinkPosts: "Bài viết",
   bulkDeleteTitle: "Xác nhận xóa nhiều",
   bulkDeleteSuccessDescription: "Đã xóa thành công {count} bộ phận nội dung",
   itemsWillBeDeleted: "Hành động này không thể hoàn tác.",

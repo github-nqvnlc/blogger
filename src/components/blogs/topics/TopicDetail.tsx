@@ -1,7 +1,18 @@
 "use client";
 
 import { AdminAccessDenied } from "@/components/layout/admin-access-denied";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
+import { StatusBadge as StatusBadgePost } from "@/components/ui/badge-status";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,6 +22,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
 import {
   Table,
   TableBody,
@@ -19,18 +31,60 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useGetDoc, useGetList, useLazyLoadList } from "@/hooks";
+import { useDeleteDoc, useGetDoc, useGetList, useLazyLoadList } from "@/hooks";
 import { useLanguage } from "@/hooks/useLanguage";
 import { buildLocalePath } from "@/i18n";
+import { getApiClient } from "@/lib/apiClient";
+import { showCrudError, showCrudSuccess } from "@/lib/crud-toast";
 import { BlogDepartment, Post, PostTopic, Topic } from "@/types/blogs";
 import { Filter } from "@/types/hooks";
 import { formatDate } from "date-fns";
-import { ArrowLeft, BookOpen, FolderOpen, Newspaper, Pencil } from "lucide-react";
+import { ArrowLeft, BookOpen, FolderOpen, Newspaper, Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { notFound, useRouter } from "next/navigation";
 import * as React from "react";
 import { TopicForm } from "./TopicForm";
-import { StatusBadge as StatusBadgePost } from "@/components/ui/badge-status";
+
+type RelationItem = { name: string; post?: string };
+
+async function getRelationCount(
+  resource: string,
+  filterField: string,
+  filterValue: string
+): Promise<number> {
+  const apiClient = getApiClient();
+  const res = await apiClient.get(`/api/resource/${resource}`, {
+    params: {
+      fields: JSON.stringify(["name"]),
+      filters: JSON.stringify([[filterField, "=", filterValue]]),
+      limit_page_length: 99999,
+      limit_start: 0,
+    },
+  });
+  const raw = (res.data ?? []) as { data?: unknown[] } | unknown[];
+  const list = Array.isArray(raw) ? raw : (raw.data ?? []);
+  return list.length;
+}
+
+async function getRelationItems(
+  resource: string,
+  filterField: string,
+  filterValue: string,
+  labelField: string
+): Promise<RelationItem[]> {
+  const apiClient = getApiClient();
+  const res = await apiClient.get(`/api/resource/${resource}`, {
+    params: {
+      fields: JSON.stringify(["name", labelField]),
+      filters: JSON.stringify([[filterField, "=", filterValue]]),
+      limit_page_length: 99999,
+      limit_start: 0,
+    },
+  });
+  const raw = (res.data ?? []) as { data?: RelationItem[] } | RelationItem[];
+  const list = Array.isArray(raw) ? raw : (raw.data ?? []);
+  return list;
+}
 
 interface TopicDetailProps {
   topicId: string;
@@ -89,7 +143,57 @@ export function TopicDetail({ topicId }: TopicDetailProps) {
   const { locale, t } = useLanguage();
   const copy = t.blogTopics.detail;
   const common = t.common;
+  const copyList = t.blogTopics;
   const [editDialogOpen, setEditDialogOpen] = React.useState(false);
+  const [deletingTopic, setDeletingTopic] = React.useState<Topic | null>(null);
+  const [blockedTopic, setBlockedTopic] = React.useState<Topic | null>(null);
+  const [blockedItems, setBlockedItems] = React.useState<{
+    posts: RelationItem[];
+  }>({ posts: [] });
+  const { deleteDoc: deleteTopic, loading: isDeleting } = useDeleteDoc("topics");
+
+  const checkTopicRelations = React.useCallback(async (topicName: string) => {
+    const [posts, postItems] = await Promise.all([
+      getRelationCount("post_topics", "topic", topicName),
+      getRelationItems("post_topics", "topic", topicName, "post"),
+    ]);
+    return {
+      counts: { posts },
+      items: { posts: postItems },
+    };
+  }, []);
+
+  const handleDeleteClick = React.useCallback(
+    async (topic: Topic) => {
+      try {
+        const { counts, items } = await checkTopicRelations(topic.name);
+        if (counts.posts > 0) {
+          setBlockedItems(items);
+          setBlockedTopic(topic);
+        } else {
+          setDeletingTopic(topic);
+        }
+      } catch {
+        setDeletingTopic(topic);
+      }
+    },
+    [checkTopicRelations]
+  );
+
+  const handleDeleteConfirm = React.useCallback(async () => {
+    if (!deletingTopic) return;
+    try {
+      await deleteTopic(deletingTopic.name);
+      showCrudSuccess(
+        copyList.deleteSuccess,
+        `${copyList.deleteSuccessDescriptionPrefix} "${deletingTopic.topic}"`
+      );
+      setDeletingTopic(null);
+      router.push(buildLocalePath(locale, "/admin/topics"));
+    } catch (err) {
+      showCrudError(copyList.deleteFailure, err, copyList.deleteFailureDescription);
+    }
+  }, [copyList, deleteTopic, deletingTopic, locale, router]);
 
   const {
     data: topic,
@@ -168,10 +272,16 @@ export function TopicDetail({ topicId }: TopicDetailProps) {
       </Button>
 
       <div className="-mt-4 flex flex-col gap-4 sm:flex-row-reverse sm:items-start sm:justify-between">
-        <Button size="sm" onClick={() => setEditDialogOpen(true)}>
-          Chỉnh sửa
-          <Pencil className="h-4 w-4 ml-2" />
-        </Button>
+        <div className="flex gap-2">
+          <Button size="sm" variant="destructive" onClick={() => handleDeleteClick(topic)}>
+            <Trash2 className="h-4 w-4 mr-2" />
+            {t.common.delete}
+          </Button>
+          <Button size="sm" onClick={() => setEditDialogOpen(true)}>
+            <Pencil className="h-4 w-4 mr-2" />
+            Chỉnh sửa
+          </Button>
+        </div>
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{topic.topic}</h1>
           <p className="mt-1 text-muted-foreground">{topic.desc || copy.noDescription}</p>
@@ -281,6 +391,64 @@ export function TopicDetail({ topicId }: TopicDetailProps) {
           />
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={!!deletingTopic} onOpenChange={open => !open && setDeletingTopic(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{copyList.deleteTitle}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {copyList.deleteDescriptionStart} &ldquo;{deletingTopic?.topic}&rdquo;?{" "}
+              {copyList.deleteDescriptionEnd}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t.common.cancel}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={isDeleting}
+            >
+              {isDeleting ? <Spinner /> : null}
+              {t.common.delete}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!blockedTopic} onOpenChange={open => !open && setBlockedTopic(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{copyList.deleteBlockedTitle}</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-6">
+              <span className="block">{copyList.deleteBlockedDescription}</span>
+              {blockedItems.posts.length > 0 && (
+                <div className="space-y-1">
+                  <span className="text-sm font-medium text-muted-foreground">
+                    {copyList.deleteBlockedLinkPosts} ({blockedItems.posts.length})
+                  </span>
+                  <ul className="pl-4 space-y-1 max-h-32 overflow-y-auto">
+                    {blockedItems.posts.map((item, index) => (
+                      <li key={item.name}>
+                        <Link
+                          href={buildLocalePath(locale, `/admin/posts/${item.post}`)}
+                          target="blank"
+                          className="text-foreground underline underline-offset-3 hover:text-muted-foreground text-sm"
+                          onClick={() => setBlockedTopic(null)}
+                        >
+                          {t.blogPosts.post}: {index + 1}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t.common.close}</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

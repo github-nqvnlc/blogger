@@ -7,6 +7,8 @@ export const common = {
   updating: "Đang cập nhật...",
   delete: "Xóa",
   deleting: "Đang xóa...",
+  edit: "Chỉnh sửa",
+  editting: "Đang chỉnh sửa...",
   send: "Gửi",
   sending: "Đang gửi...",
   upload: "Tải lên",

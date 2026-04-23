@@ -163,6 +163,8 @@ export function PostDetail({ postId }: PostDetailProps) {
 
   const { updateDoc: updatePost } = useUpdateDoc<Post>("posts");
   const { deleteDoc: deletePost } = useDeleteDoc("posts");
+  const { deleteDoc: deletePostTopic } = useDeleteDoc("post_topics");
+  const { deleteDoc: deletePostTag } = useDeleteDoc("post_tags");
 
   const handleStatusUpdate = React.useCallback(
     async (nextStatus: Post["status"]) => {
@@ -198,6 +200,10 @@ export function PostDetail({ postId }: PostDetailProps) {
     if (!post) return;
 
     try {
+      await Promise.all([
+        ...(postTopics ?? []).map(pt => deletePostTopic(pt.name)),
+        ...(postTags ?? []).map(pt => deletePostTag(pt.name)),
+      ]);
       await deletePost(post.name);
       showCrudSuccess(
         t.blogPosts.toast.deleteSuccess,
@@ -211,7 +217,17 @@ export function PostDetail({ postId }: PostDetailProps) {
         t.blogPosts.toast.deleteFailureDescription
       );
     }
-  }, [deletePost, locale, post, router, t.blogPosts.toast]);
+  }, [
+    deletePost,
+    deletePostTag,
+    deletePostTopic,
+    locale,
+    post,
+    postTags,
+    postTopics,
+    router,
+    t.blogPosts.toast,
+  ]);
 
   const statusCode = (postError as { response?: { status?: number } } | null)?.response?.status;
 

@@ -22,6 +22,11 @@ export const blogCategories = {
   bulkDeleteTitle: "Xác nhận xóa nhiều",
   bulkDeleteSuccessDescription: "Đã xóa thành công {count} danh mục",
   itemsWillBeDeleted: "Hành động này không thể hoàn tác.",
+  deleteBlockedTitle: "Không thể xóa danh mục",
+  deleteBlockedDescription:
+    "Danh mục này vẫn đang được liên kết với các mục sau. Vui lòng xóa hoặc gán lại trước.",
+  deleteBlockedLinkTopics: "Các chủ đề đang sử dụng danh mục này",
+  deleteBlockedLinkPosts: "Các bài viết đang sử dụng danh mục này",
   form: {
     updateSuccess: "Cập nhật thành công",
     updateFailure: "Cập nhật thất bại",
