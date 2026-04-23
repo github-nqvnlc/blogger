@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building2, Tags, FileText, MessageSquare, Eye, Lightbulb, FolderOpen } from "lucide-react";
+import { Building2, FileText, Lightbulb, FolderOpen, Eye, MessageSquare, Tags } from "lucide-react";
 import { useGetMethod } from "@/hooks";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useState } from "react";
@@ -11,7 +11,6 @@ import { format, startOfMonth } from "date-fns";
 import { LineChart } from "@/components/charts/line-chart";
 import { PieChart } from "@/components/charts/pie-chart";
 import { formatDate } from "@/helper/format-time";
-import { Eye, MessageSquare, Newspaper, Tags } from "lucide-react";
 
 type MasterCounts = {
   blog_departments: number;

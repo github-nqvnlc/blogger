@@ -256,7 +256,7 @@ export function PostList() {
             },
           })
           .then(res => Promise.all((res.data.data ?? []).map(pt => deletePostTopic(pt.name))))
-          .catch(() => { }),
+          .catch(() => {}),
         apiClient
           .get<{ data: PostTag[] }>("/api/resource/post_tags", {
             params: {
@@ -266,7 +266,7 @@ export function PostList() {
             },
           })
           .then(res => Promise.all((res.data.data ?? []).map(pt => deletePostTag(pt.name))))
-          .catch(() => { }),
+          .catch(() => {}),
       ]);
     },
     [deletePostTag, deletePostTopic]

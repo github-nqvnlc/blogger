@@ -1591,9 +1591,9 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
         ? copy.cancelDraftConfirmWithUploadsDescription
         : copy.cancelDraftConfirmDescription
       : copy.unsavedNavigationDescription;
-  const stepCounterText = copy.stepCounter
-    .replace("{current}", String(currentStep))
-    .replace("{total}", String(totalSteps));
+  // const stepCounterText = copy.stepCounter
+  //   .replace("{current}", String(currentStep))
+  //   .replace("{total}", String(totalSteps));
   const submitLabel = isSubmitting
     ? isEditMode
       ? copy.saving
@@ -1625,14 +1625,10 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
   return (
     <main className="flex flex-col gap-6">
       <div>
-        <h1 className="text-xl md:text-3xl font-bold tracking-tight">
-          {pageTitle}
-        </h1>
+        <h1 className="text-xl md:text-3xl font-bold tracking-tight">{pageTitle}</h1>
         <p className="text-sm text-muted-foreground">{pageDescription}</p>
       </div>
       <div className="flex flex-col gap-6">
-
-
         <div className="col-span-2">
           {currentStep === 1 ? (
             <Card>
@@ -1674,7 +1670,6 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
                       {getTrimmedLength(form.thumb_desc)}/300
                     </p>
                   </div>
-
                 </div>
 
                 <div className="grid gap-4 md:gap-6 md:grid-cols-2">
@@ -1964,8 +1959,6 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
                       </SelectContent>
                     </Select>
                   </div>
-
-
                 </div>
               </CardContent>
             </Card>
@@ -2091,7 +2084,9 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
 
       <div className="sticky bottom-0 z-10 rounded-2xl border shadow-lg bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/10">
         <div className="flex md:flex-row items-center md:justify-between gap-3 p-3">
-          <div className={cn("hidden md:grid gap-2", isEditMode ? "md:grid-cols-2" : "md:grid-cols-3")}>
+          <div
+            className={cn("hidden md:grid gap-2", isEditMode ? "md:grid-cols-2" : "md:grid-cols-3")}
+          >
             {steps.map(stepItem => {
               const stepCopy = copy.steps[stepItem.titleKey];
               const isActive = currentStep === stepItem.step;
@@ -2125,7 +2120,6 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
             })}
           </div>
 
-
           <div className="flex flex-wrap gap-2 w-full md:w-auto">
             {currentStep === 1 ? (
               <>
@@ -2137,7 +2131,11 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
                 >
                   {copy.cancel}
                 </Button>
-                <Button type="button" onClick={() => validateStepOne() && setCurrentStep(2)} className="flex-1 md:flex-none">
+                <Button
+                  type="button"
+                  onClick={() => validateStepOne() && setCurrentStep(2)}
+                  className="flex-1 md:flex-none"
+                >
                   {copy.continue}
                 </Button>
               </>
@@ -2145,7 +2143,12 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
 
             {currentStep === 2 ? (
               <>
-                <Button type="button" variant="outline" onClick={() => setCurrentStep(1)} className="flex-1 md:flex-none">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setCurrentStep(1)}
+                  className="flex-1 md:flex-none"
+                >
                   {copy.back}
                 </Button>
                 {isEditMode ? (
@@ -2158,7 +2161,11 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
                     {submitLabel}
                   </Button>
                 ) : (
-                  <Button type="button" onClick={() => validateStepTwo() && setCurrentStep(3)} className="flex-1 md:flex-none">
+                  <Button
+                    type="button"
+                    onClick={() => validateStepTwo() && setCurrentStep(3)}
+                    className="flex-1 md:flex-none"
+                  >
                     {copy.preview}
                   </Button>
                 )}
@@ -2167,7 +2174,12 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
 
             {!isEditMode && currentStep === 3 ? (
               <>
-                <Button type="button" variant="outline" onClick={() => setCurrentStep(2)} className="flex-1 md:flex-none">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setCurrentStep(2)}
+                  className="flex-1 md:flex-none"
+                >
                   {copy.back}
                 </Button>
                 <Button
