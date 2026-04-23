@@ -4,7 +4,10 @@ export const admin = {
   dashboardDescription: "Chào mừng bạn đến với trang quản trị blog",
   stats: {
     totalPosts: "Tổng bài viết",
-    totalPostsDescription: "Tăng 12% so với tháng trước",
+    totalDepartments: "Tổng bộ phận nội dung",
+    totalCategories: "Tổng danh mục",
+    totalTopics: "Tổng chủ đề",
+    totalTags: "Tổng nhãn",
     comments: "Bình luận",
     commentsDescription: "15 bình luận chưa duyệt",
     views: "Lượt xem",

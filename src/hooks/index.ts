@@ -19,6 +19,7 @@ export { useDeleteDoc } from "./useDeleteDoc";
 
 // ── Raw Endpoint Calls ────────────────────────────────────────────────────────
 export { useGetCall } from "./useGetCall";
+export { useGetMethod } from "./useGetMethod";
 export { usePostCall, usePutCall, useDeleteCall } from "./useMutationCall";
 
 // ── Utilities ─────────────────────────────────────────────────────────────────

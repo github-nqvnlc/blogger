@@ -3,8 +3,11 @@ export const admin = {
   dashboardTitle: "Overview",
   dashboardDescription: "Welcome to the blog administration workspace",
   stats: {
+    totalDepartments: "Total departments",
+    totalCategories: "Total categories",
+    totalTopics: "Total topics",
+    totalTags: "Total tags",
     totalPosts: "Total posts",
-    totalPostsDescription: "Up 12% from last month",
     comments: "Comments",
     commentsDescription: "15 comments awaiting moderation",
     views: "Views",
