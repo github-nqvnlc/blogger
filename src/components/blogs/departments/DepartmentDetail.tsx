@@ -56,7 +56,7 @@ import { notFound, useRouter } from "next/navigation";
 import * as React from "react";
 import { DepartmentForm } from "./DepartmentForm";
 
-type RelationItem = { name: string; category?: string; title?: string };
+type RelationItem = { name: string; topic?: string; category?: string; title?: string };
 
 async function getRelationCount(
   resource: string,
@@ -637,7 +637,7 @@ export function DepartmentDetail({ departmentId }: DepartmentDetailProps) {
                           className="text-foreground underline underline-offset-3 hover:text-muted-foreground text-sm"
                           onClick={() => setBlockedDepartment(null)}
                         >
-                          {item.title || item.name}
+                          {item.topic || item.name}
                         </Link>
                       </li>
                     ))}

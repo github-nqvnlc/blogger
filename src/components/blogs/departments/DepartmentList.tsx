@@ -537,7 +537,7 @@ export function DepartmentList() {
                           className="text-foreground underline underline-offset-3 hover:text-muted-foreground text-sm"
                           onClick={() => setBlockedDepartment(null)}
                         >
-                          {item.title || item.name}
+                          {item.topic || item.name}
                         </Link>
                       </li>
                     ))}
