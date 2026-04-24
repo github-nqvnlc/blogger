@@ -1,10 +1,10 @@
 "use client";
 
-import Link from "next/link";
-import { ArrowLeft, LayoutDashboard, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/hooks/useLanguage";
 import { buildLocalePath } from "@/i18n";
+import { ArrowLeft, LayoutDashboard, ShieldAlert } from "lucide-react";
+import Link from "next/link";
 
 interface AdminAccessDeniedProps {
   description: string;
@@ -23,7 +23,7 @@ export function AdminAccessDenied({ description, title }: AdminAccessDeniedProps
               <ShieldAlert className="size-10" />
             </div>
           </div>
-          <h1 className="text-3xl font-bold tracking-tight">
+          <h1 className="text-xl md:text-3xl font-bold tracking-tight">
             {title ?? t.errors.accessDeniedTitle}
           </h1>
           <p className="text-base text-muted-foreground">{description}</p>

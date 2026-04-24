@@ -22,6 +22,11 @@ export const blogCategories = {
   bulkDeleteTitle: "Confirm bulk deletion",
   bulkDeleteSuccessDescription: "Successfully deleted {count} categories",
   itemsWillBeDeleted: "This action cannot be undone.",
+  deleteBlockedTitle: "Cannot delete category",
+  deleteBlockedDescription:
+    "This category is still associated with the following items. Please delete or reassign them first.",
+  deleteBlockedLinkTopics: "Topics using this category",
+  deleteBlockedLinkPosts: "Posts using this category",
   form: {
     updateSuccess: "Category updated successfully",
     updateFailure: "Failed to update category",

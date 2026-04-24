@@ -34,13 +34,56 @@ import { Spinner } from "@/components/ui/spinner";
 import { useDeleteDoc, useGetCount, useGetList } from "@/hooks";
 import { useLanguage } from "@/hooks/useLanguage";
 import { buildLocalePath } from "@/i18n";
+import { getApiClient } from "@/lib/apiClient";
 import { showCrudError, showCrudSuccess } from "@/lib/crud-toast";
 import { BlogDepartment } from "@/types/blogs";
 import { Filter } from "@/types/hooks";
 import { ColumnDef, PaginationState, RowSelectionState, SortingState } from "@tanstack/react-table";
 import { Building2, Plus, Search, Trash2 } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import * as React from "react";
+
+async function getRelationCount(
+  resource: string,
+  filterField: string,
+  filterValue: string
+): Promise<number> {
+  const apiClient = getApiClient();
+  const res = await apiClient.get(`/api/resource/${resource}`, {
+    params: {
+      fields: JSON.stringify(["name"]),
+      filters: JSON.stringify([[filterField, "=", filterValue]]),
+      limit_page_length: 99999,
+      limit_start: 0,
+    },
+  });
+  const raw = (res.data ?? []) as { data?: unknown[] } | unknown[];
+  const list = Array.isArray(raw) ? raw : (raw.data ?? []);
+  return list.length;
+}
+
+type RelationItem = { name: string; category?: string; topic?: string; title?: string };
+
+async function getRelationItems(
+  resource: string,
+  filterField: string,
+  filterValue: string,
+  labelField: string
+): Promise<RelationItem[]> {
+  const apiClient = getApiClient();
+  const res = await apiClient.get(`/api/resource/${resource}`, {
+    params: {
+      fields: JSON.stringify(["name", labelField]),
+      filters: JSON.stringify([[filterField, "=", filterValue]]),
+      limit_page_length: 99999,
+      limit_start: 0,
+    },
+  });
+  const raw = (res.data ?? []) as { data?: RelationItem[] } | RelationItem[];
+  const list = Array.isArray(raw) ? raw : (raw.data ?? []);
+  return list;
+}
 
 const PAGE_SIZE = 20;
 
@@ -60,6 +103,12 @@ export function DepartmentList() {
   const [editingDepartment, setEditingDepartment] = React.useState<BlogDepartment | null>(null);
   const [deletingDepartment, setDeletingDepartment] = React.useState<BlogDepartment | null>(null);
   const [bulkDeletingDepts, setBulkDeletingDepts] = React.useState<BlogDepartment[]>([]);
+  const [blockedDepartment, setBlockedDepartment] = React.useState<BlogDepartment | null>(null);
+  const [blockedItems, setBlockedItems] = React.useState<{
+    categories: RelationItem[];
+    topics: RelationItem[];
+    posts: RelationItem[];
+  }>({ categories: [], topics: [], posts: [] });
 
   const apiFilters = React.useMemo<Filter[]>(() => {
     const result: Filter[] = [];
@@ -136,6 +185,45 @@ export function DepartmentList() {
     setIsFormOpen(true);
   }, []);
 
+  const checkDepartmentRelations = React.useCallback(async (deptName: string) => {
+    const [[categories, categoryItems], [topics, topicItems], [posts, postItems]] =
+      await Promise.all([
+        Promise.all([
+          getRelationCount("categories", "department", deptName),
+          getRelationItems("categories", "department", deptName, "category"),
+        ]),
+        Promise.all([
+          getRelationCount("topics", "department", deptName),
+          getRelationItems("topics", "department", deptName, "topic"),
+        ]),
+        Promise.all([
+          getRelationCount("posts", "department", deptName),
+          getRelationItems("posts", "department", deptName, "title"),
+        ]),
+      ]);
+    return {
+      counts: { categories, topics, posts },
+      items: { categories: categoryItems, topics: topicItems, posts: postItems },
+    };
+  }, []);
+
+  const handleDeleteClick = React.useCallback(
+    async (dept: BlogDepartment) => {
+      try {
+        const { counts, items } = await checkDepartmentRelations(dept.name);
+        if (counts.categories > 0 || counts.topics > 0 || counts.posts > 0) {
+          setBlockedItems(items);
+          setBlockedDepartment(dept);
+        } else {
+          setDeletingDepartment(dept);
+        }
+      } catch {
+        setDeletingDepartment(dept);
+      }
+    },
+    [checkDepartmentRelations]
+  );
+
   const handleDeleteConfirm = React.useCallback(async () => {
     if (!deletingDepartment) return;
     try {
@@ -164,10 +252,6 @@ export function DepartmentList() {
     setEditingDepartment(null);
     refetch();
   }, [refetch]);
-
-  const handleDeleteClick = React.useCallback((dept: BlogDepartment) => {
-    setDeletingDepartment(dept);
-  }, []);
 
   const handleBulkDeleteClick = React.useCallback((selectedDepts: BlogDepartment[]) => {
     setBulkDeletingDepts(selectedDepts);
@@ -224,7 +308,7 @@ export function DepartmentList() {
       <div className="space-y-6">
         <div className="flex sm:flex-row flex-col gap-6 sm:items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">{copy.title}</h1>
+            <h1 className="text-xl md:text-3xl font-bold tracking-tight">{copy.title}</h1>
             <p className="text-muted-foreground mt-1">{copy.description}</p>
           </div>
           <Button onClick={handleOpenCreateForm}>
@@ -407,6 +491,83 @@ export function DepartmentList() {
               {isDeleting ? <Spinner /> : null}
               {t.common.delete}
             </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={!!blockedDepartment}
+        onOpenChange={open => !open && setBlockedDepartment(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{copy.deleteBlockedTitle}</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-6">
+              <span className="block">{copy.deleteBlockedDescription}</span>
+              {blockedItems.categories.length > 0 && (
+                <div className="space-y-1">
+                  <span className="text-sm font-medium text-muted-foreground">
+                    {copy.deleteBlockedLinkCategories} ({blockedItems.categories.length})
+                  </span>
+                  <ul className="pl-4 space-y-1 max-h-32 overflow-y-auto">
+                    {blockedItems.categories.map(item => (
+                      <li key={item.name}>
+                        <Link
+                          href={buildLocalePath(locale, `/admin/categories/${item.name}`)}
+                          className="text-foreground underline underline-offset-3 hover:text-muted-foreground text-sm"
+                          onClick={() => setBlockedDepartment(null)}
+                        >
+                          {item.category || item.name}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {blockedItems.topics.length > 0 && (
+                <div className="space-y-1">
+                  <span className="text-sm font-medium text-muted-foreground">
+                    {copy.deleteBlockedLinkTopics} ({blockedItems.topics.length})
+                  </span>
+                  <ul className="pl-4 space-y-1 max-h-32 overflow-y-auto">
+                    {blockedItems.topics.map(item => (
+                      <li key={item.name}>
+                        <Link
+                          href={buildLocalePath(locale, `/admin/topics/${item.name}`)}
+                          className="text-foreground underline underline-offset-3 hover:text-muted-foreground text-sm"
+                          onClick={() => setBlockedDepartment(null)}
+                        >
+                          {item.topic || item.name}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {blockedItems.posts.length > 0 && (
+                <div className="space-y-1">
+                  <span className="text-sm font-medium text-muted-foreground">
+                    {copy.deleteBlockedLinkPosts} ({blockedItems.posts.length})
+                  </span>
+                  <ul className="pl-4 space-y-1 max-h-32 overflow-y-auto">
+                    {blockedItems.posts.map(item => (
+                      <li key={item.name}>
+                        <Link
+                          href={buildLocalePath(locale, `/admin/posts/${item.name}`)}
+                          className="text-foreground underline underline-offset-3 hover:text-muted-foreground text-sm"
+                          onClick={() => setBlockedDepartment(null)}
+                        >
+                          {item.title || item.name}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t.common.close}</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

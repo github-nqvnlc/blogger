@@ -34,13 +34,56 @@ import { Spinner } from "@/components/ui/spinner";
 import { useDeleteDoc, useGetCount, useGetList } from "@/hooks";
 import { useLanguage } from "@/hooks/useLanguage";
 import { buildLocalePath } from "@/i18n";
+import { getApiClient } from "@/lib/apiClient";
 import { showCrudError, showCrudSuccess } from "@/lib/crud-toast";
 import { Tag } from "@/types/blogs";
 import { Filter } from "@/types/hooks";
 import { ColumnDef, PaginationState, RowSelectionState, SortingState } from "@tanstack/react-table";
 import { FolderOpen, Plus, Search, Trash2 } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import * as React from "react";
+
+type RelationItem = { name: string; post?: string };
+
+async function getRelationCount(
+  resource: string,
+  filterField: string,
+  filterValue: string
+): Promise<number> {
+  const apiClient = getApiClient();
+  const res = await apiClient.get(`/api/resource/${resource}`, {
+    params: {
+      fields: JSON.stringify(["name"]),
+      filters: JSON.stringify([[filterField, "=", filterValue]]),
+      limit_page_length: 99999,
+      limit_start: 0,
+    },
+  });
+  const raw = (res.data ?? []) as { data?: unknown[] } | unknown[];
+  const list = Array.isArray(raw) ? raw : (raw.data ?? []);
+  return list.length;
+}
+
+async function getRelationItems(
+  resource: string,
+  filterField: string,
+  filterValue: string,
+  labelField: string
+): Promise<RelationItem[]> {
+  const apiClient = getApiClient();
+  const res = await apiClient.get(`/api/resource/${resource}`, {
+    params: {
+      fields: JSON.stringify(["name", labelField]),
+      filters: JSON.stringify([[filterField, "=", filterValue]]),
+      limit_page_length: 99999,
+      limit_start: 0,
+    },
+  });
+  const raw = (res.data ?? []) as { data?: RelationItem[] } | RelationItem[];
+  const list = Array.isArray(raw) ? raw : (raw.data ?? []);
+  return list;
+}
 
 const PAGE_SIZE = 20;
 
@@ -60,6 +103,10 @@ export function TagList() {
   const [editingTag, setEditingTag] = React.useState<Tag | null>(null);
   const [deletingTag, setDeletingTag] = React.useState<Tag | null>(null);
   const [bulkDeletingTags, setBulkDeletingTags] = React.useState<Tag[]>([]);
+  const [blockedTag, setBlockedTag] = React.useState<Tag | null>(null);
+  const [blockedItems, setBlockedItems] = React.useState<{
+    posts: RelationItem[];
+  }>({ posts: [] });
 
   const apiFilters = React.useMemo<Filter[]>(() => {
     const result: Filter[] = [];
@@ -134,6 +181,34 @@ export function TagList() {
     setIsFormOpen(true);
   }, []);
 
+  const checkTagRelations = React.useCallback(async (tagName: string) => {
+    const [posts, postItems] = await Promise.all([
+      getRelationCount("post_tags", "tag", tagName),
+      getRelationItems("post_tags", "tag", tagName, "post"),
+    ]);
+    return {
+      counts: { posts },
+      items: { posts: postItems },
+    };
+  }, []);
+
+  const handleDeleteClick = React.useCallback(
+    async (tag: Tag) => {
+      try {
+        const { counts, items } = await checkTagRelations(tag.name);
+        if (counts.posts > 0) {
+          setBlockedItems(items);
+          setBlockedTag(tag);
+        } else {
+          setDeletingTag(tag);
+        }
+      } catch {
+        setDeletingTag(tag);
+      }
+    },
+    [checkTagRelations]
+  );
+
   const handleDeleteConfirm = React.useCallback(async () => {
     if (!deletingTag) return;
 
@@ -163,10 +238,6 @@ export function TagList() {
     setEditingTag(null);
     refetch();
   }, [refetch]);
-
-  const handleDeleteClick = React.useCallback((tag: Tag) => {
-    setDeletingTag(tag);
-  }, []);
 
   const handleBulkDeleteClick = React.useCallback((selectedTags: Tag[]) => {
     setBulkDeletingTags(selectedTags);
@@ -220,7 +291,7 @@ export function TagList() {
       <div className="space-y-6">
         <div className="flex sm:flex-row flex-col gap-6 sm:items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">{copy.title}</h1>
+            <h1 className="text-xl md:text-3xl font-bold tracking-tight">{copy.title}</h1>
             <p className="mt-1 text-muted-foreground">{copy.description}</p>
           </div>
           <Button onClick={handleOpenCreateForm}>
@@ -393,6 +464,41 @@ export function TagList() {
               {isDeleting ? <Spinner /> : null}
               {t.common.delete}
             </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!blockedTag} onOpenChange={open => !open && setBlockedTag(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{copy.deleteBlockedTitle}</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-6">
+              <span className="block">{copy.deleteBlockedDescription}</span>
+              {blockedItems.posts.length > 0 && (
+                <div className="space-y-1">
+                  <span className="text-sm font-medium text-muted-foreground">
+                    {copy.deleteBlockedLinkPosts} ({blockedItems.posts.length})
+                  </span>
+                  <ul className="pl-4 space-y-1 max-h-32 overflow-y-auto">
+                    {blockedItems.posts.map((item, index) => (
+                      <li key={item.name}>
+                        <Link
+                          href={buildLocalePath(locale, `/admin/posts/${item.post}`)}
+                          target="blank"
+                          className="text-foreground underline underline-offset-3 hover:text-muted-foreground text-sm"
+                          onClick={() => setBlockedTag(null)}
+                        >
+                          {t.blogPosts.post}: {index + 1}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t.common.close}</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

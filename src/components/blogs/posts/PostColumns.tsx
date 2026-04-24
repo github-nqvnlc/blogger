@@ -86,9 +86,9 @@ export function getPostColumns(t: Dictionary): ColumnDef<Post, unknown>[] {
         const post = row.original;
 
         return (
-          <div className="max-w-[360px] cursor-pointer space-y-1" onClick={() => meta.onView(post)}>
+          <div className="max-w-56 cursor-pointer space-y-1" onClick={() => meta.onView(post)}>
             <img
-              src={`${getBaseUrl()}${post.thumb}`}
+              src={post.thumb && !post.thumb.startsWith("http") ? `${getBaseUrl()}${post.thumb}` : post.thumb}
               alt={post.title}
               className="min-w-56 h-auto rounded-sm aspect-video object-cover"
             />

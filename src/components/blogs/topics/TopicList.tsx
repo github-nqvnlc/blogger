@@ -35,13 +35,56 @@ import { Spinner } from "@/components/ui/spinner";
 import { useDeleteDoc, useGetCount, useGetList } from "@/hooks";
 import { useLanguage } from "@/hooks/useLanguage";
 import { buildLocalePath } from "@/i18n";
+import { getApiClient } from "@/lib/apiClient";
 import { showCrudError, showCrudSuccess } from "@/lib/crud-toast";
 import { BlogDepartment, Topic } from "@/types/blogs";
 import { Filter } from "@/types/hooks";
 import { ColumnDef, PaginationState, RowSelectionState, SortingState } from "@tanstack/react-table";
 import { FolderOpen, Plus, Search, Trash2 } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import * as React from "react";
+
+type RelationItem = { name: string; post?: string };
+
+async function getRelationCount(
+  resource: string,
+  filterField: string,
+  filterValue: string
+): Promise<number> {
+  const apiClient = getApiClient();
+  const res = await apiClient.get(`/api/resource/${resource}`, {
+    params: {
+      fields: JSON.stringify(["name"]),
+      filters: JSON.stringify([[filterField, "=", filterValue]]),
+      limit_page_length: 99999,
+      limit_start: 0,
+    },
+  });
+  const raw = (res.data ?? []) as { data?: unknown[] } | unknown[];
+  const list = Array.isArray(raw) ? raw : (raw.data ?? []);
+  return list.length;
+}
+
+async function getRelationItems(
+  resource: string,
+  filterField: string,
+  filterValue: string,
+  labelField: string
+): Promise<RelationItem[]> {
+  const apiClient = getApiClient();
+  const res = await apiClient.get(`/api/resource/${resource}`, {
+    params: {
+      fields: JSON.stringify(["name", labelField]),
+      filters: JSON.stringify([[filterField, "=", filterValue]]),
+      limit_page_length: 99999,
+      limit_start: 0,
+    },
+  });
+  const raw = (res.data ?? []) as { data?: RelationItem[] } | RelationItem[];
+  const list = Array.isArray(raw) ? raw : (raw.data ?? []);
+  return list;
+}
 
 const PAGE_SIZE = 20;
 
@@ -62,6 +105,10 @@ export function TopicList() {
   const [editingTopic, setEditingTopic] = React.useState<Topic | null>(null);
   const [deletingTopic, setDeletingTopic] = React.useState<Topic | null>(null);
   const [bulkDeletingTopics, setBulkDeletingTopics] = React.useState<Topic[]>([]);
+  const [blockedTopic, setBlockedTopic] = React.useState<Topic | null>(null);
+  const [blockedItems, setBlockedItems] = React.useState<{
+    posts: RelationItem[];
+  }>({ posts: [] });
   const [departments, setDepartments] = React.useState<BlogDepartment[]>([]);
 
   const apiFilters = React.useMemo<Filter[]>(() => {
@@ -158,6 +205,34 @@ export function TopicList() {
     setIsFormOpen(true);
   }, []);
 
+  const checkTopicRelations = React.useCallback(async (topicName: string) => {
+    const [posts, postItems] = await Promise.all([
+      getRelationCount("post_topics", "topic", topicName),
+      getRelationItems("post_topics", "topic", topicName, "post"),
+    ]);
+    return {
+      counts: { posts },
+      items: { posts: postItems },
+    };
+  }, []);
+
+  const handleDeleteClick = React.useCallback(
+    async (topic: Topic) => {
+      try {
+        const { counts, items } = await checkTopicRelations(topic.name);
+        if (counts.posts > 0) {
+          setBlockedItems(items);
+          setBlockedTopic(topic);
+        } else {
+          setDeletingTopic(topic);
+        }
+      } catch {
+        setDeletingTopic(topic);
+      }
+    },
+    [checkTopicRelations]
+  );
+
   const handleDeleteConfirm = React.useCallback(async () => {
     if (!deletingTopic) return;
 
@@ -187,10 +262,6 @@ export function TopicList() {
     setEditingTopic(null);
     refetch();
   }, [refetch]);
-
-  const handleDeleteClick = React.useCallback((topic: Topic) => {
-    setDeletingTopic(topic);
-  }, []);
 
   const handleBulkDeleteClick = React.useCallback((selectedTopics: Topic[]) => {
     setBulkDeletingTopics(selectedTopics);
@@ -251,7 +322,7 @@ export function TopicList() {
       <div className="space-y-6">
         <div className="flex sm:flex-row flex-col gap-6 sm:items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">{copy.title}</h1>
+            <h1 className="text-xl md:text-3xl font-bold tracking-tight">{copy.title}</h1>
             <p className="mt-1 text-muted-foreground">{copy.description}</p>
           </div>
           <Button onClick={handleOpenCreateForm}>
@@ -438,6 +509,41 @@ export function TopicList() {
               {isDeleting ? <Spinner /> : null}
               {t.common.delete}
             </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!blockedTopic} onOpenChange={open => !open && setBlockedTopic(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{copy.deleteBlockedTitle}</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-6">
+              <span className="block">{copy.deleteBlockedDescription}</span>
+              {blockedItems.posts.length > 0 && (
+                <div className="space-y-1">
+                  <span className="text-sm font-medium text-muted-foreground">
+                    {copy.deleteBlockedLinkPosts} ({blockedItems.posts.length})
+                  </span>
+                  <ul className="pl-4 space-y-1 max-h-32 overflow-y-auto">
+                    {blockedItems.posts.map((item, index) => (
+                      <li key={item.name}>
+                        <Link
+                          href={buildLocalePath(locale, `/admin/posts/${item.post}`)}
+                          target="blank"
+                          className="text-foreground underline underline-offset-3 hover:text-muted-foreground text-sm"
+                          onClick={() => setBlockedTopic(null)}
+                        >
+                          {t.blogPosts.post}: {index + 1}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t.common.close}</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

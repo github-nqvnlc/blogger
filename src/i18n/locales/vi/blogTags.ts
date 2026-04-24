@@ -20,6 +20,10 @@ export const blogTags = {
   bulkDeleteTitle: "Xác nhận xóa nhiều",
   bulkDeleteSuccessDescription: "Đã xóa thành công {count} nhãn",
   itemsWillBeDeleted: "Hành động này không thể hoàn tác.",
+  deleteBlockedTitle: "Không thể xóa nhãn",
+  deleteBlockedDescription:
+    "Nhãn này vẫn đang được liên kết với các mục sau. Vui lòng xóa hoặc gán lại trước.",
+  deleteBlockedLinkPosts: "Các bài viết đang sử dụng nhãn này",
   form: {
     updateSuccess: "Cập nhật thành công",
     updateFailure: "Cập nhật thất bại",

@@ -1,4 +1,5 @@
 export const blogPosts = {
+  post: "Bài viết",
   title: "Bài viết",
   createTitle: "Tạo bài viết mới",
   createDescription:

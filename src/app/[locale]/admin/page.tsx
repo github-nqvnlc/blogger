@@ -11,6 +11,7 @@ import { format, startOfMonth } from "date-fns";
 import { LineChart } from "@/components/charts/line-chart";
 import { PieChart } from "@/components/charts/pie-chart";
 import { formatDate } from "@/helper/format-time";
+import { Eye, MessageSquare, Newspaper, Tags } from "lucide-react";
 
 type MasterCounts = {
   blog_departments: number;
@@ -103,7 +104,7 @@ export default function AdminDashboardPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{t.admin.dashboardTitle}</h1>
+          <h1 className="text-xl md:text-3xl font-bold tracking-tight">{t.admin.dashboardTitle}</h1>
           <p className="text-muted-foreground mt-1">{t.admin.dashboardDescription}</p>
         </div>
         <DatePickerWithRange value={dateRange} onChange={setDateRange} />

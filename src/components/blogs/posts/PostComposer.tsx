@@ -400,13 +400,13 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
     () =>
       selectedDepartment
         ? {
-            value: selectedDepartment.name,
-            label: selectedDepartment.department_name,
-            description: selectedDepartment.department_code,
-            keywords: [selectedDepartment.department_code, selectedDepartment.description].filter(
-              Boolean
-            ),
-          }
+          value: selectedDepartment.name,
+          label: selectedDepartment.department_name,
+          description: selectedDepartment.department_code,
+          keywords: [selectedDepartment.department_code, selectedDepartment.description].filter(
+            Boolean
+          ),
+        }
         : null,
     [selectedDepartment]
   );
@@ -415,11 +415,11 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
     () =>
       selectedCategory
         ? {
-            value: selectedCategory.name,
-            label: getCategoryName(selectedCategory),
-            description: selectedCategory.slug || selectedCategory.description,
-            keywords: [selectedCategory.slug, selectedCategory.description].filter(Boolean),
-          }
+          value: selectedCategory.name,
+          label: getCategoryName(selectedCategory),
+          description: selectedCategory.slug || selectedCategory.description,
+          keywords: [selectedCategory.slug, selectedCategory.description].filter(Boolean),
+        }
         : null,
     [selectedCategory]
   );
@@ -616,7 +616,7 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
 
         try {
           await deleteFile.deleteDoc(fileName);
-        } catch {}
+        } catch { }
       }
 
       transientCoverFileNamesRef.current = remainingFiles;
@@ -638,7 +638,7 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
 
         try {
           await deleteFile.deleteDoc(fileName);
-        } catch {}
+        } catch { }
       }
 
       transientEditorFileNamesRef.current = remainingFiles;
@@ -1624,70 +1624,60 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
 
   return (
     <main className="flex flex-col gap-6">
-      <div className="flex flex-col lg:grid grid-cols-3 gap-6">
-        <Card className="col-span-1">
-          <CardHeader className="gap-3 px-4 sm:px-6">
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-              <div className="space-y-1">
-                <CardTitle className="text-2xl tracking-tight">{pageTitle}</CardTitle>
-                <CardDescription>{pageDescription}</CardDescription>
-              </div>
-            </div>
-            <div className={cn("grid gap-2", isEditMode ? "md:grid-cols-1" : "md:grid-cols-1")}>
-              {steps.map(stepItem => {
-                const stepCopy = copy.steps[stepItem.titleKey];
-                const isActive = currentStep === stepItem.step;
-                const isCompleted = currentStep > stepItem.step;
+      <div>
+        <h1 className="text-xl md:text-3xl font-bold tracking-tight">
+          {pageTitle}
+        </h1>
+        <p className="text-sm text-muted-foreground">{pageDescription}</p>
+      </div>
+      <div className="flex flex-col gap-6">
 
-                return (
-                  <div
-                    key={stepItem.step}
-                    className={cn(
-                      "rounded-lg border px-3 py-3 transition-colors",
-                      isActive && "border-primary bg-primary/5",
-                      isCompleted && "border-emerald-500 bg-emerald-500/5"
-                    )}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <div
-                        className={cn(
-                          "flex size-6 shrink-0 items-center justify-center rounded-full border text-xs font-semibold",
-                          isActive && "border-primary bg-primary text-primary-foreground",
-                          isCompleted && "border-emerald-500 bg-emerald-500 text-white"
-                        )}
-                      >
-                        {stepItem.step}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium leading-none">{stepCopy.title}</p>
-                        <p className="mt-1 text-xs text-muted-foreground">{stepCopy.description}</p>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
 
-            <Button
-              variant="outline"
-              size="sm"
-              type="button"
-              onClick={() => safeNavigate(cancelHref, { intent: "cancel" })}
-            >
-              {copy.cancel}
-            </Button>
-          </CardHeader>
-        </Card>
         <div className="col-span-2">
           {currentStep === 1 ? (
             <Card>
-              <CardHeader>
-                <CardTitle>{copy.steps.metadata.title}</CardTitle>
-                <CardDescription>{copy.steps.metadata.description}</CardDescription>
-              </CardHeader>
+              <CardContent className="grid gap-4 md:gap-6 md:grid-cols-2">
+                <div className="flex flex-col gap-4 md:gap-6 ">
+                  {/* Cover Image */}
+                  <div className="space-y-2">
+                    <CoverImageField
+                      id="post-cover-field"
+                      value={form.thumb}
+                      visibility={form.visibility}
+                      disabled={isSubmitting}
+                      invalid={Boolean(fieldErrors.thumb)}
+                      source={coverSource}
+                      fileMeta={coverFileMeta}
+                      onChange={value => {
+                        updateField("thumb", value);
+                        clearFieldError("thumb");
+                      }}
+                      onSourceChange={setCoverSource}
+                      onFileMetaChange={setCoverFileMeta}
+                      onBusyChange={setIsCoverBusy}
+                    />
+                  </div>
 
-              <CardContent className="space-y-6">
-                <div className="grid space-y-6 space-x-4 md:grid-cols-2">
+                  {/* Thumbnail Description */}
+                  <div className="space-y-2">
+                    <Label htmlFor="post-thumb-desc">{copy.form.thumbDesc}</Label>
+                    <Textarea
+                      id="post-thumb-desc"
+                      rows={4}
+                      value={form.thumb_desc}
+                      onChange={event => updateField("thumb_desc", event.target.value)}
+                      placeholder={copy.form.thumbDescPlaceholder}
+                      aria-invalid={Boolean(fieldErrors.thumb_desc)}
+                      className={cn(fieldErrors.thumb_desc && "border-destructive")}
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      {getTrimmedLength(form.thumb_desc)}/300
+                    </p>
+                  </div>
+
+                </div>
+
+                <div className="grid gap-4 md:gap-6 md:grid-cols-2">
                   {/* Title */}
                   <div className="space-y-2 md:col-span-2">
                     <Label htmlFor="post-title">{copy.form.title}</Label>
@@ -1812,9 +1802,9 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
                         filters={
                           form.department
                             ? [
-                                ["is_active", "=", 1],
-                                ["department", "=", form.department],
-                              ]
+                              ["is_active", "=", 1],
+                              ["department", "=", form.department],
+                            ]
                             : undefined
                         }
                         searchFields={["category", "slug", "description"]}
@@ -1861,9 +1851,9 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
                         filters={
                           form.department
                             ? [
-                                ["is_active", "=", 1],
-                                ["department", "=", form.department],
-                              ]
+                              ["is_active", "=", 1],
+                              ["department", "=", form.department],
+                            ]
                             : undefined
                         }
                         searchFields={["topic", "slug", "desc"]}
@@ -1975,42 +1965,7 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
                     </Select>
                   </div>
 
-                  {/* Cover Image */}
-                  <div className="space-y-2 md:col-span-2">
-                    <CoverImageField
-                      id="post-cover-field"
-                      value={form.thumb}
-                      visibility={form.visibility}
-                      disabled={isSubmitting}
-                      invalid={Boolean(fieldErrors.thumb)}
-                      source={coverSource}
-                      fileMeta={coverFileMeta}
-                      onChange={value => {
-                        updateField("thumb", value);
-                        clearFieldError("thumb");
-                      }}
-                      onSourceChange={setCoverSource}
-                      onFileMetaChange={setCoverFileMeta}
-                      onBusyChange={setIsCoverBusy}
-                    />
-                  </div>
 
-                  {/* Thumbnail Description */}
-                  <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="post-thumb-desc">{copy.form.thumbDesc}</Label>
-                    <Textarea
-                      id="post-thumb-desc"
-                      rows={4}
-                      value={form.thumb_desc}
-                      onChange={event => updateField("thumb_desc", event.target.value)}
-                      placeholder={copy.form.thumbDescPlaceholder}
-                      aria-invalid={Boolean(fieldErrors.thumb_desc)}
-                      className={cn(fieldErrors.thumb_desc && "border-destructive")}
-                    />
-                    <p className="text-sm text-muted-foreground">
-                      {getTrimmedLength(form.thumb_desc)}/300
-                    </p>
-                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -2135,20 +2090,54 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
       </div>
 
       <div className="sticky bottom-0 z-10 rounded-2xl border shadow-lg bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/10">
-        <div className="flex flex-wrap items-center justify-between gap-3 p-3">
-          <div className="text-sm text-primary">{stepCounterText}</div>
+        <div className="flex md:flex-row items-center md:justify-between gap-3 p-3">
+          <div className={cn("hidden md:grid gap-2", isEditMode ? "md:grid-cols-2" : "md:grid-cols-3")}>
+            {steps.map(stepItem => {
+              const stepCopy = copy.steps[stepItem.titleKey];
+              const isActive = currentStep === stepItem.step;
+              const isCompleted = currentStep > stepItem.step;
 
-          <div className="flex flex-wrap gap-2">
+              return (
+                <div
+                  key={stepItem.step}
+                  className={cn(
+                    "rounded-lg border px-3 py-3 transition-colors",
+                    isActive && "border-primary bg-primary/5",
+                    isCompleted && "border-emerald-500 bg-emerald-500/5"
+                  )}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div
+                      className={cn(
+                        "flex size-6 shrink-0 items-center justify-center rounded-full border text-xs font-semibold",
+                        isActive && "border-primary bg-primary text-primary-foreground",
+                        isCompleted && "border-emerald-500 bg-emerald-500 text-white"
+                      )}
+                    >
+                      {stepItem.step}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium leading-none">{stepCopy.title}</p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+
+          <div className="flex flex-wrap gap-2 w-full md:w-auto">
             {currentStep === 1 ? (
               <>
                 <Button
                   variant="outline"
                   type="button"
                   onClick={() => safeNavigate(cancelHref, { intent: "cancel" })}
+                  className="flex-1 md:flex-none"
                 >
                   {copy.cancel}
                 </Button>
-                <Button type="button" onClick={() => validateStepOne() && setCurrentStep(2)}>
+                <Button type="button" onClick={() => validateStepOne() && setCurrentStep(2)} className="flex-1 md:flex-none">
                   {copy.continue}
                 </Button>
               </>
@@ -2156,7 +2145,7 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
 
             {currentStep === 2 ? (
               <>
-                <Button type="button" variant="outline" onClick={() => setCurrentStep(1)}>
+                <Button type="button" variant="outline" onClick={() => setCurrentStep(1)} className="flex-1 md:flex-none">
                   {copy.back}
                 </Button>
                 {isEditMode ? (
@@ -2164,11 +2153,12 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
                     type="button"
                     onClick={handleSubmitPost}
                     disabled={isSubmitting || isCoverBusy}
+                    className="flex-1 md:flex-none"
                   >
                     {submitLabel}
                   </Button>
                 ) : (
-                  <Button type="button" onClick={() => validateStepTwo() && setCurrentStep(3)}>
+                  <Button type="button" onClick={() => validateStepTwo() && setCurrentStep(3)} className="flex-1 md:flex-none">
                     {copy.preview}
                   </Button>
                 )}
@@ -2177,13 +2167,14 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
 
             {!isEditMode && currentStep === 3 ? (
               <>
-                <Button type="button" variant="outline" onClick={() => setCurrentStep(2)}>
+                <Button type="button" variant="outline" onClick={() => setCurrentStep(2)} className="flex-1 md:flex-none">
                   {copy.back}
                 </Button>
                 <Button
                   type="button"
                   onClick={handleSubmitPost}
                   disabled={isSubmitting || isCoverBusy}
+                  className="flex-1 md:flex-none"
                 >
                   {submitLabel}
                 </Button>

@@ -7,6 +7,8 @@ export const common = {
   updating: "Updating...",
   delete: "Delete",
   deleting: "Deleting...",
+  edit: "Edit",
+  editting: "Editting...",
   send: "Send",
   sending: "Sending...",
   upload: "Upload",

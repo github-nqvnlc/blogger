@@ -1,13 +1,7 @@
 "use client";
 
-import { useLanguage } from "@/hooks/useLanguage";
-import { useUserSettings } from "@/hooks/useUserSettings";
-import { useAuth } from "@/hooks/useAuth";
-import { useMounted } from "@/hooks/useMounted";
-import { SUPPORTED_LANGUAGES } from "@/i18n";
-import { useTheme } from "next-themes";
-import { useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -15,10 +9,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/hooks/useLanguage";
+import { useMounted } from "@/hooks/useMounted";
+import { useUserSettings } from "@/hooks/useUserSettings";
+import { SUPPORTED_LANGUAGES } from "@/i18n";
 import { Loader2 } from "lucide-react";
+import { useTheme } from "next-themes";
+import { useEffect } from "react";
 
 const THEME_MAP_TO_SERVER: Record<string, string> = {
   light: "Light",
@@ -130,7 +130,7 @@ export default function SettingsPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">{t.settings.title}</h1>
+        <h1 className="text-xl md:text-3xl font-bold tracking-tight">{t.settings.title}</h1>
         <p className="text-muted-foreground mt-1">{t.settings.description}</p>
       </div>
 

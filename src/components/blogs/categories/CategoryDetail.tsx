@@ -1,7 +1,18 @@
 "use client";
 
 import { AdminAccessDenied } from "@/components/layout/admin-access-denied";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
+import { StatusBadge as StatusBadgePost } from "@/components/ui/badge-status";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,6 +22,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
 import {
   Table,
   TableBody,
@@ -19,17 +31,59 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useGetDoc, useLazyLoadList } from "@/hooks";
+import { useDeleteDoc, useGetDoc, useLazyLoadList } from "@/hooks";
 import { useLanguage } from "@/hooks/useLanguage";
 import { buildLocalePath } from "@/i18n";
+import { getApiClient } from "@/lib/apiClient";
+import { showCrudError, showCrudSuccess } from "@/lib/crud-toast";
 import { BlogDepartment, Category, Post } from "@/types/blogs";
 import { formatDate } from "date-fns";
-import { ArrowLeft, BookOpen, FolderOpen, Newspaper, Pencil } from "lucide-react";
+import { ArrowLeft, BookOpen, FolderOpen, Newspaper, Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { notFound, useRouter } from "next/navigation";
 import * as React from "react";
 import { CategoryForm } from "./CategoryForm";
-import { StatusBadge as StatusBadgePost } from "@/components/ui/badge-status";
+
+type RelationItem = { name: string; title?: string };
+
+async function getRelationCount(
+  resource: string,
+  filterField: string,
+  filterValue: string
+): Promise<number> {
+  const apiClient = getApiClient();
+  const res = await apiClient.get(`/api/resource/${resource}`, {
+    params: {
+      fields: JSON.stringify(["name"]),
+      filters: JSON.stringify([[filterField, "=", filterValue]]),
+      limit_page_length: 99999,
+      limit_start: 0,
+    },
+  });
+  const raw = (res.data ?? []) as { data?: unknown[] } | unknown[];
+  const list = Array.isArray(raw) ? raw : (raw.data ?? []);
+  return list.length;
+}
+
+async function getRelationItems(
+  resource: string,
+  filterField: string,
+  filterValue: string,
+  labelField: string
+): Promise<RelationItem[]> {
+  const apiClient = getApiClient();
+  const res = await apiClient.get(`/api/resource/${resource}`, {
+    params: {
+      fields: JSON.stringify(["name", labelField]),
+      filters: JSON.stringify([[filterField, "=", filterValue]]),
+      limit_page_length: 99999,
+      limit_start: 0,
+    },
+  });
+  const raw = (res.data ?? []) as { data?: RelationItem[] } | RelationItem[];
+  const list = Array.isArray(raw) ? raw : (raw.data ?? []);
+  return list;
+}
 
 interface CategoryDetailProps {
   categoryId: string;
@@ -88,7 +142,60 @@ export function CategoryDetail({ categoryId }: CategoryDetailProps) {
   const { locale, t } = useLanguage();
   const copy = t.blogCategories.detail;
   const common = t.common;
+  const copyList = t.blogCategories;
   const [editDialogOpen, setEditDialogOpen] = React.useState(false);
+  const [deletingCategory, setDeletingCategory] = React.useState<Category | null>(null);
+  const [blockedCategory, setBlockedCategory] = React.useState<Category | null>(null);
+  const [blockedItems, setBlockedItems] = React.useState<{
+    posts: RelationItem[];
+  }>({ posts: [] });
+  const { deleteDoc: deleteCategory, loading: isDeleting } = useDeleteDoc("categories");
+
+  const checkCategoryRelations = React.useCallback(async (catName: string) => {
+    const [[posts, postItems]] = await Promise.all([
+      Promise.all([
+        getRelationCount("posts", "category", catName),
+        getRelationItems("posts", "category", catName, "title"),
+      ]),
+    ]);
+    return {
+      counts: { posts },
+      items: { posts: postItems },
+    };
+  }, []);
+
+  const handleDeleteClick = React.useCallback(
+    async (cat: Category) => {
+      try {
+        const { counts, items } = await checkCategoryRelations(cat.name);
+        if (counts.posts > 0) {
+          setBlockedItems(items);
+          setBlockedCategory(cat);
+        } else {
+          setDeletingCategory(cat);
+        }
+      } catch {
+        setDeletingCategory(cat);
+      }
+    },
+    [checkCategoryRelations]
+  );
+
+  const handleDeleteConfirm = React.useCallback(async () => {
+    if (!deletingCategory) return;
+    try {
+      await deleteCategory(deletingCategory.name);
+      showCrudSuccess(
+        copyList.deleteSuccess,
+        `${copyList.deleteSuccessDescriptionPrefix} "${deletingCategory.category}"`
+      );
+      setDeletingCategory(null);
+      router.push(buildLocalePath(locale, "/admin/categories"));
+    } catch (err) {
+      showCrudError(copyList.deleteFailure, err, copyList.deleteFailureDescription);
+    }
+  }, [copyList, deleteCategory, deletingCategory, locale, router]);
+
   const {
     data: category,
     isLoading: isLoadingCategory,
@@ -150,12 +257,18 @@ export function CategoryDetail({ categoryId }: CategoryDetailProps) {
       </Button>
 
       <div className="-mt-4 flex flex-col gap-4 sm:flex-row-reverse sm:items-start sm:justify-between">
-        <Button size="sm" onClick={() => setEditDialogOpen(true)}>
-          Chỉnh sửa
-          <Pencil className="h-4 w-4 ml-2" />
-        </Button>
+        <div className="flex gap-2">
+          <Button size="sm" variant="destructive" onClick={() => handleDeleteClick(category)}>
+            <Trash2 className="h-4 w-4 mr-2" />
+            {t.common.delete}
+          </Button>
+          <Button size="sm" onClick={() => setEditDialogOpen(true)}>
+            <Pencil className="h-4 w-4 mr-2" />
+            {t.common.edit}
+          </Button>
+        </div>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{category.category}</h1>
+          <h1 className="text-xl md:text-3xl font-bold tracking-tight">{category.category}</h1>
           <p className="mt-1 text-muted-foreground">{category.description || copy.noDescription}</p>
         </div>
       </div>
@@ -265,6 +378,70 @@ export function CategoryDetail({ categoryId }: CategoryDetailProps) {
           />
         </DialogContent>
       </Dialog>
+
+      <AlertDialog
+        open={!!deletingCategory}
+        onOpenChange={open => !open && setDeletingCategory(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{copyList.deleteTitle}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {copyList.deleteDescriptionStart} &ldquo;{deletingCategory?.category}&rdquo;?{" "}
+              {copyList.deleteDescriptionEnd}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t.common.cancel}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={isDeleting}
+            >
+              {isDeleting ? <Spinner /> : null}
+              {t.common.delete}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={!!blockedCategory}
+        onOpenChange={open => !open && setBlockedCategory(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{copyList.deleteBlockedTitle}</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-6">
+              <span className="block">{copyList.deleteBlockedDescription}</span>
+
+              {blockedItems.posts.length > 0 && (
+                <span className="block space-y-1">
+                  <span className="text-sm font-medium text-muted-foreground">
+                    {copyList.deleteBlockedLinkPosts} ({blockedItems.posts.length})
+                  </span>
+                  <ul className="pl-4 space-y-1 max-h-32 overflow-y-auto">
+                    {blockedItems.posts.map(item => (
+                      <li key={item.name}>
+                        <Link
+                          href={buildLocalePath(locale, `/admin/posts/${item.name}`)}
+                          className="text-foreground underline underline-offset-3 hover:text-muted-foreground text-sm"
+                          onClick={() => setBlockedCategory(null)}
+                        >
+                          {item.title || item.name}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </span>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t.common.close}</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

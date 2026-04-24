@@ -38,13 +38,56 @@ import { Spinner } from "@/components/ui/spinner";
 import { useDeleteDoc, useGetCount, useGetList } from "@/hooks";
 import { useLanguage } from "@/hooks/useLanguage";
 import { buildLocalePath } from "@/i18n";
+import { getApiClient } from "@/lib/apiClient";
 import { showCrudError, showCrudSuccess } from "@/lib/crud-toast";
 import { BlogDepartment, Category } from "@/types/blogs";
 import { Filter } from "@/types/hooks";
 import { ColumnDef, PaginationState, RowSelectionState, SortingState } from "@tanstack/react-table";
 import { FolderOpen, Plus, Search, Trash2 } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import * as React from "react";
+
+type RelationItem = { name: string; title?: string };
+
+async function getRelationCount(
+  resource: string,
+  filterField: string,
+  filterValue: string
+): Promise<number> {
+  const apiClient = getApiClient();
+  const res = await apiClient.get(`/api/resource/${resource}`, {
+    params: {
+      fields: JSON.stringify(["name"]),
+      filters: JSON.stringify([[filterField, "=", filterValue]]),
+      limit_page_length: 99999,
+      limit_start: 0,
+    },
+  });
+  const raw = (res.data ?? []) as { data?: unknown[] } | unknown[];
+  const list = Array.isArray(raw) ? raw : (raw.data ?? []);
+  return list.length;
+}
+
+async function getRelationItems(
+  resource: string,
+  filterField: string,
+  filterValue: string,
+  labelField: string
+): Promise<RelationItem[]> {
+  const apiClient = getApiClient();
+  const res = await apiClient.get(`/api/resource/${resource}`, {
+    params: {
+      fields: JSON.stringify(["name", labelField]),
+      filters: JSON.stringify([[filterField, "=", filterValue]]),
+      limit_page_length: 99999,
+      limit_start: 0,
+    },
+  });
+  const raw = (res.data ?? []) as { data?: RelationItem[] } | RelationItem[];
+  const list = Array.isArray(raw) ? raw : (raw.data ?? []);
+  return list;
+}
 
 const PAGE_SIZE = 20;
 
@@ -66,6 +109,10 @@ export function CategoryList() {
   const [editingCategory, setEditingCategory] = React.useState<Category | null>(null);
   const [deletingCategory, setDeletingCategory] = React.useState<Category | null>(null);
   const [bulkDeletingCategories, setBulkDeletingCategories] = React.useState<Category[]>([]);
+  const [blockedCategory, setBlockedCategory] = React.useState<Category | null>(null);
+  const [blockedItems, setBlockedItems] = React.useState<{
+    posts: RelationItem[];
+  }>({ posts: [] });
 
   const apiFilters = React.useMemo<Filter[]>(() => {
     const result: Filter[] = [];
@@ -164,6 +211,40 @@ export function CategoryList() {
     setIsFormOpen(true);
   }, []);
 
+  const checkCategoryRelations = React.useCallback(async (catName: string) => {
+    const [[topics, topicItems], [posts, postItems]] = await Promise.all([
+      Promise.all([
+        getRelationCount("topics", "category", catName),
+        getRelationItems("topics", "category", catName, "topic"),
+      ]),
+      Promise.all([
+        getRelationCount("posts", "category", catName),
+        getRelationItems("posts", "category", catName, "title"),
+      ]),
+    ]);
+    return {
+      counts: { topics, posts },
+      items: { topics: topicItems, posts: postItems },
+    };
+  }, []);
+
+  const handleDeleteClick = React.useCallback(
+    async (category: Category) => {
+      try {
+        const { counts, items } = await checkCategoryRelations(category.name);
+        if (counts.topics > 0 || counts.posts > 0) {
+          setBlockedItems(items);
+          setBlockedCategory(category);
+        } else {
+          setDeletingCategory(category);
+        }
+      } catch {
+        setDeletingCategory(category);
+      }
+    },
+    [checkCategoryRelations]
+  );
+
   const handleDeleteConfirm = React.useCallback(async () => {
     if (!deletingCategory) return;
 
@@ -193,10 +274,6 @@ export function CategoryList() {
     setEditingCategory(null);
     refetch();
   }, [refetch]);
-
-  const handleDeleteClick = React.useCallback((category: Category) => {
-    setDeletingCategory(category);
-  }, []);
 
   const handleBulkDeleteClick = React.useCallback((selectedCategories: Category[]) => {
     setBulkDeletingCategories(selectedCategories);
@@ -257,7 +334,7 @@ export function CategoryList() {
       <div className="space-y-6">
         <div className="flex sm:flex-row flex-col gap-6 sm:items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">{copy.title}</h1>
+            <h1 className="text-xl md:text-3xl font-bold tracking-tight">{copy.title}</h1>
             <p className="mt-1 text-muted-foreground">{copy.description}</p>
           </div>
           <Button onClick={handleOpenCreateForm}>
@@ -456,6 +533,43 @@ export function CategoryList() {
               {isDeleting ? <Spinner /> : null}
               {t.common.delete}
             </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={!!blockedCategory}
+        onOpenChange={open => !open && setBlockedCategory(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{copy.deleteBlockedTitle}</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-6">
+              <span className="block">{copy.deleteBlockedDescription}</span>
+              {blockedItems.posts.length > 0 && (
+                <div className="space-y-1">
+                  <span className="text-sm font-medium text-muted-foreground">
+                    {copy.deleteBlockedLinkPosts} ({blockedItems.posts.length})
+                  </span>
+                  <ul className="pl-4 space-y-1 max-h-32 overflow-y-auto">
+                    {blockedItems.posts.map(item => (
+                      <li key={item.name}>
+                        <Link
+                          href={buildLocalePath(locale, `/admin/posts/${item.name}`)}
+                          className="text-foreground underline underline-offset-3 hover:text-muted-foreground text-sm"
+                          onClick={() => setBlockedCategory(null)}
+                        >
+                          {item.title || item.name}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t.common.close}</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
