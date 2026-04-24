@@ -1,20 +1,7 @@
 "use client";
 
-import * as React from "react";
-import Link from "next/link";
-import { formatDate } from "date-fns";
-import { ArrowLeft, Archive, Eye, FolderTree, Pencil, Send, Trash2 } from "lucide-react";
-import { notFound, useRouter } from "next/navigation";
-import { useDeleteDoc, useGetDoc, useGetList, useUpdateDoc } from "@/hooks";
-import { useLanguage } from "@/hooks/useLanguage";
-import { buildLocalePath } from "@/i18n";
-import { BlogDepartment, Category, Post, PostTag, PostTopic, Tag, Topic } from "@/types/blogs";
-import { AdminAccessDenied } from "@/components/layout/admin-access-denied";
 import { RichContent } from "@/components/blogs/editor/rich-content";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { AdminAccessDenied } from "@/components/layout/admin-access-denied";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,13 +12,26 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useDeleteDoc, useGetDoc, useGetList, useUpdateDoc } from "@/hooks";
+import { useLanguage } from "@/hooks/useLanguage";
+import { buildLocalePath } from "@/i18n";
 import {
   formatFrappeDatetime,
   formatPostStatusLabel,
   formatPostVisibilityLabel,
 } from "@/lib/blog-posts";
-import { getBaseUrl } from "@/lib/utils";
 import { showCrudError, showCrudSuccess } from "@/lib/crud-toast";
+import { getBaseUrl } from "@/lib/utils";
+import { BlogDepartment, Category, Post, PostTag, PostTopic, Tag, Topic } from "@/types/blogs";
+import { formatDate } from "date-fns";
+import { Archive, ArrowLeft, Eye, FolderTree, Pencil, Send, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { notFound, useRouter } from "next/navigation";
+import * as React from "react";
 
 interface PostDetailProps {
   postId: string;
@@ -264,7 +264,7 @@ export function PostDetail({ postId }: PostDetailProps) {
               </Link>
             </Button>
             <div className="space-y-2">
-              <h1 className="text-3xl font-bold tracking-tight">{post.title}</h1>
+              <h1 className="text-xl md:text-3xl font-bold tracking-tight">{post.title}</h1>
               <div className="flex flex-wrap items-center gap-2">
                 <Badge>{formatPostStatusLabel(post.status, t.blogPosts.status)}</Badge>
                 <Badge variant="secondary">

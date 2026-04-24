@@ -283,7 +283,7 @@ export function TopicDetail({ topicId }: TopicDetailProps) {
           </Button>
         </div>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{topic.topic}</h1>
+          <h1 className="text-xl md:text-3xl font-bold tracking-tight">{topic.topic}</h1>
           <p className="mt-1 text-muted-foreground">{topic.desc || copy.noDescription}</p>
         </div>
       </div>

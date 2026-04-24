@@ -1,8 +1,8 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Newspaper, MessageSquare, Tags, Eye } from "lucide-react";
 import { useLanguage } from "@/hooks/useLanguage";
+import { Eye, MessageSquare, Newspaper, Tags } from "lucide-react";
 
 export default function AdminDashboardPage() {
   const { t } = useLanguage();
@@ -37,7 +37,7 @@ export default function AdminDashboardPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">{t.admin.dashboardTitle}</h1>
+        <h1 className="text-xl md:text-3xl font-bold tracking-tight">{t.admin.dashboardTitle}</h1>
         <p className="text-muted-foreground mt-1">{t.admin.dashboardDescription}</p>
       </div>
 

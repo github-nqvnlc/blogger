@@ -81,17 +81,14 @@ export function CoverImageField({
     source === "url" && urlTouched && value.trim() && !isSupportedImageUrl(value);
 
   return (
-    <div className="space-y-3">
-      <div className="space-y-1">
-        <Label htmlFor={id}>{copy.title}</Label>
-      </div>
-
+    <div className="space-y-2">
+      <Label htmlFor={id}>{copy.title}</Label>
       {value ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={value.includes("https") ? value : `${getBaseUrl()}${value}`}
           alt={copy.previewAlt}
-          className="max-h-100  w-full rounded-xl border object-contain"
+          className="max-h-80  w-full rounded-xl border object-contain"
         />
       ) : null}
 

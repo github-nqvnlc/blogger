@@ -308,7 +308,7 @@ export function DepartmentList() {
       <div className="space-y-6">
         <div className="flex sm:flex-row flex-col gap-6 sm:items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">{copy.title}</h1>
+            <h1 className="text-xl md:text-3xl font-bold tracking-tight">{copy.title}</h1>
             <p className="text-muted-foreground mt-1">{copy.description}</p>
           </div>
           <Button onClick={handleOpenCreateForm}>

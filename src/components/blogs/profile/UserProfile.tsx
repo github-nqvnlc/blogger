@@ -1,13 +1,12 @@
 "use client";
 
-import * as React from "react";
-import { Monitor, ShieldCheck, Smartphone, Wifi } from "lucide-react";
-import { useAuth, useGetDoc } from "@/hooks";
-import { useLanguage } from "@/hooks/useLanguage";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth, useGetDoc } from "@/hooks";
+import { useLanguage } from "@/hooks/useLanguage";
+import { Monitor, ShieldCheck, Smartphone, Wifi } from "lucide-react";
 
 type UserRole = {
   role: string;
@@ -168,7 +167,7 @@ export function UserProfile() {
   return (
     <div className="space-y-6">
       <div className="">
-        <h1 className="text-3xl font-bold tracking-tight">{t.users.profile.title}</h1>
+        <h1 className="text-xl md:text-3xl font-bold tracking-tight">{t.users.profile.title}</h1>
         <p className="mt-1 text-muted-foreground">{t.users.profile.description}</p>
       </div>
 

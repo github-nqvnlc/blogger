@@ -309,7 +309,7 @@ export function DepartmentDetail({ departmentId }: DepartmentDetailProps) {
           </Button>
         </div>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{department.department_name}</h1>
+          <h1 className="text-xl md:text-3xl font-bold tracking-tight">{department.department_name}</h1>
           <p className="mt-1 text-muted-foreground">
             {department.description || copy.noDescription}
           </p>

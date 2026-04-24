@@ -268,7 +268,7 @@ export function CategoryDetail({ categoryId }: CategoryDetailProps) {
           </Button>
         </div>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{category.category}</h1>
+          <h1 className="text-xl md:text-3xl font-bold tracking-tight">{category.category}</h1>
           <p className="mt-1 text-muted-foreground">{category.description || copy.noDescription}</p>
         </div>
       </div>

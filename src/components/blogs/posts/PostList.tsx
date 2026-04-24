@@ -29,9 +29,9 @@ import {
 import { useDeleteDoc, useGetCount, useGetList, useUpdateDoc } from "@/hooks";
 import { useLanguage } from "@/hooks/useLanguage";
 import { buildLocalePath } from "@/i18n";
+import { getApiClient } from "@/lib/apiClient";
 import { formatFrappeDatetime } from "@/lib/blog-posts";
 import { showCrudError, showCrudSuccess } from "@/lib/crud-toast";
-import { getApiClient } from "@/lib/apiClient";
 import { BlogDepartment, Category, Post, PostStatus, PostTag, PostTopic } from "@/types/blogs";
 import { Filter } from "@/types/hooks";
 import { ColumnDef, PaginationState, RowSelectionState, SortingState } from "@tanstack/react-table";
@@ -256,7 +256,7 @@ export function PostList() {
             },
           })
           .then(res => Promise.all((res.data.data ?? []).map(pt => deletePostTopic(pt.name))))
-          .catch(() => {}),
+          .catch(() => { }),
         apiClient
           .get<{ data: PostTag[] }>("/api/resource/post_tags", {
             params: {
@@ -266,7 +266,7 @@ export function PostList() {
             },
           })
           .then(res => Promise.all((res.data.data ?? []).map(pt => deletePostTag(pt.name))))
-          .catch(() => {}),
+          .catch(() => { }),
       ]);
     },
     [deletePostTag, deletePostTopic]
@@ -412,7 +412,7 @@ export function PostList() {
     <div className="space-y-6">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div className="space-y-1">
-          <h1 className="text-3xl font-bold tracking-tight">{copy.list.title}</h1>
+          <h1 className="text-xl md:text-3xl font-bold tracking-tight">{copy.list.title}</h1>
           <p className="text-sm text-muted-foreground">{copy.list.description}</p>
         </div>
         <Button asChild>

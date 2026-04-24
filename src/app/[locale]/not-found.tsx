@@ -1,10 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Home, Search, MessageSquare } from "lucide-react";
 import { useLanguage } from "@/hooks/useLanguage";
 import { buildLocalePath } from "@/i18n";
+import { ArrowLeft, Home, MessageSquare, Search } from "lucide-react";
+import Link from "next/link";
 
 export default function NotFoundPage() {
   const { locale, t } = useLanguage();
@@ -18,7 +18,7 @@ export default function NotFoundPage() {
               <span className="text-4xl font-bold text-muted-foreground">404</span>
             </div>
           </div>
-          <h1 className="text-3xl font-bold tracking-tight">{t.errors.notFoundTitle}</h1>
+          <h1 className="text-xl md:text-3xl font-bold tracking-tight">{t.errors.notFoundTitle}</h1>
           <p className="text-muted-foreground text-base">{t.errors.notFoundDescription}</p>
         </div>
 
