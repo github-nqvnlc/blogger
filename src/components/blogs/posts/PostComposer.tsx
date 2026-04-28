@@ -46,6 +46,7 @@ import { useAuth, useCreateDoc, useDeleteDoc, useGetDoc, useGetList, useUpdateDo
 import { useLanguage } from "@/hooks/useLanguage";
 import { buildLocalePath, getDictionary } from "@/i18n";
 import {
+  encodeHtmlContent,
   formatFrappeDatetime,
   formatPostStatusLabel,
   formatPostVisibilityLabel,
@@ -1489,7 +1490,7 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
         excerpt: form.excerpt.trim() || undefined,
         status: form.status,
         visibility: form.visibility,
-        content: normalizeEditorHtml(form.content),
+        content: encodeHtmlContent(normalizeEditorHtml(form.content)),
       };
 
       let targetPostId = postId;
@@ -1580,7 +1581,6 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
   const pageTitle = isEditMode ? copy.editTitle : copy.createTitle;
   const pageDescription = isEditMode ? copy.editDescription : copy.createDescription;
   const steps = isEditMode ? EDIT_STEPS : CREATE_STEPS;
-  const totalSteps = steps.length;
   const pendingNavigationTitle =
     pendingNavigation?.intent === "cancel"
       ? copy.cancelDraftConfirmTitle

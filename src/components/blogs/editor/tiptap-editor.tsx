@@ -10,22 +10,34 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Spinner } from "@/components/ui/spinner";
-import { useFileUpload, useDeleteDoc } from "@/hooks";
+import { useDeleteDoc, useFileUpload } from "@/hooks";
 import { useLanguage } from "@/hooks/useLanguage";
 import {
+  decodeHtmlContent,
   isSupportedImageUrl,
   normalizeBlogMediaUrl,
   parseVideoMediaUrl,
   restoreEmbeddedMediaHtml,
 } from "@/lib/blog-posts";
-import { Extension, mergeAttributes, Node } from "@tiptap/core";
+import { Extension, Node } from "@tiptap/core";
 import Color from "@tiptap/extension-color";
 import Highlight from "@tiptap/extension-highlight";
 import Image from "@tiptap/extension-image";
+import { Table } from "@tiptap/extension-table";
+import { TableCell } from "@tiptap/extension-table-cell";
+import { TableHeader } from "@tiptap/extension-table-header";
+import { TableRow } from "@tiptap/extension-table-row";
 import TextAlign from "@tiptap/extension-text-align";
 import { TextStyle } from "@tiptap/extension-text-style";
 import { EditorContent, useEditor, useEditorState } from "@tiptap/react";
@@ -37,6 +49,7 @@ import {
   AlignRight,
   Bold,
   Code2,
+  Grid3x3,
   Heading2,
   Heading3,
   Highlighter,
@@ -47,9 +60,15 @@ import {
   Link2,
   List,
   ListOrdered,
+  Merge,
+  Minus,
   Palette,
+  Plus,
   Quote,
   Redo2,
+  SplitSquareHorizontal,
+  Table2,
+  Trash2,
   Type,
   UnderlineIcon,
   Undo2,
@@ -103,6 +122,7 @@ const DEFAULT_EDITOR_STATE = {
   isOrderedList: false,
   isBlockquote: false,
   isCodeBlock: false,
+  isTable: false,
   canUndo: false,
   canRedo: false,
   textAlign: "left" as TextAlignValue,
@@ -178,12 +198,12 @@ const FontSize = Extension.create({
     return {
       setFontSize:
         (fontSize: string) =>
-        ({ chain }) =>
-          chain().setMark("textStyle", { fontSize }).run(),
+          ({ chain }) =>
+            chain().setMark("textStyle", { fontSize }).run(),
       unsetFontSize:
         () =>
-        ({ chain }) =>
-          chain().setMark("textStyle", { fontSize: null }).removeEmptyTextStyle().run(),
+          ({ chain }) =>
+            chain().setMark("textStyle", { fontSize: null }).removeEmptyTextStyle().run(),
     };
   },
 });
@@ -218,12 +238,12 @@ const FontFamily = Extension.create({
     return {
       setFontFamily:
         (fontFamily: string) =>
-        ({ chain }) =>
-          chain().setMark("textStyle", { fontFamily }).run(),
+          ({ chain }) =>
+            chain().setMark("textStyle", { fontFamily }).run(),
       unsetFontFamily:
         () =>
-        ({ chain }) =>
-          chain().setMark("textStyle", { fontFamily: null }).removeEmptyTextStyle().run(),
+          ({ chain }) =>
+            chain().setMark("textStyle", { fontFamily: null }).removeEmptyTextStyle().run(),
     };
   },
 });
@@ -266,32 +286,32 @@ const Indent = Extension.create({
     return {
       setIndent:
         (level: number) =>
-        ({ editor, commands }) => {
-          const nextLevel = clampIndent(level);
-          for (const type of INDENT_NODE_TYPES) {
-            if (editor.isActive(type)) {
-              return commands.updateAttributes(type, {
-                indent: nextLevel,
-              });
+          ({ editor, commands }) => {
+            const nextLevel = clampIndent(level);
+            for (const type of INDENT_NODE_TYPES) {
+              if (editor.isActive(type)) {
+                return commands.updateAttributes(type, {
+                  indent: nextLevel,
+                });
+              }
             }
-          }
 
-          return commands.updateAttributes("paragraph", {
-            indent: nextLevel,
-          });
-        },
+            return commands.updateAttributes("paragraph", {
+              indent: nextLevel,
+            });
+          },
       indent:
         () =>
-        ({ editor }) => {
-          const currentIndent = Number(getActiveBlockAttributes(editor).indent ?? 0);
-          return editor.commands.setIndent(currentIndent + 1);
-        },
+          ({ editor }) => {
+            const currentIndent = Number(getActiveBlockAttributes(editor).indent ?? 0);
+            return editor.commands.setIndent(currentIndent + 1);
+          },
       outdent:
         () =>
-        ({ editor }) => {
-          const currentIndent = Number(getActiveBlockAttributes(editor).indent ?? 0);
-          return editor.commands.setIndent(currentIndent - 1);
-        },
+          ({ editor }) => {
+            const currentIndent = Number(getActiveBlockAttributes(editor).indent ?? 0);
+            return editor.commands.setIndent(currentIndent - 1);
+          },
     };
   },
 });
@@ -329,9 +349,10 @@ const EmbeddedMedia = Node.create({
           const iframe = figure.querySelector("iframe");
           const video = figure.querySelector("video");
           const src =
-            iframe?.getAttribute("src") ??
-            video?.getAttribute("src") ??
-            figure.getAttribute("src") ??
+            iframe?.getAttribute("src") ||
+            iframe?.getAttribute("data-src") ||
+            video?.getAttribute("src") ||
+            video?.getAttribute("data-src") ||
             "";
 
           if (!src) {
@@ -339,8 +360,8 @@ const EmbeddedMedia = Node.create({
           }
 
           const inferredKind =
-            figure.dataset.kind ??
-            (iframe ? "embed" : video ? "file" : undefined) ??
+            figure.dataset.kind ||
+            (iframe ? "embed" : video ? "file" : undefined) ||
             (figure.dataset.provider === "youtube" || figure.dataset.provider === "vimeo"
               ? "embed"
               : "file");
@@ -350,10 +371,10 @@ const EmbeddedMedia = Node.create({
             provider: figure.dataset.provider ?? "file",
             kind: inferredKind,
             title:
-              figure.dataset.title ??
-              iframe?.getAttribute("title") ??
-              video?.getAttribute("title") ??
-              figure.getAttribute("title") ??
+              figure.dataset.title ||
+              iframe?.getAttribute("title") ||
+              video?.getAttribute("title") ||
+              figure.getAttribute("title") ||
               "Embedded media",
           };
         },
@@ -362,48 +383,34 @@ const EmbeddedMedia = Node.create({
   },
 
   renderHTML({ HTMLAttributes }) {
-    const figureAttributes = mergeAttributes(
-      {
-        "data-blog-media": "true",
-        "data-provider": HTMLAttributes.provider,
-        "data-kind": HTMLAttributes.kind,
-        "data-title": HTMLAttributes.title,
-        class: "my-6 overflow-hidden rounded-xl",
-      },
-      HTMLAttributes
-    );
-
-    if (HTMLAttributes.kind === "embed") {
-      return [
-        "figure",
-        figureAttributes,
-        [
-          "iframe",
-          {
-            src: HTMLAttributes.src,
-            title: HTMLAttributes.title || "Embedded video",
-            allow:
-              "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share",
-            allowfullscreen: "true",
-            frameborder: "0",
-            class: "aspect-video w-full rounded-xl border-0",
-          },
-        ],
-      ];
-    }
+    const src = HTMLAttributes.src || "";
+    const kind = HTMLAttributes.kind || (src.includes("youtube.com/embed") || src.includes("player.vimeo") ? "embed" : "file");
+    const isEmbed = kind === "embed";
 
     return [
       "figure",
-      figureAttributes,
+      {
+        "data-blog-media": "true",
+        class: "my-6 overflow-hidden rounded-xl",
+      },
       [
-        "video",
+        isEmbed ? "iframe" : "video",
         {
-          src: HTMLAttributes.src,
-          title: HTMLAttributes.title || "Video file",
-          controls: "true",
-          playsinline: "true",
-          preload: "metadata",
-          class: "w-full rounded-xl",
+          src,
+          title: HTMLAttributes.title || (isEmbed ? "Embedded video" : "Video file"),
+          ...(isEmbed
+            ? {
+                allow: "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share",
+                allowfullscreen: "true",
+                frameborder: "0",
+                class: "aspect-video w-full rounded-xl border-0",
+              }
+            : {
+                controls: "true",
+                playsinline: "true",
+                preload: "metadata",
+                class: "w-full rounded-xl",
+              }),
         },
       ],
     ];
@@ -463,7 +470,7 @@ export const TiptapEditor = forwardRef<BlogEditorHandle, BlogEditorProps>(
         for (const name of uploadedImageNames) {
           try {
             await deleteFile.deleteDoc(name);
-          } catch {}
+          } catch { }
         }
         setUploadedImageNames([]);
       },
@@ -500,6 +507,12 @@ export const TiptapEditor = forwardRef<BlogEditorHandle, BlogEditorProps>(
             class: "rounded-xl",
           },
         }),
+        Table.configure({
+          resizable: true,
+        }),
+        TableRow,
+        TableCell,
+        TableHeader,
         EmbeddedMedia,
       ],
       content: normalizeEditorHtml(restoreEmbeddedMediaHtml(value)),
@@ -507,11 +520,12 @@ export const TiptapEditor = forwardRef<BlogEditorHandle, BlogEditorProps>(
       editorProps: {
         attributes: {
           class:
-            "min-h-72 px-4 py-3 focus:outline-none [&_.ProseMirror-selectednode]:ring-2 [&_.ProseMirror-selectednode]:ring-primary [&_a]:cursor-pointer [&_a]:text-primary [&_a]:underline [&_blockquote]:border-l [&_blockquote]:pl-4 [&_blockquote]:italic [&_figure]:my-6 [&_iframe]:aspect-video [&_iframe]:w-full [&_iframe]:rounded-xl [&_ol]:list-decimal [&_ol]:pl-6 [&_pre]:overflow-x-auto [&_pre]:rounded-xl [&_pre]:bg-muted [&_pre]:p-4 [&_ul]:list-disc [&_ul]:pl-6 [&_video]:w-full [&_video]:rounded-xl",
+            "min-h-72 px-4 py-3 focus:outline-none [&_.ProseMirror-selectednode]:ring-2 [&_.ProseMirror-selectednode]:ring-primary [&_a]:cursor-pointer [&_a]:text-primary [&_a]:underline [&_blockquote]:border-l [&_blockquote]:pl-4 [&_blockquote]:italic [&_figure]:my-6 [&_iframe]:aspect-video [&_iframe]:w-full [&_iframe]:rounded-xl [&_ol]:list-decimal [&_ol]:pl-6 [&_pre]:overflow-x-auto [&_pre]:rounded-xl [&_pre]:bg-muted [&_pre]:p-4 [&_ul]:list-disc [&_ul]:pl-6 [&_video]:w-full [&_video]:rounded-xl [&_table]:border-collapse [&_table]:w-full [&_table]:my-4 [&_table_td]:border [&_table_td]:border-border [&_table_td]:p-2 [&_table_th]:border [&_table_th]:border-border [&_table_th]:bg-muted [&_table_th]:p-2 [&_table_th]:font-semibold [&_table_tr]:border [&_table_tr]:border-border",
         },
       },
       onUpdate({ editor: currentEditor }) {
-        onChange(normalizeEditorHtml(currentEditor.getHTML()));
+        const html = normalizeEditorHtml(currentEditor.getHTML());
+        onChange(html);
       },
     });
 
@@ -528,8 +542,9 @@ export const TiptapEditor = forwardRef<BlogEditorHandle, BlogEditorProps>(
         return;
       }
 
+      const decodedValue = decodeHtmlContent(value ?? "");
       const currentValue = normalizeEditorHtml(editor.getHTML());
-      const nextValue = normalizeEditorHtml(restoreEmbeddedMediaHtml(value));
+      const nextValue = normalizeEditorHtml(restoreEmbeddedMediaHtml(decodedValue));
 
       if (currentValue !== nextValue) {
         editor.commands.setContent(nextValue || "", {
@@ -560,6 +575,7 @@ export const TiptapEditor = forwardRef<BlogEditorHandle, BlogEditorProps>(
             isOrderedList: currentEditor.isActive("orderedList"),
             isBlockquote: currentEditor.isActive("blockquote"),
             isCodeBlock: currentEditor.isActive("codeBlock"),
+            isTable: currentEditor.isActive("table"),
             canUndo: currentEditor.can().undo(),
             canRedo: currentEditor.can().redo(),
             textAlign: (blockAttributes.textAlign as TextAlignValue) || "left",
@@ -1072,6 +1088,100 @@ export const TiptapEditor = forwardRef<BlogEditorHandle, BlogEditorProps>(
           >
             <Video />
           </ToolbarButton>
+
+          {/* Table Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                type="button"
+                size="sm"
+                variant={editorState.isTable ? "default" : "outline"}
+                disabled={!editor || disabled}
+                title={msg.toolbar.insertTable}
+                className="min-w-9"
+              >
+                <Table2 />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              <DropdownMenuItem
+                onClick={() =>
+                  editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
+                }
+              >
+                <Grid3x3 className="mr-2 size-4" />
+                {msg.toolbar.insertTableDropdown.insertTable} (3x3)
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                disabled={!editorState.isTable}
+                onClick={() => editor?.chain().focus().addRowBefore().run()}
+              >
+                <Plus className="mr-2 size-4" />
+                {msg.toolbar.insertTableDropdown.addRowBefore}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                disabled={!editorState.isTable}
+                onClick={() => editor?.chain().focus().addRowAfter().run()}
+              >
+                <Plus className="mr-2 size-4" />
+                {msg.toolbar.insertTableDropdown.addRowAfter}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                disabled={!editorState.isTable}
+                onClick={() => editor?.chain().focus().deleteRow().run()}
+              >
+                <Minus className="mr-2 size-4" />
+                {msg.toolbar.insertTableDropdown.deleteRow}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                disabled={!editorState.isTable}
+                onClick={() => editor?.chain().focus().addColumnBefore().run()}
+              >
+                <Plus className="mr-2 size-4" />
+                {msg.toolbar.insertTableDropdown.addColBefore}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                disabled={!editorState.isTable}
+                onClick={() => editor?.chain().focus().addColumnAfter().run()}
+              >
+                <Plus className="mr-2 size-4" />
+                {msg.toolbar.insertTableDropdown.addColAfter}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                disabled={!editorState.isTable}
+                onClick={() => editor?.chain().focus().deleteColumn().run()}
+              >
+                <Minus className="mr-2 size-4" />
+                {msg.toolbar.insertTableDropdown.deleteCol}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                disabled={!editorState.isTable}
+                onClick={() => editor?.chain().focus().mergeCells().run()}
+              >
+                <Merge className="mr-2 size-4" />
+                {msg.toolbar.insertTableDropdown.mergeCells}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                disabled={!editorState.isTable}
+                onClick={() => editor?.chain().focus().splitCell().run()}
+              >
+                <SplitSquareHorizontal className="mr-2 size-4" />
+                {msg.toolbar.insertTableDropdown.splitCell}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                disabled={!editorState.isTable}
+                variant="destructive"
+                onClick={() => editor?.chain().focus().deleteTable().run()}
+              >
+                <Trash2 className="mr-2 size-4" />
+                {msg.toolbar.insertTableDropdown.deleteTable}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           {/* Undo Button */}
           <ToolbarButton
