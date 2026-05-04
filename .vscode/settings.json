@@ -1,5 +1,12 @@
 {
-  "cSpell.words": ["cmdk", "playsinline", "vaul", "vercel"],
+  "cSpell.words": [
+    "cmdk",
+    "Lowlight",
+    "playsinline",
+    "selectednode",
+    "vaul",
+    "vercel"
+  ],
   "editor.formatOnSave": true,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.codeActionsOnSave": {

@@ -38,6 +38,7 @@ export const blogEditor = {
       orderedList: "Ordered list",
       blockquote: "Blockquote",
       codeBlock: "Code block",
+      formatCode: "Format code",
       insertLink: "Insert link",
       insertImageUrl: "Insert image from URL",
       uploadImage: "Upload image",
@@ -77,6 +78,8 @@ export const blogEditor = {
         description: "Enter an image URL to insert directly into the content.",
         label: "Image URL",
         placeholder: "https://example.com/image.jpg",
+        caption: "Image caption",
+        captionPlaceholder: "Enter a caption for the image (optional)",
         submit: "Insert image",
       },
       video: {

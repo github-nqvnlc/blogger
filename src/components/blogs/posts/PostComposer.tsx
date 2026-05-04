@@ -46,7 +46,6 @@ import { useAuth, useCreateDoc, useDeleteDoc, useGetDoc, useGetList, useUpdateDo
 import { useLanguage } from "@/hooks/useLanguage";
 import { buildLocalePath, getDictionary } from "@/i18n";
 import {
-  encodeHtmlContent,
   formatFrappeDatetime,
   formatPostStatusLabel,
   formatPostVisibilityLabel,
@@ -251,7 +250,7 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
   const tagFormCopy = tagCopy.form;
   const statusLabels = copy.status;
   const visibilityLabels = copy.visibility;
-  const [currentStep, setCurrentStep] = useState<StepNumber>(1);
+  const [currentStep, setCurrentStep] = useState<StepNumber>(2);
   const [form, setForm] = useState<PostFormValues>(INITIAL_FORM_STATE);
   const [createdCategoryOption, setCreatedCategoryOption] = useState<SelectOption | null>(null);
   const [createdTopicOptions, setCreatedTopicOptions] = useState<SelectOption[]>([]);
@@ -1490,7 +1489,7 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
         excerpt: form.excerpt.trim() || undefined,
         status: form.status,
         visibility: form.visibility,
-        content: encodeHtmlContent(normalizeEditorHtml(form.content)),
+        content: normalizeEditorHtml(form.content),
       };
 
       let targetPostId = postId;
@@ -1965,30 +1964,19 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
           ) : null}
 
           {currentStep === 2 ? (
-            <Card>
-              <CardHeader>
-                <CardTitle>{copy.steps.content.title}</CardTitle>
-                <CardDescription>{copy.steps.content.description}</CardDescription>
-              </CardHeader>
-
-              <CardContent className="grid grid-cols-3 space-y-4">
-                <div className="col-span-3">
-                  <BlogContentComposer
-                    ref={editorRef}
-                    id="post-content-editor"
-                    value={form.content}
-                    onChange={value => {
-                      updateField("content", value);
-                      clearFieldError("content");
-                    }}
-                    onTransientImageUpload={registerTransientEditorUpload}
-                    onTransientUploadsChange={setEditorHasTransientUploads}
-                    disabled={isSubmitting}
-                    invalid={Boolean(fieldErrors.content)}
-                  />
-                </div>
-              </CardContent>
-            </Card>
+            <BlogContentComposer
+              ref={editorRef}
+              id="post-content-editor"
+              value={form.content}
+              onChange={value => {
+                updateField("content", value);
+                clearFieldError("content");
+              }}
+              onTransientImageUpload={registerTransientEditorUpload}
+              onTransientUploadsChange={setEditorHasTransientUploads}
+              disabled={isSubmitting}
+              invalid={Boolean(fieldErrors.content)}
+            />
           ) : null}
 
           {!isEditMode && currentStep === 3 ? (

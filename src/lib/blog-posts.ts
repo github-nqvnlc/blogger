@@ -157,25 +157,6 @@ export function restoreEmbeddedMediaHtml(value: string): string {
   return value;
 }
 
-const HTML_ENCODING_PREFIX = "BASE64:";
-const HTML_ENCODING_REGEX = /^BASE64:/i;
-
-export function encodeHtmlContent(html: string): string {
-  if (!html || !isHtmlContent(html)) return html;
-  if (HTML_ENCODING_REGEX.test(html)) return html;
-  return `${HTML_ENCODING_PREFIX}${btoa(unescape(encodeURIComponent(html)))}`;
-}
-
-export function decodeHtmlContent(encoded: string): string {
-  if (!encoded || !HTML_ENCODING_REGEX.test(encoded)) return encoded;
-  try {
-    const base64Part = encoded.slice(HTML_ENCODING_PREFIX.length);
-    return decodeURIComponent(escape(atob(base64Part)));
-  } catch {
-    return encoded;
-  }
-}
-
 export function normalizeBlogMediaUrl(value: string): string {
   const trimmed = value.trim();
 

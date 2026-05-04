@@ -20,17 +20,25 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import { useDeleteDoc, useFileUpload } from "@/hooks";
 import { useLanguage } from "@/hooks/useLanguage";
 import {
-  decodeHtmlContent,
   isSupportedImageUrl,
   normalizeBlogMediaUrl,
   parseVideoMediaUrl,
   restoreEmbeddedMediaHtml,
 } from "@/lib/blog-posts";
+import { getBaseUrl } from "@/lib/utils";
 import { Extension, Node } from "@tiptap/core";
+import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
 import Color from "@tiptap/extension-color";
 import Highlight from "@tiptap/extension-highlight";
 import Image from "@tiptap/extension-image";
@@ -42,6 +50,7 @@ import TextAlign from "@tiptap/extension-text-align";
 import { TextStyle } from "@tiptap/extension-text-style";
 import { EditorContent, useEditor, useEditorState } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import { common, createLowlight } from "lowlight";
 import {
   AlignCenter,
   AlignJustify,
@@ -74,6 +83,7 @@ import {
   Undo2,
   Upload,
   Video,
+  WandSparkles,
 } from "lucide-react";
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 
@@ -144,6 +154,72 @@ const FONT_SIZE_OPTIONS = ["12px", "14px", "16px", "18px", "24px", "32px"];
 const INDENT_NODE_TYPES = ["paragraph", "heading", "blockquote", "codeBlock"];
 const DEFAULT_TEXT_COLOR = "#111827";
 const DEFAULT_HIGHLIGHT_COLOR = "#fef08a";
+
+function formatCode(code: string): string {
+  const indentUnit = "  ";
+  let indentLevel = 0;
+  const output: string[] = [];
+  const lines = code.split("\n");
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const trimmed = line.trim();
+
+    if (!trimmed) {
+      output.push("");
+      continue;
+    }
+
+    const closesBlock = /^[}\])]/.test(trimmed);
+    if (closesBlock && indentLevel > 0) {
+      indentLevel--;
+    }
+
+    output.push(indentUnit.repeat(indentLevel) + trimmed);
+
+    const opensBlock = /[{[(\[]\s*$/.test(trimmed) || /\{\s*$/.test(trimmed);
+    if (opensBlock && !trimmed.endsWith("}") && !trimmed.endsWith("]") && !trimmed.endsWith(")")) {
+      indentLevel++;
+    }
+
+    const isSingleLineBlock = /^if|^for|^while|^switch|^function|^class|^const|^let|^var|^import|^export|^return/.test(trimmed) && trimmed.endsWith("{");
+    if (isSingleLineBlock) {
+      indentLevel--;
+    }
+
+    if (trimmed.endsWith("{")) {
+      indentLevel++;
+    }
+  }
+
+  return output.join("\n");
+}
+
+const CODE_BLOCK_LANGUAGES = [
+  { value: "plaintext", label: "Plain Text" },
+  { value: "javascript", label: "JavaScript" },
+  { value: "typescript", label: "TypeScript" },
+  { value: "python", label: "Python" },
+  { value: "java", label: "Java" },
+  { value: "cpp", label: "C++" },
+  { value: "csharp", label: "C#" },
+  { value: "go", label: "Go" },
+  { value: "rust", label: "Rust" },
+  { value: "ruby", label: "Ruby" },
+  { value: "php", label: "PHP" },
+  { value: "swift", label: "Swift" },
+  { value: "kotlin", label: "Kotlin" },
+  { value: "sql", label: "SQL" },
+  { value: "html", label: "HTML" },
+  { value: "css", label: "CSS" },
+  { value: "json", label: "JSON" },
+  { value: "yaml", label: "YAML" },
+  { value: "markdown", label: "Markdown" },
+  { value: "bash", label: "Bash" },
+  { value: "powershell", label: "PowerShell" },
+];
+
+const lowlight = createLowlight(common);
 
 function clampIndent(value: number): number {
   return Math.max(0, Math.min(5, value));
@@ -400,17 +476,17 @@ const EmbeddedMedia = Node.create({
           title: HTMLAttributes.title || (isEmbed ? "Embedded video" : "Video file"),
           ...(isEmbed
             ? {
-                allow: "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share",
-                allowfullscreen: "true",
-                frameborder: "0",
-                class: "aspect-video w-full rounded-xl border-0",
-              }
+              allow: "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share",
+              allowfullscreen: "true",
+              frameborder: "0",
+              class: "aspect-video w-full rounded-xl border-0",
+            }
             : {
-                controls: "true",
-                playsinline: "true",
-                preload: "metadata",
-                class: "w-full rounded-xl",
-              }),
+              controls: "true",
+              playsinline: "true",
+              preload: "metadata",
+              class: "w-full rounded-xl",
+            }),
         },
       ],
     ];
@@ -461,7 +537,9 @@ export const TiptapEditor = forwardRef<BlogEditorHandle, BlogEditorProps>(
     const deleteFile = useDeleteDoc("File");
     const [dialogKind, setDialogKind] = useState<MediaDialogKind | null>(null);
     const [dialogValue, setDialogValue] = useState("");
+    const [dialogCaption, setDialogCaption] = useState("");
     const [dialogError, setDialogError] = useState<string | null>(null);
+    const [pendingImageUrl, setPendingImageUrl] = useState<string | null>(null);
     const [inlineUploadError, setInlineUploadError] = useState<string | null>(null);
     const [uploadedImageNames, setUploadedImageNames] = useState<string[]>([]);
 
@@ -490,6 +568,7 @@ export const TiptapEditor = forwardRef<BlogEditorHandle, BlogEditorProps>(
           heading: {
             levels: [2, 3],
           },
+          codeBlock: false,
         }),
         TextStyle,
         Color,
@@ -514,13 +593,19 @@ export const TiptapEditor = forwardRef<BlogEditorHandle, BlogEditorProps>(
         TableCell,
         TableHeader,
         EmbeddedMedia,
+        CodeBlockLowlight.configure({
+          lowlight,
+          HTMLAttributes: {
+            class: "rounded-xl bg-neutral-900 p-4 overflow-x-auto",
+          },
+        }),
       ],
       content: normalizeEditorHtml(restoreEmbeddedMediaHtml(value)),
       editable: !disabled,
       editorProps: {
         attributes: {
           class:
-            "min-h-72 px-4 py-3 focus:outline-none [&_.ProseMirror-selectednode]:ring-2 [&_.ProseMirror-selectednode]:ring-primary [&_a]:cursor-pointer [&_a]:text-primary [&_a]:underline [&_blockquote]:border-l [&_blockquote]:pl-4 [&_blockquote]:italic [&_figure]:my-6 [&_iframe]:aspect-video [&_iframe]:w-full [&_iframe]:rounded-xl [&_ol]:list-decimal [&_ol]:pl-6 [&_pre]:overflow-x-auto [&_pre]:rounded-xl [&_pre]:bg-muted [&_pre]:p-4 [&_ul]:list-disc [&_ul]:pl-6 [&_video]:w-full [&_video]:rounded-xl [&_table]:border-collapse [&_table]:w-full [&_table]:my-4 [&_table_td]:border [&_table_td]:border-border [&_table_td]:p-2 [&_table_th]:border [&_table_th]:border-border [&_table_th]:bg-muted [&_table_th]:p-2 [&_table_th]:font-semibold [&_table_tr]:border [&_table_tr]:border-border",
+            "min-h-72 px-4 py-3 focus:outline-none [&_.ProseMirror-selectednode]:ring-2 [&_.ProseMirror-selectednode]:ring-primary [&_a]:cursor-pointer [&_a]:text-primary [&_a]:underline [&_blockquote]:border-l [&_blockquote]:pl-4 [&_blockquote]:italic [&_figure]:my-6 [&_iframe]:aspect-video [&_iframe]:w-full [&_iframe]:rounded-xl [&_ol]:list-decimal [&_ol]:pl-6 [&_pre]:text-[10px] [&_pre]:font-mono [&_pre]:overflow-x-auto [&_pre]:rounded-xl [&_pre]:bg-neutral-900 [&_pre]:p-4 [&_ul]:list-disc [&_ul]:pl-6 [&_video]:w-full [&_video]:rounded-xl [&_table]:border-collapse [&_table]:w-full [&_table]:my-4 [&_table_td]:border [&_table_td]:border-border [&_table_td]:p-2 [&_table_th]:border [&_table_th]:border-border [&_table_th]:bg-muted [&_table_th]:p-2 [&_table_th]:font-semibold [&_table_tr]:border [&_table_tr]:border-border",
         },
       },
       onUpdate({ editor: currentEditor }) {
@@ -542,7 +627,7 @@ export const TiptapEditor = forwardRef<BlogEditorHandle, BlogEditorProps>(
         return;
       }
 
-      const decodedValue = decodeHtmlContent(value ?? "");
+      const decodedValue = value ?? "";
       const currentValue = normalizeEditorHtml(editor.getHTML());
       const nextValue = normalizeEditorHtml(restoreEmbeddedMediaHtml(decodedValue));
 
@@ -589,6 +674,18 @@ export const TiptapEditor = forwardRef<BlogEditorHandle, BlogEditorProps>(
       }) ?? DEFAULT_EDITOR_STATE;
 
     const dialogText = useMemo(() => {
+      if (pendingImageUrl) {
+        return {
+          title: msgDialog.image.title,
+          description: msgDialog.image.description,
+          label: msgDialog.image.label,
+          placeholder: msgDialog.image.placeholder,
+          captionLabel: msgDialog.image.caption,
+          captionPlaceholder: msgDialog.image.captionPlaceholder,
+          submitLabel: msgDialog.image.submit,
+        };
+      }
+
       switch (dialogKind) {
         case "link":
           return {
@@ -604,6 +701,8 @@ export const TiptapEditor = forwardRef<BlogEditorHandle, BlogEditorProps>(
             description: msgDialog.image.description,
             label: msgDialog.image.label,
             placeholder: msgDialog.image.placeholder,
+            captionLabel: msgDialog.image.caption,
+            captionPlaceholder: msgDialog.image.captionPlaceholder,
             submitLabel: msgDialog.image.submit,
           };
         case "video":
@@ -617,17 +716,19 @@ export const TiptapEditor = forwardRef<BlogEditorHandle, BlogEditorProps>(
         default:
           return null;
       }
-    }, [dialogKind, msgDialog]);
+    }, [dialogKind, msgDialog, pendingImageUrl]);
 
     function openDialog(kind: MediaDialogKind) {
       setDialogKind(kind);
       setDialogValue("");
+      setDialogCaption("");
       setDialogError(null);
     }
 
     function closeDialog() {
       setDialogKind(null);
       setDialogValue("");
+      setDialogCaption("");
       setDialogError(null);
     }
 
@@ -687,7 +788,20 @@ export const TiptapEditor = forwardRef<BlogEditorHandle, BlogEditorProps>(
         return;
       }
 
-      editor.chain().focus().setImage({ src: normalized }).run();
+      const caption = dialogCaption.trim();
+      if (caption) {
+        editor.chain().focus().insertContent([
+          { type: "image", attrs: { src: normalized } },
+          {
+            type: "paragraph",
+            attrs: { textAlign: "center" },
+            content: [{ type: "text", text: caption, marks: [{ type: "italic" }] }],
+          },
+          { type: "paragraph" },
+        ]).run();
+      } else {
+        editor.chain().focus().setImage({ src: normalized }).run();
+      }
       closeDialog();
     }
 
@@ -715,6 +829,30 @@ export const TiptapEditor = forwardRef<BlogEditorHandle, BlogEditorProps>(
 
     function handleDialogSubmit(event: React.FormEvent<HTMLFormElement>) {
       event.preventDefault();
+
+      if (pendingImageUrl) {
+        if (!editor) {
+          return;
+        }
+
+        const caption = dialogCaption.trim();
+        if (caption) {
+          editor.chain().focus().insertContent([
+            { type: "image", attrs: { src: pendingImageUrl } },
+            {
+              type: "paragraph",
+              attrs: { textAlign: "center" },
+              content: [{ type: "text", text: caption, marks: [{ type: "italic" }] }],
+            },
+            { type: "paragraph" },
+          ]).run();
+        } else {
+          editor.chain().focus().setImage({ src: pendingImageUrl }).run();
+        }
+        setPendingImageUrl(null);
+        closeDialog();
+        return;
+      }
 
       if (dialogKind === "link") {
         insertLink();
@@ -756,20 +894,24 @@ export const TiptapEditor = forwardRef<BlogEditorHandle, BlogEditorProps>(
           onTransientImageUpload?.(uploaded.name);
         }
 
-        editor
-          .chain()
-          .focus()
-          .setImage({
-            src: uploaded.file_url,
-            alt: uploaded.file_name || file.name,
-          })
-          .run();
+        setPendingImageUrl(uploaded.file_url);
+        setDialogCaption("");
+        setDialogError(null);
       } catch (error) {
         setInlineUploadError(error instanceof Error ? error.message : msg.error.uploadFailed);
       }
     }
 
     const mediaPreview = useMemo(() => {
+      if (pendingImageUrl) {
+        return (
+          <div className="overflow-hidden rounded-xl border">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={pendingImageUrl.includes("https") ? pendingImageUrl : `${getBaseUrl()}${pendingImageUrl}`} alt="Image preview" className="max-h-60 w-full object-cover" />
+          </div>
+        );
+      }
+
       if (!dialogKind || dialogKind === "link") {
         return null;
       }
@@ -812,7 +954,7 @@ export const TiptapEditor = forwardRef<BlogEditorHandle, BlogEditorProps>(
           <video src={parsed.src} controls playsInline preload="metadata" className="w-full" />
         </div>
       );
-    }, [dialogKind, dialogValue]);
+    }, [dialogKind, dialogValue, pendingImageUrl]);
 
     return (
       <div className="space-y-3">
@@ -1044,13 +1186,79 @@ export const TiptapEditor = forwardRef<BlogEditorHandle, BlogEditorProps>(
           </ToolbarButton>
 
           {/* Code Block Button */}
-          <ToolbarButton
-            active={editorState.isCodeBlock}
-            disabled={!editor || disabled}
-            onClick={() => editor?.chain().focus().toggleCodeBlock().run()}
-            title={msg.toolbar.codeBlock}
+          <Select
+            value={
+              editorState.isCodeBlock
+                ? (editor?.getAttributes("codeBlock").language as string) || "plaintext"
+                : ""
+            }
+            onValueChange={(language) => {
+              if (!editor) return;
+              if (editorState.isCodeBlock) {
+                editor.chain().focus().updateAttributes("codeBlock", { language }).run();
+              } else {
+                editor.chain().focus().toggleCodeBlock({ language }).run();
+              }
+            }}
           >
-            <Code2 />
+            <SelectTrigger
+              size="sm"
+              className="min-w-9"
+              disabled={!editor || disabled}
+              title={msg.toolbar.codeBlock}
+            >
+              <SelectValue placeholder={<Code2 className="size-4" />} />
+            </SelectTrigger>
+            <SelectContent>
+              {CODE_BLOCK_LANGUAGES.map((lang) => (
+                <SelectItem key={lang.value} value={lang.value}>
+                  {lang.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* Format Code Button */}
+          <ToolbarButton
+            disabled={!editor || disabled || !editorState.isCodeBlock}
+            onClick={() => {
+              if (!editor) return;
+              const { $from } = editor.state.selection;
+
+              let codeBlock = null;
+              let codeBlockStart = 0;
+
+              for (let depth = $from.depth; depth >= 0; depth--) {
+                const node = $from.node(depth);
+                if (node.type.name === "codeBlock" || node.type.name === "codeBlockCode") {
+                  codeBlock = node;
+                  codeBlockStart = $from.start(depth);
+                  break;
+                }
+              }
+
+              if (codeBlock) {
+                let content = "";
+                if (codeBlock.textContent) {
+                  content = codeBlock.textContent;
+                } else if (codeBlock.content && codeBlock.content.size > 0) {
+                  codeBlock.content.forEach((child) => {
+                    content += child.text || "";
+                  });
+                }
+
+                if (!content || !content.trim()) return;
+
+                const formatted = formatCode(content);
+                const from = codeBlockStart + 1;
+                const to = codeBlockStart + codeBlock.nodeSize - 1;
+
+                editor.chain().focus().deleteRange({ from, to }).insertContentAt(from, formatted).run();
+              }
+            }}
+            title={msg.toolbar.formatCode || "Format Code"}
+          >
+            <WandSparkles className="size-4" />
           </ToolbarButton>
 
           {/* Insert Link Button */}
@@ -1226,14 +1434,15 @@ export const TiptapEditor = forwardRef<BlogEditorHandle, BlogEditorProps>(
           </Alert>
         )}
 
-        <div className="overflow-hidden rounded-xl border bg-background">
+        <div className="overflow-hidden min-h-[calc(100vh-510px)] rounded-xl border bg-background">
           <EditorContent editor={editor} />
         </div>
 
         <Dialog
-          open={dialogKind !== null}
+          open={dialogKind !== null || pendingImageUrl !== null}
           onOpenChange={open => {
             if (!open) {
+              setPendingImageUrl(null);
               closeDialog();
             }
           }}
@@ -1246,18 +1455,33 @@ export const TiptapEditor = forwardRef<BlogEditorHandle, BlogEditorProps>(
                   <DialogDescription>{dialogText.description}</DialogDescription>
                 </DialogHeader>
 
-                <div className="space-y-2">
-                  <Label htmlFor="media-url">{dialogText.label}</Label>
-                  <Input
-                    id="media-url"
-                    value={dialogValue}
-                    onChange={event => setDialogValue(event.target.value)}
-                    placeholder={dialogText.placeholder}
-                    autoFocus
-                  />
-                </div>
+                {!pendingImageUrl && (
+                  <div className="space-y-2">
+                    <Label htmlFor="media-url">{dialogText.label}</Label>
+                    <Input
+                      id="media-url"
+                      value={dialogValue}
+                      onChange={event => setDialogValue(event.target.value)}
+                      placeholder={dialogText.placeholder}
+                      autoFocus
+                    />
+                  </div>
+                )}
 
                 {mediaPreview}
+
+                {(pendingImageUrl || dialogKind === "image") && (
+                  <div className="space-y-2">
+                    <Label htmlFor="media-caption">{dialogText.captionLabel}</Label>
+                    <Input
+                      id="media-caption"
+                      value={dialogCaption}
+                      onChange={event => setDialogCaption(event.target.value)}
+                      placeholder={dialogText.captionPlaceholder}
+                      autoFocus={!!pendingImageUrl}
+                    />
+                  </div>
+                )}
 
                 {dialogError && (
                   <Alert variant="destructive">
@@ -1266,7 +1490,10 @@ export const TiptapEditor = forwardRef<BlogEditorHandle, BlogEditorProps>(
                 )}
 
                 <DialogFooter>
-                  <Button type="button" variant="outline" onClick={closeDialog}>
+                  <Button type="button" variant="outline" onClick={() => {
+                    setPendingImageUrl(null);
+                    closeDialog();
+                  }}>
                     {msgDialog.cancel}
                   </Button>
                   <Button type="submit">{dialogText.submitLabel}</Button>

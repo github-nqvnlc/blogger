@@ -38,6 +38,7 @@ export const blogEditor = {
       orderedList: "Ordered list",
       blockquote: "Blockquote",
       codeBlock: "Code block",
+      formatCode: "Format code",
       insertLink: "Chèn liên kết",
       insertImageUrl: "Chèn ảnh từ URL",
       uploadImage: "Upload ảnh",
@@ -76,6 +77,8 @@ export const blogEditor = {
         description: "Nhập link ảnh để chèn trực tiếp vào nội dung.",
         label: "Image URL",
         placeholder: "https://example.com/image.jpg",
+        caption: "Mô tả ảnh",
+        captionPlaceholder: "Nhập mô tả cho ảnh (tùy chọn)",
         submit: "Chèn ảnh",
       },
       video: {
