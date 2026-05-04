@@ -80,6 +80,7 @@ export const blogEditor = {
         placeholder: "https://example.com/image.jpg",
         caption: "Image caption",
         captionPlaceholder: "Enter a caption for the image (optional)",
+        alignment: "Alignment",
         submit: "Insert image",
       },
       video: {

@@ -214,7 +214,6 @@ export const BlogContentComposer = forwardRef<BlogContentComposerHandle, BlogCon
           invalid && "border-red-500 ring-2 ring-red-500/20"
         )}
       >
-
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <Tabs value={activeView} onValueChange={handleViewChange}>
             <div className="flex flex-col gap-3 border-b pb-4 md:flex-row md:items-center md:justify-between">
@@ -296,8 +295,6 @@ export const BlogContentComposer = forwardRef<BlogContentComposerHandle, BlogCon
             <RichContent value={normalizedValue} emptyText={msg.emptyPreview} />
           </div>
         </div>
-
-
       </div>
     );
   }

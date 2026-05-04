@@ -79,6 +79,7 @@ export const blogEditor = {
         placeholder: "https://example.com/image.jpg",
         caption: "Mô tả ảnh",
         captionPlaceholder: "Nhập mô tả cho ảnh (tùy chọn)",
+        alignment: "Căn chỉnh",
         submit: "Chèn ảnh",
       },
       video: {

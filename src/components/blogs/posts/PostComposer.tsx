@@ -400,13 +400,13 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
     () =>
       selectedDepartment
         ? {
-          value: selectedDepartment.name,
-          label: selectedDepartment.department_name,
-          description: selectedDepartment.department_code,
-          keywords: [selectedDepartment.department_code, selectedDepartment.description].filter(
-            Boolean
-          ),
-        }
+            value: selectedDepartment.name,
+            label: selectedDepartment.department_name,
+            description: selectedDepartment.department_code,
+            keywords: [selectedDepartment.department_code, selectedDepartment.description].filter(
+              Boolean
+            ),
+          }
         : null,
     [selectedDepartment]
   );
@@ -415,11 +415,11 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
     () =>
       selectedCategory
         ? {
-          value: selectedCategory.name,
-          label: getCategoryName(selectedCategory),
-          description: selectedCategory.slug || selectedCategory.description,
-          keywords: [selectedCategory.slug, selectedCategory.description].filter(Boolean),
-        }
+            value: selectedCategory.name,
+            label: getCategoryName(selectedCategory),
+            description: selectedCategory.slug || selectedCategory.description,
+            keywords: [selectedCategory.slug, selectedCategory.description].filter(Boolean),
+          }
         : null,
     [selectedCategory]
   );
@@ -616,7 +616,7 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
 
         try {
           await deleteFile.deleteDoc(fileName);
-        } catch { }
+        } catch {}
       }
 
       transientCoverFileNamesRef.current = remainingFiles;
@@ -638,7 +638,7 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
 
         try {
           await deleteFile.deleteDoc(fileName);
-        } catch { }
+        } catch {}
       }
 
       transientEditorFileNamesRef.current = remainingFiles;
@@ -1796,9 +1796,9 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
                         filters={
                           form.department
                             ? [
-                              ["is_active", "=", 1],
-                              ["department", "=", form.department],
-                            ]
+                                ["is_active", "=", 1],
+                                ["department", "=", form.department],
+                              ]
                             : undefined
                         }
                         searchFields={["category", "slug", "description"]}
@@ -1845,9 +1845,9 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
                         filters={
                           form.department
                             ? [
-                              ["is_active", "=", 1],
-                              ["department", "=", form.department],
-                            ]
+                                ["is_active", "=", 1],
+                                ["department", "=", form.department],
+                              ]
                             : undefined
                         }
                         searchFields={["topic", "slug", "desc"]}

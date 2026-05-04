@@ -144,6 +144,7 @@ const DEFAULT_EDITOR_STATE = {
 };
 
 const FONT_FAMILY_OPTIONS = [
+  { label: "Open Sans", value: "var(--font-open-sans)" },
   { label: "Sans", value: "Arial, Helvetica, sans-serif" },
   { label: "Serif", value: "Georgia, 'Times New Roman', serif" },
   { label: "Monospace", value: "'Courier New', monospace" },
@@ -182,7 +183,10 @@ function formatCode(code: string): string {
       indentLevel++;
     }
 
-    const isSingleLineBlock = /^if|^for|^while|^switch|^function|^class|^const|^let|^var|^import|^export|^return/.test(trimmed) && trimmed.endsWith("{");
+    const isSingleLineBlock =
+      /^if|^for|^while|^switch|^function|^class|^const|^let|^var|^import|^export|^return/.test(
+        trimmed
+      ) && trimmed.endsWith("{");
     if (isSingleLineBlock) {
       indentLevel--;
     }
@@ -274,12 +278,12 @@ const FontSize = Extension.create({
     return {
       setFontSize:
         (fontSize: string) =>
-          ({ chain }) =>
-            chain().setMark("textStyle", { fontSize }).run(),
+        ({ chain }) =>
+          chain().setMark("textStyle", { fontSize }).run(),
       unsetFontSize:
         () =>
-          ({ chain }) =>
-            chain().setMark("textStyle", { fontSize: null }).removeEmptyTextStyle().run(),
+        ({ chain }) =>
+          chain().setMark("textStyle", { fontSize: null }).removeEmptyTextStyle().run(),
     };
   },
 });
@@ -314,12 +318,12 @@ const FontFamily = Extension.create({
     return {
       setFontFamily:
         (fontFamily: string) =>
-          ({ chain }) =>
-            chain().setMark("textStyle", { fontFamily }).run(),
+        ({ chain }) =>
+          chain().setMark("textStyle", { fontFamily }).run(),
       unsetFontFamily:
         () =>
-          ({ chain }) =>
-            chain().setMark("textStyle", { fontFamily: null }).removeEmptyTextStyle().run(),
+        ({ chain }) =>
+          chain().setMark("textStyle", { fontFamily: null }).removeEmptyTextStyle().run(),
     };
   },
 });
@@ -362,32 +366,70 @@ const Indent = Extension.create({
     return {
       setIndent:
         (level: number) =>
-          ({ editor, commands }) => {
-            const nextLevel = clampIndent(level);
-            for (const type of INDENT_NODE_TYPES) {
-              if (editor.isActive(type)) {
-                return commands.updateAttributes(type, {
-                  indent: nextLevel,
-                });
-              }
+        ({ tr, state, view }) => {
+          const nextLevel = clampIndent(level);
+          const { selection } = state;
+          let done = false;
+          state.doc.nodesBetween(selection.from, selection.to, (node, pos) => {
+            if (done) return;
+            if (INDENT_NODE_TYPES.includes(node.type.name) || node.type.name === "paragraph") {
+              tr.setNodeMarkup(pos, undefined, { ...node.attrs, indent: nextLevel });
+              done = true;
             }
-
-            return commands.updateAttributes("paragraph", {
-              indent: nextLevel,
+          });
+          if (done && view) {
+            requestAnimationFrame(() => {
+              if (view.state === state) {
+                view.dispatch(tr);
+              }
             });
-          },
+          }
+          return done;
+        },
       indent:
         () =>
-          ({ editor }) => {
-            const currentIndent = Number(getActiveBlockAttributes(editor).indent ?? 0);
-            return editor.commands.setIndent(currentIndent + 1);
-          },
+        ({ tr, state, view }) => {
+          const { selection } = state;
+          let done = false;
+          state.doc.nodesBetween(selection.from, selection.to, (node, pos) => {
+            if (done) return;
+            if (INDENT_NODE_TYPES.includes(node.type.name) || node.type.name === "paragraph") {
+              const nextIndent = clampIndent(Number(node.attrs.indent ?? 0) + 1);
+              tr.setNodeMarkup(pos, undefined, { ...node.attrs, indent: nextIndent });
+              done = true;
+            }
+          });
+          if (done && view) {
+            requestAnimationFrame(() => {
+              if (view.state === state) {
+                view.dispatch(tr);
+              }
+            });
+          }
+          return done;
+        },
       outdent:
         () =>
-          ({ editor }) => {
-            const currentIndent = Number(getActiveBlockAttributes(editor).indent ?? 0);
-            return editor.commands.setIndent(currentIndent - 1);
-          },
+        ({ tr, state, view }) => {
+          const { selection } = state;
+          let done = false;
+          state.doc.nodesBetween(selection.from, selection.to, (node, pos) => {
+            if (done) return;
+            if (INDENT_NODE_TYPES.includes(node.type.name) || node.type.name === "paragraph") {
+              const nextIndent = clampIndent(Number(node.attrs.indent ?? 0) - 1);
+              tr.setNodeMarkup(pos, undefined, { ...node.attrs, indent: nextIndent });
+              done = true;
+            }
+          });
+          if (done && view) {
+            requestAnimationFrame(() => {
+              if (view.state === state) {
+                view.dispatch(tr);
+              }
+            });
+          }
+          return done;
+        },
     };
   },
 });
@@ -460,7 +502,9 @@ const EmbeddedMedia = Node.create({
 
   renderHTML({ HTMLAttributes }) {
     const src = HTMLAttributes.src || "";
-    const kind = HTMLAttributes.kind || (src.includes("youtube.com/embed") || src.includes("player.vimeo") ? "embed" : "file");
+    const kind =
+      HTMLAttributes.kind ||
+      (src.includes("youtube.com/embed") || src.includes("player.vimeo") ? "embed" : "file");
     const isEmbed = kind === "embed";
 
     return [
@@ -476,17 +520,18 @@ const EmbeddedMedia = Node.create({
           title: HTMLAttributes.title || (isEmbed ? "Embedded video" : "Video file"),
           ...(isEmbed
             ? {
-              allow: "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share",
-              allowfullscreen: "true",
-              frameborder: "0",
-              class: "aspect-video w-full rounded-xl border-0",
-            }
+                allow:
+                  "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share",
+                allowfullscreen: "true",
+                frameborder: "0",
+                class: "aspect-video w-full rounded-xl border-0",
+              }
             : {
-              controls: "true",
-              playsinline: "true",
-              preload: "metadata",
-              class: "w-full rounded-xl",
-            }),
+                controls: "true",
+                playsinline: "true",
+                preload: "metadata",
+                class: "w-full rounded-xl",
+              }),
         },
       ],
     ];
@@ -539,6 +584,7 @@ export const TiptapEditor = forwardRef<BlogEditorHandle, BlogEditorProps>(
     const [dialogValue, setDialogValue] = useState("");
     const [dialogCaption, setDialogCaption] = useState("");
     const [dialogError, setDialogError] = useState<string | null>(null);
+    const [imageAlign, setImageAlign] = useState<"left" | "center" | "right">("center");
     const [pendingImageUrl, setPendingImageUrl] = useState<string | null>(null);
     const [inlineUploadError, setInlineUploadError] = useState<string | null>(null);
     const [uploadedImageNames, setUploadedImageNames] = useState<string[]>([]);
@@ -548,7 +594,7 @@ export const TiptapEditor = forwardRef<BlogEditorHandle, BlogEditorProps>(
         for (const name of uploadedImageNames) {
           try {
             await deleteFile.deleteDoc(name);
-          } catch { }
+          } catch {}
         }
         setUploadedImageNames([]);
       },
@@ -579,11 +625,11 @@ export const TiptapEditor = forwardRef<BlogEditorHandle, BlogEditorProps>(
         FontSize,
         Indent,
         TextAlign.configure({
-          types: ["heading", "paragraph", "blockquote", "codeBlock"],
+          types: ["heading", "paragraph", "blockquote", "codeBlock", "image"],
         }),
         Image.configure({
           HTMLAttributes: {
-            class: "rounded-xl",
+            class: "rounded-xl w-full",
           },
         }),
         Table.configure({
@@ -682,6 +728,7 @@ export const TiptapEditor = forwardRef<BlogEditorHandle, BlogEditorProps>(
           placeholder: msgDialog.image.placeholder,
           captionLabel: msgDialog.image.caption,
           captionPlaceholder: msgDialog.image.captionPlaceholder,
+          alignmentLabel: msgDialog.image.alignment,
           submitLabel: msgDialog.image.submit,
         };
       }
@@ -703,6 +750,7 @@ export const TiptapEditor = forwardRef<BlogEditorHandle, BlogEditorProps>(
             placeholder: msgDialog.image.placeholder,
             captionLabel: msgDialog.image.caption,
             captionPlaceholder: msgDialog.image.captionPlaceholder,
+            alignmentLabel: msgDialog.image.alignment,
             submitLabel: msgDialog.image.submit,
           };
         case "video":
@@ -730,6 +778,7 @@ export const TiptapEditor = forwardRef<BlogEditorHandle, BlogEditorProps>(
       setDialogValue("");
       setDialogCaption("");
       setDialogError(null);
+      setImageAlign("center");
     }
 
     function insertLink() {
@@ -790,17 +839,30 @@ export const TiptapEditor = forwardRef<BlogEditorHandle, BlogEditorProps>(
 
       const caption = dialogCaption.trim();
       if (caption) {
-        editor.chain().focus().insertContent([
-          { type: "image", attrs: { src: normalized } },
-          {
-            type: "paragraph",
-            attrs: { textAlign: "center" },
-            content: [{ type: "text", text: caption, marks: [{ type: "italic" }] }],
-          },
-          { type: "paragraph" },
-        ]).run();
+        editor
+          .chain()
+          .focus()
+          .insertContent([
+            {
+              type: "image",
+              attrs: {
+                src: normalized,
+              },
+            },
+            {
+              type: "paragraph",
+              attrs: { textAlign: "center" },
+              content: [{ type: "text", text: caption, marks: [{ type: "italic" }] }],
+            },
+            { type: "paragraph" },
+          ])
+          .run();
       } else {
-        editor.chain().focus().setImage({ src: normalized }).run();
+        editor
+          .chain()
+          .focus()
+          .insertContent({ type: "image", attrs: { src: normalized } })
+          .run();
       }
       closeDialog();
     }
@@ -837,17 +899,40 @@ export const TiptapEditor = forwardRef<BlogEditorHandle, BlogEditorProps>(
 
         const caption = dialogCaption.trim();
         if (caption) {
-          editor.chain().focus().insertContent([
-            { type: "image", attrs: { src: pendingImageUrl } },
-            {
-              type: "paragraph",
-              attrs: { textAlign: "center" },
-              content: [{ type: "text", text: caption, marks: [{ type: "italic" }] }],
-            },
-            { type: "paragraph" },
-          ]).run();
+          editor
+            .chain()
+            .focus()
+            .insertContent([
+              {
+                type: "image",
+                attrs: {
+                  alt: "Image preview",
+                  src: pendingImageUrl.includes("https")
+                    ? pendingImageUrl
+                    : `${getBaseUrl()}${pendingImageUrl}`,
+                },
+              },
+              {
+                type: "paragraph",
+                attrs: { textAlign: "center" },
+                content: [{ type: "text", text: caption, marks: [{ type: "italic" }] }],
+              },
+              { type: "paragraph" },
+            ])
+            .run();
         } else {
-          editor.chain().focus().setImage({ src: pendingImageUrl }).run();
+          editor
+            .chain()
+            .focus()
+            .insertContent({
+              type: "image",
+              attrs: {
+                src: pendingImageUrl.includes("https")
+                  ? pendingImageUrl
+                  : `${getBaseUrl()}${pendingImageUrl}`,
+              },
+            })
+            .run();
         }
         setPendingImageUrl(null);
         closeDialog();
@@ -907,7 +992,15 @@ export const TiptapEditor = forwardRef<BlogEditorHandle, BlogEditorProps>(
         return (
           <div className="overflow-hidden rounded-xl border">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={pendingImageUrl.includes("https") ? pendingImageUrl : `${getBaseUrl()}${pendingImageUrl}`} alt="Image preview" className="max-h-60 w-full object-cover" />
+            <img
+              src={
+                pendingImageUrl.includes("https")
+                  ? pendingImageUrl
+                  : `${getBaseUrl()}${pendingImageUrl}`
+              }
+              alt="Image preview"
+              className="max-h-60 w-full object-cover"
+            />
           </div>
         );
       }
@@ -958,464 +1051,475 @@ export const TiptapEditor = forwardRef<BlogEditorHandle, BlogEditorProps>(
 
     return (
       <div className="space-y-3">
-        <div className="flex flex-wrap items-center gap-2 rounded-xl border bg-muted/30 p-3">
-          {/* Heading2 Button */}
-          <ToolbarButton
-            active={editorState.isHeading2}
-            disabled={!editor || disabled}
-            onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}
-            title={msg.toolbar.heading2}
-          >
-            <Heading2 />
-          </ToolbarButton>
-
-          {/* Heading3 Button */}
-          <ToolbarButton
-            active={editorState.isHeading3}
-            disabled={!editor || disabled}
-            onClick={() => editor?.chain().focus().toggleHeading({ level: 3 }).run()}
-            title={msg.toolbar.heading3}
-          >
-            <Heading3 />
-          </ToolbarButton>
-
-          {/* Bold Button */}
-          <ToolbarButton
-            active={editorState.isBold}
-            disabled={!editor || disabled}
-            onClick={() => editor?.chain().focus().toggleBold().run()}
-            title={msg.toolbar.bold}
-          >
-            <Bold />
-          </ToolbarButton>
-
-          {/* Italic Button */}
-          <ToolbarButton
-            active={editorState.isItalic}
-            disabled={!editor || disabled}
-            onClick={() => editor?.chain().focus().toggleItalic().run()}
-            title={msg.toolbar.italic}
-          >
-            <Italic />
-          </ToolbarButton>
-
-          {/* Underline Button */}
-          <ToolbarButton
-            active={editorState.isUnderline}
-            disabled={!editor || disabled}
-            onClick={() => editor?.chain().focus().toggleUnderline().run()}
-            title={msg.toolbar.underline}
-          >
-            <UnderlineIcon />
-          </ToolbarButton>
-
-          {/* Align Left Button */}
-          <ToolbarButton
-            active={editorState.textAlign === "left"}
-            disabled={!editor || disabled}
-            onClick={() => editor?.chain().focus().setTextAlign("left").run()}
-            title={msg.toolbar.alignLeft}
-          >
-            <AlignLeft />
-          </ToolbarButton>
-
-          {/* Align Center Button */}
-          <ToolbarButton
-            active={editorState.textAlign === "center"}
-            disabled={!editor || disabled}
-            onClick={() => editor?.chain().focus().setTextAlign("center").run()}
-            title={msg.toolbar.alignCenter}
-          >
-            <AlignCenter />
-          </ToolbarButton>
-
-          {/* Align Right Button */}
-          <ToolbarButton
-            active={editorState.textAlign === "right"}
-            disabled={!editor || disabled}
-            onClick={() => editor?.chain().focus().setTextAlign("right").run()}
-            title={msg.toolbar.alignRight}
-          >
-            <AlignRight />
-          </ToolbarButton>
-
-          {/* Align Justify Button */}
-          <ToolbarButton
-            active={editorState.textAlign === "justify"}
-            disabled={!editor || disabled}
-            onClick={() => editor?.chain().focus().setTextAlign("justify").run()}
-            title={msg.toolbar.alignJustify}
-          >
-            <AlignJustify />
-          </ToolbarButton>
-
-          {/* Outdent Button */}
-          <ToolbarButton
-            disabled={!editor || disabled}
-            onClick={() => editor?.chain().focus().outdent().run()}
-            title={msg.toolbar.outdent}
-          >
-            <IndentDecrease />
-          </ToolbarButton>
-
-          {/* Indent Button */}
-          <ToolbarButton
-            disabled={!editor || disabled || editorState.indent >= 5}
-            onClick={() => editor?.chain().focus().indent().run()}
-            title={msg.toolbar.indent}
-          >
-            <IndentIncrease />
-          </ToolbarButton>
-
-          {/* Font Family Select */}
-          <label className="flex items-center gap-2 rounded-md border bg-background px-2 py-1.5 text-sm text-muted-foreground">
-            <Type className="size-4" />
-            <select
-              className="max-w-28 bg-transparent text-sm outline-none"
+        <div className="sticky top-0 z-10 -mx-4 -mt-4 rounded-xl bg-background/95 px-4 py-2 backdrop-blur-sm">
+          <div className="flex flex-wrap items-center gap-2 rounded-xl border bg-muted/30 p-3">
+            {/* Heading2 Button */}
+            <ToolbarButton
+              active={editorState.isHeading2}
               disabled={!editor || disabled}
-              value={editorState.fontFamily}
-              onChange={event => {
-                const nextValue = event.target.value;
-                if (!editor) {
-                  return;
-                }
-
-                if (!nextValue) {
-                  editor.chain().focus().unsetFontFamily().run();
-                  return;
-                }
-
-                editor.chain().focus().setFontFamily(nextValue).run();
-              }}
+              onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}
+              title={msg.toolbar.heading2}
             >
-              <option value="">{msg.toolbar.fontFamily}</option>
-              {FONT_FAMILY_OPTIONS.map(fontFamily => (
-                <option key={fontFamily.value} value={fontFamily.value}>
-                  {fontFamily.label}
-                </option>
-              ))}
-            </select>
-          </label>
+              <Heading2 />
+            </ToolbarButton>
 
-          {/* Font Size Select */}
-          <label className="flex items-center gap-2 rounded-md border bg-background px-2 py-1.5 text-sm text-muted-foreground">
-            <Type className="size-4" />
-            <select
-              className="bg-transparent text-sm outline-none"
+            {/* Heading3 Button */}
+            <ToolbarButton
+              active={editorState.isHeading3}
               disabled={!editor || disabled}
-              value={editorState.fontSize}
-              onChange={event => {
-                const nextValue = event.target.value;
-                if (!editor) {
-                  return;
-                }
-
-                if (!nextValue) {
-                  editor.chain().focus().unsetFontSize().run();
-                  return;
-                }
-
-                editor.chain().focus().setFontSize(nextValue).run();
-              }}
+              onClick={() => editor?.chain().focus().toggleHeading({ level: 3 }).run()}
+              title={msg.toolbar.heading3}
             >
-              <option value="">{msg.toolbar.fontSize}</option>
-              {FONT_SIZE_OPTIONS.map(fontSize => (
-                <option key={fontSize} value={fontSize}>
-                  {fontSize.replace("px", "")}
-                </option>
-              ))}
-            </select>
-          </label>
+              <Heading3 />
+            </ToolbarButton>
 
-          {/* Text Color Picker */}
-          <label className="flex items-center gap-2 rounded-md border bg-background px-2 py-0 text-sm text-muted-foreground">
-            <Palette className="size-4" />
-            <input
-              type="color"
-              title={msg.toolbar.textColor}
+            {/* Bold Button */}
+            <ToolbarButton
+              active={editorState.isBold}
               disabled={!editor || disabled}
-              value={editorState.textColor || DEFAULT_TEXT_COLOR}
-              onChange={event => editor?.chain().focus().setColor(event.target.value).run()}
-              className="h-8 w-10 rounded border-0 bg-transparent p-0"
-            />
-          </label>
-
-          {/* Highlight Color Picker */}
-          <label className="flex items-center gap-2 rounded-md border bg-background px-2 py-0 text-sm text-muted-foreground">
-            <Highlighter className="size-4" />
-            <input
-              type="color"
-              title={msg.toolbar.highlightColor}
-              disabled={!editor || disabled}
-              value={editorState.highlightColor || DEFAULT_HIGHLIGHT_COLOR}
-              onChange={event =>
-                editor?.chain().focus().setHighlight({ color: event.target.value }).run()
-              }
-              className="h-8 w-10 rounded border-0 bg-transparent p-0"
-            />
-          </label>
-
-          {/* Bullet List Button */}
-          <ToolbarButton
-            active={editorState.isBulletList}
-            disabled={!editor || disabled}
-            onClick={() => editor?.chain().focus().toggleBulletList().run()}
-            title={msg.toolbar.bulletList}
-          >
-            <List />
-          </ToolbarButton>
-
-          {/* Ordered List Button */}
-          <ToolbarButton
-            active={editorState.isOrderedList}
-            disabled={!editor || disabled}
-            onClick={() => editor?.chain().focus().toggleOrderedList().run()}
-            title={msg.toolbar.orderedList}
-          >
-            <ListOrdered />
-          </ToolbarButton>
-
-          {/* Blockquote Button */}
-          <ToolbarButton
-            active={editorState.isBlockquote}
-            disabled={!editor || disabled}
-            onClick={() => editor?.chain().focus().toggleBlockquote().run()}
-            title={msg.toolbar.blockquote}
-          >
-            <Quote />
-          </ToolbarButton>
-
-          {/* Code Block Button */}
-          <Select
-            value={
-              editorState.isCodeBlock
-                ? (editor?.getAttributes("codeBlock").language as string) || "plaintext"
-                : ""
-            }
-            onValueChange={(language) => {
-              if (!editor) return;
-              if (editorState.isCodeBlock) {
-                editor.chain().focus().updateAttributes("codeBlock", { language }).run();
-              } else {
-                editor.chain().focus().toggleCodeBlock({ language }).run();
-              }
-            }}
-          >
-            <SelectTrigger
-              size="sm"
-              className="min-w-9"
-              disabled={!editor || disabled}
-              title={msg.toolbar.codeBlock}
+              onClick={() => editor?.chain().focus().toggleBold().run()}
+              title={msg.toolbar.bold}
             >
-              <SelectValue placeholder={<Code2 className="size-4" />} />
-            </SelectTrigger>
-            <SelectContent>
-              {CODE_BLOCK_LANGUAGES.map((lang) => (
-                <SelectItem key={lang.value} value={lang.value}>
-                  {lang.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+              <Bold />
+            </ToolbarButton>
 
-          {/* Format Code Button */}
-          <ToolbarButton
-            disabled={!editor || disabled || !editorState.isCodeBlock}
-            onClick={() => {
-              if (!editor) return;
-              const { $from } = editor.state.selection;
+            {/* Italic Button */}
+            <ToolbarButton
+              active={editorState.isItalic}
+              disabled={!editor || disabled}
+              onClick={() => editor?.chain().focus().toggleItalic().run()}
+              title={msg.toolbar.italic}
+            >
+              <Italic />
+            </ToolbarButton>
 
-              let codeBlock = null;
-              let codeBlockStart = 0;
+            {/* Underline Button */}
+            <ToolbarButton
+              active={editorState.isUnderline}
+              disabled={!editor || disabled}
+              onClick={() => editor?.chain().focus().toggleUnderline().run()}
+              title={msg.toolbar.underline}
+            >
+              <UnderlineIcon />
+            </ToolbarButton>
 
-              for (let depth = $from.depth; depth >= 0; depth--) {
-                const node = $from.node(depth);
-                if (node.type.name === "codeBlock" || node.type.name === "codeBlockCode") {
-                  codeBlock = node;
-                  codeBlockStart = $from.start(depth);
-                  break;
-                }
-              }
+            {/* Align Left Button */}
+            <ToolbarButton
+              active={editorState.textAlign === "left"}
+              disabled={!editor || disabled}
+              onClick={() => editor?.chain().focus().setTextAlign("left").run()}
+              title={msg.toolbar.alignLeft}
+            >
+              <AlignLeft />
+            </ToolbarButton>
 
-              if (codeBlock) {
-                let content = "";
-                if (codeBlock.textContent) {
-                  content = codeBlock.textContent;
-                } else if (codeBlock.content && codeBlock.content.size > 0) {
-                  codeBlock.content.forEach((child) => {
-                    content += child.text || "";
-                  });
-                }
+            {/* Align Center Button */}
+            <ToolbarButton
+              active={editorState.textAlign === "center"}
+              disabled={!editor || disabled}
+              onClick={() => editor?.chain().focus().setTextAlign("center").run()}
+              title={msg.toolbar.alignCenter}
+            >
+              <AlignCenter />
+            </ToolbarButton>
 
-                if (!content || !content.trim()) return;
+            {/* Align Right Button */}
+            <ToolbarButton
+              active={editorState.textAlign === "right"}
+              disabled={!editor || disabled}
+              onClick={() => editor?.chain().focus().setTextAlign("right").run()}
+              title={msg.toolbar.alignRight}
+            >
+              <AlignRight />
+            </ToolbarButton>
 
-                const formatted = formatCode(content);
-                const from = codeBlockStart + 1;
-                const to = codeBlockStart + codeBlock.nodeSize - 1;
+            {/* Align Justify Button */}
+            <ToolbarButton
+              active={editorState.textAlign === "justify"}
+              disabled={!editor || disabled}
+              onClick={() => editor?.chain().focus().setTextAlign("justify").run()}
+              title={msg.toolbar.alignJustify}
+            >
+              <AlignJustify />
+            </ToolbarButton>
 
-                editor.chain().focus().deleteRange({ from, to }).insertContentAt(from, formatted).run();
-              }
-            }}
-            title={msg.toolbar.formatCode || "Format Code"}
-          >
-            <WandSparkles className="size-4" />
-          </ToolbarButton>
+            {/* Outdent Button */}
+            <ToolbarButton
+              disabled={!editor || disabled}
+              onClick={() => editor?.commands.outdent()}
+              title={msg.toolbar.outdent}
+            >
+              <IndentDecrease />
+            </ToolbarButton>
 
-          {/* Insert Link Button */}
-          <ToolbarButton
-            disabled={!editor || disabled}
-            onClick={() => openDialog("link")}
-            title={msg.toolbar.insertLink}
-          >
-            <Link2 />
-          </ToolbarButton>
+            {/* Indent Button */}
+            <ToolbarButton
+              disabled={!editor || disabled || editorState.indent >= 5}
+              onClick={() => editor?.commands.indent()}
+              title={msg.toolbar.indent}
+            >
+              <IndentIncrease />
+            </ToolbarButton>
 
-          {/* Insert Image Button */}
-          <ToolbarButton
-            disabled={!editor || disabled}
-            onClick={() => openDialog("image")}
-            title={msg.toolbar.insertImageUrl}
-          >
-            <ImagePlus />
-          </ToolbarButton>
-
-          {/* Upload Image Button */}
-          <ToolbarButton
-            disabled={!editor || disabled || inlineUpload.loading}
-            onClick={() => uploadImageInputRef.current?.click()}
-            title={msg.toolbar.uploadImage}
-          >
-            {inlineUpload.loading ? <Spinner /> : <Upload />}
-          </ToolbarButton>
-
-          {/* Insert Video Button */}
-          <ToolbarButton
-            disabled={!editor || disabled}
-            onClick={() => openDialog("video")}
-            title={msg.toolbar.insertVideoUrl}
-          >
-            <Video />
-          </ToolbarButton>
-
-          {/* Table Dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                type="button"
-                size="sm"
-                variant={editorState.isTable ? "default" : "outline"}
+            {/* Font Family Select */}
+            <label className="flex items-center gap-2 rounded-md border bg-background px-2 py-1.5 text-sm text-muted-foreground">
+              <Type className="size-4" />
+              <select
+                className="max-w-28 bg-transparent text-sm outline-none"
                 disabled={!editor || disabled}
-                title={msg.toolbar.insertTable}
-                className="min-w-9"
+                value={editorState.fontFamily}
+                onChange={event => {
+                  const nextValue = event.target.value;
+                  if (!editor) {
+                    return;
+                  }
+
+                  if (!nextValue) {
+                    editor.chain().focus().unsetFontFamily().run();
+                    return;
+                  }
+
+                  editor.chain().focus().setFontFamily(nextValue).run();
+                }}
               >
-                <Table2 />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start">
-              <DropdownMenuItem
-                onClick={() =>
-                  editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
+                <option value="">{msg.toolbar.fontFamily}</option>
+                {FONT_FAMILY_OPTIONS.map(fontFamily => (
+                  <option key={fontFamily.value} value={fontFamily.value}>
+                    {fontFamily.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            {/* Font Size Select */}
+            <label className="flex items-center gap-2 rounded-md border bg-background px-2 py-1.5 text-sm text-muted-foreground">
+              <Type className="size-4" />
+              <select
+                className="bg-transparent text-sm outline-none"
+                disabled={!editor || disabled}
+                value={editorState.fontSize}
+                onChange={event => {
+                  const nextValue = event.target.value;
+                  if (!editor) {
+                    return;
+                  }
+
+                  if (!nextValue) {
+                    editor.chain().focus().unsetFontSize().run();
+                    return;
+                  }
+
+                  editor.chain().focus().setFontSize(nextValue).run();
+                }}
+              >
+                <option value="">{msg.toolbar.fontSize}</option>
+                {FONT_SIZE_OPTIONS.map(fontSize => (
+                  <option key={fontSize} value={fontSize}>
+                    {fontSize.replace("px", "")}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            {/* Text Color Picker */}
+            <label className="flex items-center gap-2 rounded-md border bg-background px-2 py-0 text-sm text-muted-foreground">
+              <Palette className="size-4" />
+              <input
+                type="color"
+                title={msg.toolbar.textColor}
+                disabled={!editor || disabled}
+                value={editorState.textColor || DEFAULT_TEXT_COLOR}
+                onChange={event => editor?.chain().focus().setColor(event.target.value).run()}
+                className="h-8 w-10 rounded border-0 bg-transparent p-0"
+              />
+            </label>
+
+            {/* Highlight Color Picker */}
+            <label className="flex items-center gap-2 rounded-md border bg-background px-2 py-0 text-sm text-muted-foreground">
+              <Highlighter className="size-4" />
+              <input
+                type="color"
+                title={msg.toolbar.highlightColor}
+                disabled={!editor || disabled}
+                value={editorState.highlightColor || DEFAULT_HIGHLIGHT_COLOR}
+                onChange={event =>
+                  editor?.chain().focus().setHighlight({ color: event.target.value }).run()
                 }
-              >
-                <Grid3x3 className="mr-2 size-4" />
-                {msg.toolbar.insertTableDropdown.insertTable} (3x3)
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                disabled={!editorState.isTable}
-                onClick={() => editor?.chain().focus().addRowBefore().run()}
-              >
-                <Plus className="mr-2 size-4" />
-                {msg.toolbar.insertTableDropdown.addRowBefore}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                disabled={!editorState.isTable}
-                onClick={() => editor?.chain().focus().addRowAfter().run()}
-              >
-                <Plus className="mr-2 size-4" />
-                {msg.toolbar.insertTableDropdown.addRowAfter}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                disabled={!editorState.isTable}
-                onClick={() => editor?.chain().focus().deleteRow().run()}
-              >
-                <Minus className="mr-2 size-4" />
-                {msg.toolbar.insertTableDropdown.deleteRow}
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                disabled={!editorState.isTable}
-                onClick={() => editor?.chain().focus().addColumnBefore().run()}
-              >
-                <Plus className="mr-2 size-4" />
-                {msg.toolbar.insertTableDropdown.addColBefore}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                disabled={!editorState.isTable}
-                onClick={() => editor?.chain().focus().addColumnAfter().run()}
-              >
-                <Plus className="mr-2 size-4" />
-                {msg.toolbar.insertTableDropdown.addColAfter}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                disabled={!editorState.isTable}
-                onClick={() => editor?.chain().focus().deleteColumn().run()}
-              >
-                <Minus className="mr-2 size-4" />
-                {msg.toolbar.insertTableDropdown.deleteCol}
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                disabled={!editorState.isTable}
-                onClick={() => editor?.chain().focus().mergeCells().run()}
-              >
-                <Merge className="mr-2 size-4" />
-                {msg.toolbar.insertTableDropdown.mergeCells}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                disabled={!editorState.isTable}
-                onClick={() => editor?.chain().focus().splitCell().run()}
-              >
-                <SplitSquareHorizontal className="mr-2 size-4" />
-                {msg.toolbar.insertTableDropdown.splitCell}
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                disabled={!editorState.isTable}
-                variant="destructive"
-                onClick={() => editor?.chain().focus().deleteTable().run()}
-              >
-                <Trash2 className="mr-2 size-4" />
-                {msg.toolbar.insertTableDropdown.deleteTable}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                className="h-8 w-10 rounded border-0 bg-transparent p-0"
+              />
+            </label>
 
-          {/* Undo Button */}
-          <ToolbarButton
-            disabled={!editor || disabled || !editorState.canUndo}
-            onClick={() => editor?.chain().focus().undo().run()}
-            title={msg.toolbar.undo}
-          >
-            <Undo2 />
-          </ToolbarButton>
+            {/* Bullet List Button */}
+            <ToolbarButton
+              active={editorState.isBulletList}
+              disabled={!editor || disabled}
+              onClick={() => editor?.chain().focus().toggleBulletList().run()}
+              title={msg.toolbar.bulletList}
+            >
+              <List />
+            </ToolbarButton>
 
-          {/* Redo Button */}
-          <ToolbarButton
-            disabled={!editor || disabled || !editorState.canRedo}
-            onClick={() => editor?.chain().focus().redo().run()}
-            title={msg.toolbar.redo}
-          >
-            <Redo2 />
-          </ToolbarButton>
+            {/* Ordered List Button */}
+            <ToolbarButton
+              active={editorState.isOrderedList}
+              disabled={!editor || disabled}
+              onClick={() => editor?.chain().focus().toggleOrderedList().run()}
+              title={msg.toolbar.orderedList}
+            >
+              <ListOrdered />
+            </ToolbarButton>
 
-          <input
-            ref={uploadImageInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={handleInlineImageUpload}
-          />
+            {/* Blockquote Button */}
+            <ToolbarButton
+              active={editorState.isBlockquote}
+              disabled={!editor || disabled}
+              onClick={() => editor?.chain().focus().toggleBlockquote().run()}
+              title={msg.toolbar.blockquote}
+            >
+              <Quote />
+            </ToolbarButton>
+
+            {/* Code Block Button */}
+            <Select
+              value={
+                editorState.isCodeBlock
+                  ? (editor?.getAttributes("codeBlock").language as string) || "plaintext"
+                  : ""
+              }
+              onValueChange={language => {
+                if (!editor) return;
+                if (editorState.isCodeBlock) {
+                  editor.chain().focus().updateAttributes("codeBlock", { language }).run();
+                } else {
+                  editor.chain().focus().toggleCodeBlock({ language }).run();
+                }
+              }}
+            >
+              <SelectTrigger
+                size="sm"
+                className="min-w-9"
+                disabled={!editor || disabled}
+                title={msg.toolbar.codeBlock}
+              >
+                <SelectValue placeholder={<Code2 className="size-4" />} />
+              </SelectTrigger>
+              <SelectContent>
+                {CODE_BLOCK_LANGUAGES.map(lang => (
+                  <SelectItem key={lang.value} value={lang.value}>
+                    {lang.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* Format Code Button */}
+            <ToolbarButton
+              disabled={!editor || disabled || !editorState.isCodeBlock}
+              onClick={() => {
+                if (!editor) return;
+                const { $from } = editor.state.selection;
+
+                let codeBlock = null;
+                let codeBlockStart = 0;
+
+                for (let depth = $from.depth; depth >= 0; depth--) {
+                  const node = $from.node(depth);
+                  if (node.type.name === "codeBlock" || node.type.name === "codeBlockCode") {
+                    codeBlock = node;
+                    codeBlockStart = $from.start(depth);
+                    break;
+                  }
+                }
+
+                if (codeBlock) {
+                  let content = "";
+                  if (codeBlock.textContent) {
+                    content = codeBlock.textContent;
+                  } else if (codeBlock.content && codeBlock.content.size > 0) {
+                    codeBlock.content.forEach(child => {
+                      content += child.text || "";
+                    });
+                  }
+
+                  if (!content || !content.trim()) return;
+
+                  const formatted = formatCode(content);
+                  const from = codeBlockStart + 1;
+                  const to = codeBlockStart + codeBlock.nodeSize - 1;
+
+                  editor
+                    .chain()
+                    .focus()
+                    .deleteRange({ from, to })
+                    .insertContentAt(from, formatted)
+                    .run();
+                }
+              }}
+              title={msg.toolbar.formatCode || "Format Code"}
+            >
+              <WandSparkles className="size-4" />
+            </ToolbarButton>
+
+            {/* Insert Link Button */}
+            <ToolbarButton
+              disabled={!editor || disabled}
+              onClick={() => openDialog("link")}
+              title={msg.toolbar.insertLink}
+            >
+              <Link2 />
+            </ToolbarButton>
+
+            {/* Insert Image Button */}
+            <ToolbarButton
+              disabled={!editor || disabled}
+              onClick={() => openDialog("image")}
+              title={msg.toolbar.insertImageUrl}
+            >
+              <ImagePlus />
+            </ToolbarButton>
+
+            {/* Upload Image Button */}
+            <ToolbarButton
+              disabled={!editor || disabled || inlineUpload.loading}
+              onClick={() => uploadImageInputRef.current?.click()}
+              title={msg.toolbar.uploadImage}
+            >
+              {inlineUpload.loading ? <Spinner /> : <Upload />}
+            </ToolbarButton>
+
+            {/* Insert Video Button */}
+            <ToolbarButton
+              disabled={!editor || disabled}
+              onClick={() => openDialog("video")}
+              title={msg.toolbar.insertVideoUrl}
+            >
+              <Video />
+            </ToolbarButton>
+
+            {/* Table Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={editorState.isTable ? "default" : "outline"}
+                  disabled={!editor || disabled}
+                  title={msg.toolbar.insertTable}
+                  className="min-w-9"
+                >
+                  <Table2 />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                <DropdownMenuItem
+                  onClick={() =>
+                    editor
+                      ?.chain()
+                      .focus()
+                      .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+                      .run()
+                  }
+                >
+                  <Grid3x3 className="mr-2 size-4" />
+                  {msg.toolbar.insertTableDropdown.insertTable} (3x3)
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  disabled={!editorState.isTable}
+                  onClick={() => editor?.chain().focus().addRowBefore().run()}
+                >
+                  <Plus className="mr-2 size-4" />
+                  {msg.toolbar.insertTableDropdown.addRowBefore}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  disabled={!editorState.isTable}
+                  onClick={() => editor?.chain().focus().addRowAfter().run()}
+                >
+                  <Plus className="mr-2 size-4" />
+                  {msg.toolbar.insertTableDropdown.addRowAfter}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  disabled={!editorState.isTable}
+                  onClick={() => editor?.chain().focus().deleteRow().run()}
+                >
+                  <Minus className="mr-2 size-4" />
+                  {msg.toolbar.insertTableDropdown.deleteRow}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  disabled={!editorState.isTable}
+                  onClick={() => editor?.chain().focus().addColumnBefore().run()}
+                >
+                  <Plus className="mr-2 size-4" />
+                  {msg.toolbar.insertTableDropdown.addColBefore}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  disabled={!editorState.isTable}
+                  onClick={() => editor?.chain().focus().addColumnAfter().run()}
+                >
+                  <Plus className="mr-2 size-4" />
+                  {msg.toolbar.insertTableDropdown.addColAfter}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  disabled={!editorState.isTable}
+                  onClick={() => editor?.chain().focus().deleteColumn().run()}
+                >
+                  <Minus className="mr-2 size-4" />
+                  {msg.toolbar.insertTableDropdown.deleteCol}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  disabled={!editorState.isTable}
+                  onClick={() => editor?.chain().focus().mergeCells().run()}
+                >
+                  <Merge className="mr-2 size-4" />
+                  {msg.toolbar.insertTableDropdown.mergeCells}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  disabled={!editorState.isTable}
+                  onClick={() => editor?.chain().focus().splitCell().run()}
+                >
+                  <SplitSquareHorizontal className="mr-2 size-4" />
+                  {msg.toolbar.insertTableDropdown.splitCell}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  disabled={!editorState.isTable}
+                  variant="destructive"
+                  onClick={() => editor?.chain().focus().deleteTable().run()}
+                >
+                  <Trash2 className="mr-2 size-4" />
+                  {msg.toolbar.insertTableDropdown.deleteTable}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Undo Button */}
+            <ToolbarButton
+              disabled={!editor || disabled || !editorState.canUndo}
+              onClick={() => editor?.chain().focus().undo().run()}
+              title={msg.toolbar.undo}
+            >
+              <Undo2 />
+            </ToolbarButton>
+
+            {/* Redo Button */}
+            <ToolbarButton
+              disabled={!editor || disabled || !editorState.canRedo}
+              onClick={() => editor?.chain().focus().redo().run()}
+              title={msg.toolbar.redo}
+            >
+              <Redo2 />
+            </ToolbarButton>
+
+            <input
+              ref={uploadImageInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleInlineImageUpload}
+            />
+          </div>
         </div>
 
         {inlineUpload.loading && (
@@ -1471,16 +1575,47 @@ export const TiptapEditor = forwardRef<BlogEditorHandle, BlogEditorProps>(
                 {mediaPreview}
 
                 {(pendingImageUrl || dialogKind === "image") && (
-                  <div className="space-y-2">
-                    <Label htmlFor="media-caption">{dialogText.captionLabel}</Label>
-                    <Input
-                      id="media-caption"
-                      value={dialogCaption}
-                      onChange={event => setDialogCaption(event.target.value)}
-                      placeholder={dialogText.captionPlaceholder}
-                      autoFocus={!!pendingImageUrl}
-                    />
-                  </div>
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="media-caption">{dialogText.captionLabel}</Label>
+                      <Input
+                        id="media-caption"
+                        value={dialogCaption}
+                        onChange={event => setDialogCaption(event.target.value)}
+                        placeholder={dialogText.captionPlaceholder}
+                        autoFocus={!!pendingImageUrl}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>{dialogText.alignmentLabel}</Label>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant={imageAlign === "left" ? "default" : "outline"}
+                          onClick={() => setImageAlign("left")}
+                        >
+                          <AlignLeft className="size-4" />
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant={imageAlign === "center" ? "default" : "outline"}
+                          onClick={() => setImageAlign("center")}
+                        >
+                          <AlignCenter className="size-4" />
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant={imageAlign === "right" ? "default" : "outline"}
+                          onClick={() => setImageAlign("right")}
+                        >
+                          <AlignRight className="size-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </>
                 )}
 
                 {dialogError && (
@@ -1490,10 +1625,14 @@ export const TiptapEditor = forwardRef<BlogEditorHandle, BlogEditorProps>(
                 )}
 
                 <DialogFooter>
-                  <Button type="button" variant="outline" onClick={() => {
-                    setPendingImageUrl(null);
-                    closeDialog();
-                  }}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setPendingImageUrl(null);
+                      closeDialog();
+                    }}
+                  >
                     {msgDialog.cancel}
                   </Button>
                   <Button type="submit">{dialogText.submitLabel}</Button>

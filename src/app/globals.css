@@ -197,6 +197,10 @@
     @apply bg-background text-foreground;
     letter-spacing: var(--tracking-normal);
   }
+
+  .ProseMirror {
+    font-family: var(--font-open-sans), sans-serif;
+  }
 }
 
 @layer components {

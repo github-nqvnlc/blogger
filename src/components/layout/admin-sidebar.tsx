@@ -249,15 +249,15 @@ export function AdminSidebar() {
       title: t.sidebar.posts,
       items: [
         {
-          title: t.sidebar.createPost,
-          url: "/admin/posts/new",
-          icon: FilePlus,
-        },
-        {
           title: t.sidebar.allPosts,
           url: "/admin/posts",
           icon: Newspaper,
           showPostsBadge: true,
+        },
+        {
+          title: t.sidebar.createPost,
+          url: "/admin/posts/new",
+          icon: FilePlus,
         },
       ],
     },
@@ -357,7 +357,11 @@ export function AdminSidebar() {
                           >
                             {item.icon && <item.icon className="size-4" />}
                             <span>{item.title}</span>
-                            {item.showPostsBadge ? <PostsCountBadge /> : <NavBadge badge={item.badge} />}
+                            {item.showPostsBadge ? (
+                              <PostsCountBadge />
+                            ) : (
+                              <NavBadge badge={item.badge} />
+                            )}
                             <ChevronDown className="ml-auto size-3 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-180" />
                           </SidebarMenuButton>
                         </CollapsibleTrigger>
@@ -386,7 +390,11 @@ export function AdminSidebar() {
                         <Link href={buildLocalePath(locale, item.url)}>
                           {item.icon && <item.icon className="size-4" />}
                           <span>{item.title}</span>
-                          {item.showPostsBadge ? <PostsCountBadge /> : <NavBadge badge={item.badge} />}
+                          {item.showPostsBadge ? (
+                            <PostsCountBadge />
+                          ) : (
+                            <NavBadge badge={item.badge} />
+                          )}
                         </Link>
                       </SidebarMenuButton>
                     )}
