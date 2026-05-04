@@ -1,7 +1,5 @@
 "use client";
 
-import { usePathname } from "next/navigation";
-import Link from "next/link";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -10,9 +8,11 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { Slash } from "lucide-react";
 import { useLanguage } from "@/hooks/useLanguage";
 import { buildLocalePath, stripLocaleFromPathname } from "@/i18n";
+import { Slash } from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 function formatLabel(slug: string, map: Record<string, string>): string {
   if (map[slug]) return map[slug];
@@ -30,6 +30,8 @@ export function AdminBreadcrumb() {
   const breadcrumbMap = t.admin.breadcrumbs as Record<string, string>;
 
   if (segments.length === 0) return null;
+
+  console.log("segments", segments);
 
   return (
     <Breadcrumb>

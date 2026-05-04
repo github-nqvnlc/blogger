@@ -1,24 +1,16 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import type { LucideIcon } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
-  Newspaper,
-  Tags,
-  FolderOpen,
-  MessageSquare,
-  Settings,
-  FilePlus,
-  ChevronDown,
-  LayoutDashboard,
-  Menu,
-  LogOut,
-  User,
-  Loader2,
-  Lightbulb,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Sidebar,
   SidebarContent,
@@ -36,22 +28,31 @@ import {
   SidebarMenuSubItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
+import { useGetCount } from "@/hooks/useGetCount";
 import { useGetDoc } from "@/hooks/useGetDoc";
 import { useLanguage } from "@/hooks/useLanguage";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Skeleton } from "@/components/ui/skeleton";
 import { buildLocalePath, stripLocaleFromPathname } from "@/i18n";
+import { cn } from "@/lib/utils";
+import type { LucideIcon } from "lucide-react";
+import {
+  ChevronDown,
+  FilePlus,
+  FolderOpen,
+  LayoutDashboard,
+  Lightbulb,
+  Loader2,
+  LogOut,
+  Menu,
+  MessageSquare,
+  Newspaper,
+  Settings,
+  Tags,
+  User,
+} from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 interface NavSubItem {
   title: string;
@@ -64,6 +65,7 @@ interface NavItem {
   url: string;
   icon: LucideIcon;
   badge?: string;
+  showPostsBadge?: boolean;
   items?: NavSubItem[];
 }
 
@@ -77,6 +79,22 @@ function NavBadge({ badge }: { badge?: string }) {
   return (
     <Badge variant="secondary" className="ml-auto h-5 w-5 items-center justify-center p-0 text-xs">
       {badge}
+    </Badge>
+  );
+}
+
+function PostsCountBadge() {
+  const { data: count, isLoading } = useGetCount("posts");
+
+  if (isLoading) {
+    return <Skeleton className="ml-auto h-5 w-5 rounded" />;
+  }
+
+  if (!count) return null;
+
+  return (
+    <Badge variant="secondary" className="ml-auto h-5 w-5 items-center justify-center p-0 text-xs">
+      {count}
     </Badge>
   );
 }
@@ -239,7 +257,7 @@ export function AdminSidebar() {
           title: t.sidebar.allPosts,
           url: "/admin/posts",
           icon: Newspaper,
-          badge: "12",
+          showPostsBadge: true,
         },
       ],
     },
@@ -339,7 +357,7 @@ export function AdminSidebar() {
                           >
                             {item.icon && <item.icon className="size-4" />}
                             <span>{item.title}</span>
-                            <NavBadge badge={item.badge} />
+                            {item.showPostsBadge ? <PostsCountBadge /> : <NavBadge badge={item.badge} />}
                             <ChevronDown className="ml-auto size-3 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-180" />
                           </SidebarMenuButton>
                         </CollapsibleTrigger>
@@ -368,7 +386,7 @@ export function AdminSidebar() {
                         <Link href={buildLocalePath(locale, item.url)}>
                           {item.icon && <item.icon className="size-4" />}
                           <span>{item.title}</span>
-                          <NavBadge badge={item.badge} />
+                          {item.showPostsBadge ? <PostsCountBadge /> : <NavBadge badge={item.badge} />}
                         </Link>
                       </SidebarMenuButton>
                     )}

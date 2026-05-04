@@ -32,5 +32,6 @@ export const admin = {
     login: "Đăng nhập",
     dev: "Dev",
     doc: "Kiểm thử hooks",
+    new: "Tạo bài viết mới",
   },
 } as const;
