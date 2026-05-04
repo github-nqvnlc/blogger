@@ -400,13 +400,13 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
     () =>
       selectedDepartment
         ? {
-          value: selectedDepartment.name,
-          label: selectedDepartment.department_name,
-          description: selectedDepartment.department_code,
-          keywords: [selectedDepartment.department_code, selectedDepartment.description].filter(
-            Boolean
-          ),
-        }
+            value: selectedDepartment.name,
+            label: selectedDepartment.department_name,
+            description: selectedDepartment.department_code,
+            keywords: [selectedDepartment.department_code, selectedDepartment.description].filter(
+              Boolean
+            ),
+          }
         : null,
     [selectedDepartment]
   );
@@ -415,11 +415,11 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
     () =>
       selectedCategory
         ? {
-          value: selectedCategory.name,
-          label: getCategoryName(selectedCategory),
-          description: selectedCategory.slug || selectedCategory.description,
-          keywords: [selectedCategory.slug, selectedCategory.description].filter(Boolean),
-        }
+            value: selectedCategory.name,
+            label: getCategoryName(selectedCategory),
+            description: selectedCategory.slug || selectedCategory.description,
+            keywords: [selectedCategory.slug, selectedCategory.description].filter(Boolean),
+          }
         : null,
     [selectedCategory]
   );
@@ -616,7 +616,7 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
 
         try {
           await deleteFile.deleteDoc(fileName);
-        } catch { }
+        } catch {}
       }
 
       transientCoverFileNamesRef.current = remainingFiles;
@@ -638,7 +638,7 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
 
         try {
           await deleteFile.deleteDoc(fileName);
-        } catch { }
+        } catch {}
       }
 
       transientEditorFileNamesRef.current = remainingFiles;
@@ -1580,7 +1580,6 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
   const pageTitle = isEditMode ? copy.editTitle : copy.createTitle;
   const pageDescription = isEditMode ? copy.editDescription : copy.createDescription;
   const steps = isEditMode ? EDIT_STEPS : CREATE_STEPS;
-  const totalSteps = steps.length;
   const pendingNavigationTitle =
     pendingNavigation?.intent === "cancel"
       ? copy.cancelDraftConfirmTitle
@@ -1797,9 +1796,9 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
                         filters={
                           form.department
                             ? [
-                              ["is_active", "=", 1],
-                              ["department", "=", form.department],
-                            ]
+                                ["is_active", "=", 1],
+                                ["department", "=", form.department],
+                              ]
                             : undefined
                         }
                         searchFields={["category", "slug", "description"]}
@@ -1846,9 +1845,9 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
                         filters={
                           form.department
                             ? [
-                              ["is_active", "=", 1],
-                              ["department", "=", form.department],
-                            ]
+                                ["is_active", "=", 1],
+                                ["department", "=", form.department],
+                              ]
                             : undefined
                         }
                         searchFields={["topic", "slug", "desc"]}
@@ -1965,30 +1964,19 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
           ) : null}
 
           {currentStep === 2 ? (
-            <Card>
-              <CardHeader>
-                <CardTitle>{copy.steps.content.title}</CardTitle>
-                <CardDescription>{copy.steps.content.description}</CardDescription>
-              </CardHeader>
-
-              <CardContent className="grid grid-cols-3 space-y-4">
-                <div className="col-span-3">
-                  <BlogContentComposer
-                    ref={editorRef}
-                    id="post-content-editor"
-                    value={form.content}
-                    onChange={value => {
-                      updateField("content", value);
-                      clearFieldError("content");
-                    }}
-                    onTransientImageUpload={registerTransientEditorUpload}
-                    onTransientUploadsChange={setEditorHasTransientUploads}
-                    disabled={isSubmitting}
-                    invalid={Boolean(fieldErrors.content)}
-                  />
-                </div>
-              </CardContent>
-            </Card>
+            <BlogContentComposer
+              ref={editorRef}
+              id="post-content-editor"
+              value={form.content}
+              onChange={value => {
+                updateField("content", value);
+                clearFieldError("content");
+              }}
+              onTransientImageUpload={registerTransientEditorUpload}
+              onTransientUploadsChange={setEditorHasTransientUploads}
+              disabled={isSubmitting}
+              invalid={Boolean(fieldErrors.content)}
+            />
           ) : null}
 
           {!isEditMode && currentStep === 3 ? (

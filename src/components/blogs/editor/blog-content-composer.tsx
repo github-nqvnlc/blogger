@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useLanguage } from "@/hooks/useLanguage";
 import { restoreEmbeddedMediaHtml, stripHtml } from "@/lib/blog-posts";
 import { cn } from "@/lib/utils";
-import { Copy, Eye, FileCode2, PencilLine, WandSparkles } from "lucide-react";
+import { Copy, FileCode2, PencilLine, WandSparkles } from "lucide-react";
 import { marked } from "marked";
 import htmlPlugin from "prettier/plugins/html";
 import { format as formatWithPrettier } from "prettier/standalone";
@@ -214,91 +214,87 @@ export const BlogContentComposer = forwardRef<BlogContentComposerHandle, BlogCon
           invalid && "border-red-500 ring-2 ring-red-500/20"
         )}
       >
-        <Tabs value={activeView} onValueChange={handleViewChange}>
-          <div className="flex flex-col gap-3 border-b pb-4 md:flex-row md:items-center md:justify-between">
-            <TabsList className="grid w-full grid-cols-2 md:w-auto md:grid-cols-4">
-              <TabsTrigger value="editor" className="gap-2">
-                <PencilLine className="size-4" />
-                {msg.tabs.editor}
-              </TabsTrigger>
-              <TabsTrigger value="html" className="gap-2">
-                <FileCode2 className="size-4" />
-                {msg.tabs.html}
-              </TabsTrigger>
-              <TabsTrigger value="markdown" className="gap-2">
-                <FileCode2 className="size-4" />
-                {msg.tabs.markdown}
-              </TabsTrigger>
-              <TabsTrigger value="preview" className="gap-2">
-                <Eye className="size-4" />
-                {msg.tabs.preview}
-              </TabsTrigger>
-            </TabsList>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <Tabs value={activeView} onValueChange={handleViewChange}>
+            <div className="flex flex-col gap-3 border-b pb-4 md:flex-row md:items-center md:justify-between">
+              <TabsList className="grid w-full md:w-auto grid-cols-3">
+                <TabsTrigger value="editor" className="gap-2">
+                  <PencilLine className="size-4" />
+                  {msg.tabs.editor}
+                </TabsTrigger>
+                <TabsTrigger value="html" className="gap-2">
+                  <FileCode2 className="size-4" />
+                  {msg.tabs.html}
+                </TabsTrigger>
+                <TabsTrigger value="markdown" className="gap-2">
+                  <FileCode2 className="size-4" />
+                  {msg.tabs.markdown}
+                </TabsTrigger>
+              </TabsList>
 
-            <div className="flex items-center justify-end gap-2">
-              {activeView === "html" ? (
+              <div className="flex items-center justify-end gap-2">
+                {activeView === "html" ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleFormatHtml}
+                    disabled={disabled || !htmlDraft.trim()}
+                  >
+                    <WandSparkles className="size-4" />
+                    {msg.formatHtml}
+                  </Button>
+                ) : null}
+
                 <Button
                   type="button"
                   variant="outline"
-                  size="sm"
-                  onClick={handleFormatHtml}
-                  disabled={disabled || !htmlDraft.trim()}
+                  size="icon"
+                  onClick={handleCopy}
+                  disabled={disabled || !copySource.trim()}
+                  title={msg.copyButton}
                 >
-                  <WandSparkles className="size-4" />
-                  {msg.formatHtml}
+                  <Copy className="size-4" />
                 </Button>
-              ) : null}
-
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                onClick={handleCopy}
-                disabled={disabled || !copySource.trim()}
-                title={msg.copyButton}
-              >
-                <Copy className="size-4" />
-              </Button>
+              </div>
             </div>
+
+            <TabsContent value="editor" className="pt-4">
+              <TiptapEditor
+                ref={editorRef}
+                value={normalizedValue}
+                onChange={onChange}
+                onTransientImageUpload={onTransientImageUpload}
+                onTransientUploadsChange={onTransientUploadsChange}
+                disabled={disabled}
+              />
+            </TabsContent>
+
+            <TabsContent value="html" className="pt-4">
+              <Textarea
+                value={htmlDraft}
+                onChange={event => handleHtmlChange(event.target.value)}
+                disabled={disabled}
+                className="min-h-[calc(100vh-400px)] font-mono text-sm"
+                spellCheck={false}
+              />
+            </TabsContent>
+
+            <TabsContent value="markdown" className="pt-4">
+              <Textarea
+                value={markdownDraft}
+                onChange={event => handleMarkdownChange(event.target.value)}
+                disabled={disabled}
+                className="min-h-[calc(100vh-400px)] font-mono text-sm"
+                spellCheck={false}
+              />
+            </TabsContent>
+          </Tabs>
+
+          <div className="min-h-[calc(100vh-400px)] rounded-xl border bg-muted/10 p-4">
+            <RichContent value={normalizedValue} emptyText={msg.emptyPreview} />
           </div>
-
-          <TabsContent value="editor" className="pt-4">
-            <TiptapEditor
-              ref={editorRef}
-              value={normalizedValue}
-              onChange={onChange}
-              onTransientImageUpload={onTransientImageUpload}
-              onTransientUploadsChange={onTransientUploadsChange}
-              disabled={disabled}
-            />
-          </TabsContent>
-
-          <TabsContent value="html" className="pt-4">
-            <Textarea
-              value={htmlDraft}
-              onChange={event => handleHtmlChange(event.target.value)}
-              disabled={disabled}
-              className="min-h-[calc(100vh-400px)] font-mono text-sm"
-              spellCheck={false}
-            />
-          </TabsContent>
-
-          <TabsContent value="markdown" className="pt-4">
-            <Textarea
-              value={markdownDraft}
-              onChange={event => handleMarkdownChange(event.target.value)}
-              disabled={disabled}
-              className="min-h-[calc(100vh-400px)] font-mono text-sm"
-              spellCheck={false}
-            />
-          </TabsContent>
-
-          <TabsContent value="preview" className="pt-4">
-            <div className="min-h-[calc(100vh-400px)] rounded-xl border bg-muted/10 p-4">
-              <RichContent value={normalizedValue} emptyText={msg.emptyPreview} />
-            </div>
-          </TabsContent>
-        </Tabs>
+        </div>
       </div>
     );
   }

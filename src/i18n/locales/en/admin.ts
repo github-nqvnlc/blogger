@@ -32,5 +32,6 @@ export const admin = {
     login: "Login",
     dev: "Dev",
     doc: "Hooks Tester",
+    new: "Create New Post",
   },
 } as const;
