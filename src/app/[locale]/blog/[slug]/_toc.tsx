@@ -51,7 +51,7 @@ export function TableOfContents({ html }: { html: string }) {
         <a
           key={item.id}
           href={`#${item.id}`}
-          className={`block text-foreground-variant hover:text-foreground transition-colors leading-snug
+          className={`block text-sm md:text-base font-semibold text-foreground-variant hover:text-foreground transition-colors leading-snug
                         ${item.level === 3 ? "pl-4" : "font-medium"}`}
         >
           {item.text}

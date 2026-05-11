@@ -1,7 +1,7 @@
 import React from "react";
 import Link from "next/link";
 
-const Logo = () => {
+const Logo = ({ className }: { className?: string }) => {
   return (
     <Link href="/">
       <svg
@@ -11,6 +11,7 @@ const Logo = () => {
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         xmlnsXlink="http://www.w3.org/1999/xlink"
+        className={className}
       >
         <rect width="176.076" height="89.6875" fill="url(#pattern0_5_836)" />
         <defs>

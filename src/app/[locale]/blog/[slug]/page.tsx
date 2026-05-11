@@ -13,6 +13,7 @@ import { injectHeadingIds, TableOfContents } from "@/app/[locale]/blog/[slug]/_t
 import { useCategoryMap, useTagMap } from "@/hooks/useGuestMetadata";
 import { unbounded } from "@/lib/font";
 import { PostCard } from "@/components/sections/post-cart";
+import Support from "@/components/sections/support";
 
 export default function BlogDetailPage() {
   const params = useParams();
@@ -89,7 +90,7 @@ export default function BlogDetailPage() {
   }
 
   return (
-    <section id="blog-detail" className="mt-24">
+    <section id="blog-detail" className="mt-14 lg:mt-24">
       <div className="inner relative aspect-video w-full md:aspect-auto md:h-96 overflow-hidden rounded-none md:rounded-4xl">
         <div className="absolute inset-0">
           <img
@@ -111,13 +112,13 @@ export default function BlogDetailPage() {
               {categoryLabel && (
                 <div className="flex items-center gap-2">
                   <FolderOpen className="size-5" />
-                  <span className="text-md">{categoryLabel}</span>
+                  <span className="text-sm md:text-md">{categoryLabel}</span>
                 </div>
               )}
               {post.published_at && (
                 <div className="flex items-center gap-2">
                   <Pencil className="size-5" />
-                  <span className="text-md">
+                  <span className="text-sm md:text-md">
                     {formatDate(new Date(post.published_at), "HH:mm - dd/MM/yyyy")}
                   </span>
                 </div>
@@ -184,6 +185,8 @@ export default function BlogDetailPage() {
           </div>
         </div>
       )}
+
+      <Support />
     </section>
   );
 }
