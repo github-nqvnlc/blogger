@@ -1580,6 +1580,7 @@ export function PostComposer({ mode = "create", postId }: PostComposerProps) {
   const pageTitle = isEditMode ? copy.editTitle : copy.createTitle;
   const pageDescription = isEditMode ? copy.editDescription : copy.createDescription;
   const steps = isEditMode ? EDIT_STEPS : CREATE_STEPS;
+  // const totalSteps = steps.length;
   const pendingNavigationTitle =
     pendingNavigation?.intent === "cancel"
       ? copy.cancelDraftConfirmTitle

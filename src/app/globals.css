@@ -1,14 +1,24 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));
 
 :root {
+  --blue-midnight: #0b2f52;
+  --blue-muted: #234c74;
+  --blue-sky: #1969b6;
+  --blue-brand: #1d90ff;
+  --blue-ice: #e5eff7;
+  --orange-vibrant: #fe7018;
+  --orange-accent-dark: #f05b38;
+  --orange-amber: #fd8f00;
   --background: oklch(0.9824 0.0013 286.3757);
   --foreground: oklch(0.3211 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.3211 0 0);
+  --color-surface-container: #eaeef2;
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.3211 0 0);
   --primary: oklch(0.6487 0.1538 150.3071);
@@ -64,6 +74,7 @@
   --foreground: oklch(0.9219 0 0);
   --card: oklch(0.3106 0.0301 268.6365);
   --card-foreground: oklch(0.9219 0 0);
+  --color-surface-container: #201f1f;
   --popover: oklch(0.29 0.0249 268.3986);
   --popover-foreground: oklch(0.9219 0 0);
   --primary: oklch(0.6397 0.172 36.4421);
@@ -117,10 +128,19 @@
 }
 
 @theme inline {
+  --color-blue-midnight: var(--blue-midnight);
+  --color-blue-muted: var(--blue-muted);
+  --color-blue-sky: var(--blue-sky);
+  --color-blue-brand: var(--blue-brand);
+  --color-orange-amber: var(--orange-amber);
+  --color-orange-vibrant: var(--orange-vibrant);
+  --color-orange-accent-dark: var(--orange-accent-dark);
+  --color-blue-ice: var(--blue-ice);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
+  --color-surface-container: var(--color-surface-container);
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
@@ -192,7 +212,10 @@
   * {
     @apply border-border outline-ring/50;
   }
-
+  html {
+    scroll-padding-top: 6rem;
+    scroll-behavior: smooth;
+  }
   body {
     @apply bg-background text-foreground;
     letter-spacing: var(--tracking-normal);
@@ -275,5 +298,19 @@
 
   .hljs-strong {
     @apply font-bold;
+  }
+}
+
+@layer utilities {
+  .l-section {
+    @apply px-5 py-16 md:py-32;
+  }
+
+  .l-section-content {
+    @apply px-5 py-16 md:py-16;
+  }
+
+  .inner {
+    @apply mx-auto w-full max-w-[1260px];
   }
 }

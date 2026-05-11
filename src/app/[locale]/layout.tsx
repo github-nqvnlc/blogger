@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ApiProvider } from "@/lib/ApiProvider";
 import { ThemeProviderWrapper } from "@/components/providers/ThemeProviderWrapper";
 import { getDictionary, isValidLocale, localizeMetadataPath } from "@/i18n";
+import { ConditionalGuestLayout } from "@/components/layout/conditional-guest-layout";
 
 export function generateStaticParams() {
   return [{ locale: "vi" }, { locale: "en" }];
@@ -51,7 +52,7 @@ export default async function LocaleLayout({
   return (
     <ThemeProviderWrapper>
       <ApiProvider locale={locale} dictionary={dictionary}>
-        {children}
+        <ConditionalGuestLayout>{children}</ConditionalGuestLayout>
       </ApiProvider>
     </ThemeProviderWrapper>
   );

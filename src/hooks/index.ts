@@ -29,3 +29,14 @@ export type { FileUploadResponse } from "./useFileUpload";
 
 // ── Language ──────────────────────────────────────────────────────────────────
 export { useLanguage } from "./useLanguage";
+
+// ── Guest Metadata (prefetched global lookups) ────────────────────────────────
+export {
+  useAllCategories,
+  useAllTags,
+  useAllTopics,
+  useCategoryMap,
+  useTagMap,
+  useTopicMap,
+  usePrefetchGuestMetadata,
+} from "./useGuestMetadata";
