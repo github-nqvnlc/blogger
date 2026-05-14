@@ -20,7 +20,7 @@ const Footer = () => {
           </div>
           <div className="flex flex-col md:flex-row gap-4 md:gap-20 xl:gap-40">
             <div>
-              <span className="font-medium text-md md:text-lg leading-[36px] text-blue-muted">
+              <span className="font-medium text-base md:text-lg leading-[36px] text-blue-muted">
                 Dịch vụ
               </span>
               <ul className="mt-2 ml-5 list-disc space-y-2 text-foreground text-sm lg:text-base">
@@ -32,7 +32,7 @@ const Footer = () => {
             </div>
             <div>
               <div>
-                <span className="font-medium text-md md:text-lg leading-[36px] text-blue-muted">
+                <span className="font-medium text-base md:text-lg leading-[36px] text-blue-muted">
                   Liên hệ
                 </span>
                 <ul className="mt-2 space-y-2 text-foreground text-sm lg:text-base">

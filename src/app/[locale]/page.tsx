@@ -19,7 +19,8 @@ const Content = () => {
         <FeaturePost
           key={blogDepartment.name}
           title={blogDepartment.department_name}
-          department_code={blogDepartment.name}
+          department_name={blogDepartment.name}
+          department_code={blogDepartment.department_code}
           odd={(index + 1) % 2 === 0}
         />
       ))}

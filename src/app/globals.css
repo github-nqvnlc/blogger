@@ -213,7 +213,7 @@
     @apply border-border outline-ring/50;
   }
   html {
-    scroll-padding-top: 6rem;
+    scroll-padding-top: 4rem;
     scroll-behavior: smooth;
   }
   body {
@@ -303,7 +303,7 @@
 
 @layer utilities {
   .l-section {
-    @apply px-5 py-16 md:py-32;
+    @apply px-5 py-16 md:py-24;
   }
 
   .l-section-content {

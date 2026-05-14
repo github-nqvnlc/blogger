@@ -1,8 +1,15 @@
 import React from "react";
 
-const Circle = () => {
+const Circle = ({ className }: { className?: string }) => {
   return (
-    <svg width="19" height="19" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg
+      width="19"
+      height="19"
+      viewBox="0 0 19 19"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+    >
       <g filter="url(#filter0_i_5_845)">
         <circle cx="9.5" cy="9.5" r="9.5" fill="#B8D1E8" />
       </g>

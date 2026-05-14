@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ApiProvider } from "@/lib/ApiProvider";
-import { ThemeProviderWrapper } from "@/components/providers/ThemeProviderWrapper";
+import { ThemeProviderWrapper, AuthAwareTheme } from "@/components/providers/ThemeProviderWrapper";
 import { getDictionary, isValidLocale, localizeMetadataPath } from "@/i18n";
 import { ConditionalGuestLayout } from "@/components/layout/conditional-guest-layout";
 
@@ -52,6 +52,7 @@ export default async function LocaleLayout({
   return (
     <ThemeProviderWrapper>
       <ApiProvider locale={locale} dictionary={dictionary}>
+        <AuthAwareTheme />
         <ConditionalGuestLayout>{children}</ConditionalGuestLayout>
       </ApiProvider>
     </ThemeProviderWrapper>

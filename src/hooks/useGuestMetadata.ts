@@ -3,14 +3,33 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { getApiClient } from "@/lib/apiClient";
-import { Category, Tag, Topic } from "@/types/blogs";
+import { BlogDepartment, Category, Tag, Topic } from "@/types/blogs";
 
 // ─── Query Keys (cố định để cache share toàn app) ────────────────────────────
 
 export const GUEST_METADATA_KEYS = {
-  categories: ["categories", "list", { fields: ["name", "category", "slug"], limit: 500 }] as const,
+  categories: [
+    "categories",
+    "list",
+    { fields: ["name", "category", "slug", "department"], limit: 500 },
+  ] as const,
   tags: ["tags", "list", { fields: ["name", "tag_name", "slug"], limit: 500 }] as const,
   topics: ["topics", "list", { fields: ["name", "topic", "slug"], limit: 500 }] as const,
+  blogDepartments: [
+    "blog_departments",
+    "list",
+    {
+      fields: [
+        "name",
+        "department_name",
+        "department_code",
+        "description",
+        "is_active",
+        "creation",
+      ],
+      limit: 500,
+    },
+  ] as const,
 };
 
 // ─── Fetch helper (dùng cùng apiClient với useGetList) ───────────────────────
@@ -28,10 +47,25 @@ async function fetchResource<T>(resource: string, fields: string[], limit: numbe
 
 // ─── Individual Hooks ─────────────────────────────────────────────────────────
 
+export function useAllBlogDepartments() {
+  return useQuery<BlogDepartment[]>({
+    queryKey: GUEST_METADATA_KEYS.blogDepartments,
+    queryFn: () =>
+      fetchResource<BlogDepartment>(
+        "blog_departments",
+        ["name", "department_name", "department_code", "description", "is_active", "creation"],
+        500
+      ),
+    staleTime: 5 * 60 * 1000, // 5 phút
+    gcTime: 30 * 60 * 1000, // giữ cache 30 phút
+  });
+}
+
 export function useAllCategories() {
   return useQuery<Category[]>({
     queryKey: GUEST_METADATA_KEYS.categories,
-    queryFn: () => fetchResource<Category>("categories", ["name", "category", "slug"], 500),
+    queryFn: () =>
+      fetchResource<Category>("categories", ["name", "category", "slug", "department"], 500),
     staleTime: 5 * 60 * 1000, // 5 phút
     gcTime: 30 * 60 * 1000, // giữ cache 30 phút
   });
@@ -57,12 +91,20 @@ export function useAllTopics() {
 
 // ─── Derived map helpers ──────────────────────────────────────────────────────
 
-export function useCategoryMap(): Record<string, string> {
+export function useCategoryMap(department_name?: string): Record<string, string> {
   const { data } = useAllCategories();
   const map: Record<string, string> = {};
-  data?.forEach(c => {
-    map[c.name] = c.category;
-  });
+  data
+    ?.filter(c => {
+      if (!department_name) return true;
+      const department = c.department;
+      return typeof department === "string"
+        ? department === department_name
+        : department.name === department_name;
+    })
+    .forEach(c => {
+      map[c.name] = c.category;
+    });
   return map;
 }
 

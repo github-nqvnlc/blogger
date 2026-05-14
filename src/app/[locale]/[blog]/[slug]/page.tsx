@@ -3,20 +3,31 @@
 
 import React from "react";
 import { useParams } from "next/navigation";
-import { FolderOpen, Pencil } from "lucide-react";
+import { ChevronDown, Pencil } from "lucide-react";
 import { formatDate } from "date-fns";
 import { useGetList } from "@/hooks";
 import { Post, PostTag } from "@/types/blogs";
 import PlaceholderImage from "@public/images/post-placeholder.png";
 import { postImageUrl } from "@/helper/format-image";
-import { injectHeadingIds, TableOfContents } from "@/app/[locale]/blog/[slug]/_toc";
+import { injectHeadingIds, TableOfContents } from "@/app/[locale]/[blog]/[slug]/_toc";
 import { useCategoryMap, useTagMap } from "@/hooks/useGuestMetadata";
 import { unbounded } from "@/lib/font";
-import { PostCard } from "@/components/sections/post-cart";
+import { PostCard } from "@/components/sections/post-card";
 import Support from "@/components/sections/support";
+
+function getPostCategoryLabel(
+  category: Post["category"] | undefined,
+  categoryMap: Record<string, string>
+) {
+  if (!category) return "";
+  if (typeof category !== "string")
+    return category.category ?? categoryMap[category.name] ?? category.name;
+  return categoryMap[category] ?? category;
+}
 
 export default function BlogDetailPage() {
   const params = useParams();
+  const blogCode = params?.blog as string;
   const slug = params?.slug as string;
 
   const { data: posts, isLoading: postLoading } = useGetList<Post>("posts", {
@@ -58,14 +69,12 @@ export default function BlogDetailPage() {
   const categoryMap = useCategoryMap();
 
   const categoryLabel = React.useMemo(() => {
-    if (!post?.category) return "";
-    if (typeof post.category !== "string") return post.category.category;
-    return categoryMap[post.category as string] ?? post.category;
+    return getPostCategoryLabel(post?.category, categoryMap);
   }, [post, categoryMap]);
 
   if (postLoading) {
     return (
-      <section className="mt-16 md:mt-30">
+      <section>
         <div className="inner animate-pulse space-y-6">
           <div className="h-64 bg-gray-200 rounded-3xl" />
           <div className="h-8 bg-gray-200 rounded w-2/3" />
@@ -78,7 +87,7 @@ export default function BlogDetailPage() {
 
   if (!post) {
     return (
-      <section className="mt-16 md:mt-30">
+      <section className="l-section">
         <div className="inner text-center py-32">
           <h1 className="text-3xl font-bold text-foreground-variant">Không tìm thấy bài viết</h1>
           <p className="mt-4 text-foreground-variant">
@@ -90,8 +99,8 @@ export default function BlogDetailPage() {
   }
 
   return (
-    <section id="blog-detail" className="mt-14 lg:mt-24">
-      <div className="inner relative aspect-video w-full md:aspect-auto md:h-96 overflow-hidden rounded-none md:rounded-4xl">
+    <section id="blog-detail" className="pt-14 md:pt-0 pb-16 md:pb-24">
+      <div className="relative aspect-video overflow-hidden">
         <div className="absolute inset-0">
           <img
             src={postImageUrl(post.thumb)}
@@ -103,22 +112,22 @@ export default function BlogDetailPage() {
           />
           <div className="absolute inset-0 bg-linear-to-t from-gray-800 via-gray-800/50 to-transparent" />
         </div>
-        <div className="relative py-16 text-center text-white md:py-24">
+        <div className="absolute bottom-0 left-0 right-0  py-8 md:py-60 text-center text-white">
           <div className="inner">
-            <h1 className="mx-auto mb-6 max-w-xs text-2xl leading-tight font-bold md:max-w-3xl md:text-3xl lg:text-4xl">
+            <div className="flex md:gap-3 gap-1 items-center bg-white/80 mx-auto backdrop-blur-md px-2 py-1 md:px-6 md:py-2 rounded-full w-fit">
+              <span className="text-xs md:text-base text-blue-midnight">{categoryLabel}</span>
+            </div>
+            <h1 className="mt-3 mx-auto max-w-xs text-xl leading-tight font-bold md:max-w-3xl md:text-3xl lg:text-4xl line-clamp-2">
               {post.title}
             </h1>
-            <div className="flex flex-wrap items-center justify-center gap-6 text-gray-300">
-              {categoryLabel && (
-                <div className="flex items-center gap-2">
-                  <FolderOpen className="size-5" />
-                  <span className="text-sm md:text-md">{categoryLabel}</span>
-                </div>
-              )}
+            <span className="mt-5 text-sm md:text-base hidden max-w-2xl mx-auto md:line-clamp-2">
+              {post.excerpt}
+            </span>
+            <div className="mt-2 md:mt-4 flex justify-center text-gray-300">
               {post.published_at && (
                 <div className="flex items-center gap-2">
-                  <Pencil className="size-5" />
-                  <span className="text-sm md:text-md">
+                  <Pencil className="size-3 md:size-5" />
+                  <span className="text-xs md:text-base">
                     {formatDate(new Date(post.published_at), "HH:mm - dd/MM/yyyy")}
                   </span>
                 </div>
@@ -126,9 +135,24 @@ export default function BlogDetailPage() {
             </div>
           </div>
         </div>
+        <div className="absolute bottom-0 left-0 right-0 py-8 flex-col items-center gap-1 text-white hidden md:flex">
+          <button
+            type="button"
+            onClick={() =>
+              document.getElementById("blog-content")?.scrollIntoView({ behavior: "smooth" })
+            }
+            className="group flex flex-col items-center gap-1 cursor-pointer opacity-80 hover:opacity-100 transition-opacity duration-200 focus:outline-none active:scale-95"
+            aria-label="Cuộn xuống nội dung"
+          >
+            <span className="text-xs md:text-sm font-medium tracking-widest uppercase">
+              Cuộn xuống
+            </span>
+            <ChevronDown className="animate-bounce mt-0.5" />
+          </button>
+        </div>
       </div>
 
-      <div className="l-section-content">
+      <div id="blog-content" className="l-section-content">
         <div className="inner">
           <div className="flex flex-col gap-6 lg:flex-row-reverse lg:gap-10">
             <div className="w-full lg:w-4/12 lg:shrink-0">
@@ -169,17 +193,21 @@ export default function BlogDetailPage() {
         <div className="l-section-content">
           <div className="inner">
             <h2
-              className={`${unbounded.className} mb-16 text-center bg-linear-to-r from-orange-accent-dark to-orange-amber bg-clip-text text-3xl font-medium tracking-tight text-transparent md:text-4xl`}
+              className={`${unbounded.className} mb-8 md:mb-16 text-center bg-linear-to-r from-orange-accent-dark to-orange-amber bg-clip-text text-xl md:text-3xl font-medium tracking-tight text-transparent md:text-4xl`}
             >
               Bài viết liên quan
             </h2>
-            <div className="grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 md:gap-12 md:grid-cols-2 lg:grid-cols-3">
               {relatedPosts.map(p => {
-                const relCatLabel =
-                  typeof p.category === "string"
-                    ? (categoryMap[p.category] ?? p.category)
-                    : ((p.category as { category: string })?.category ?? "");
-                return <PostCard key={p.name} post={p} categoryLabel={relCatLabel} />;
+                const relCatLabel = getPostCategoryLabel(p.category, categoryMap);
+                return (
+                  <PostCard
+                    key={p.name}
+                    post={p}
+                    categoryLabel={relCatLabel}
+                    departmentCode={blogCode}
+                  />
+                );
               })}
             </div>
           </div>

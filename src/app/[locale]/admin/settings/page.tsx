@@ -29,6 +29,7 @@ const THEME_MAP_TO_SERVER: Record<string, string> = {
 const THEME_MAP_FROM_SERVER: Record<string, string> = {
   Light: "light",
   Dark: "dark",
+  Automatic: "system",
 };
 
 function LanguageSetting() {

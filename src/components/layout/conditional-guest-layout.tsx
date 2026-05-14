@@ -12,9 +12,12 @@ function GuestLayoutWithPrefetch({ children }: { children: React.ReactNode }) {
 
 export function ConditionalGuestLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isAdmin = pathname?.includes("/admin");
+  const pathSegments = pathname?.split("/").filter(Boolean) ?? [];
+  const isAdmin = pathSegments[1] === "admin";
+  const isLogin = pathSegments.length === 2 && pathSegments[1] === "login";
+  const isDev = pathSegments[1] === "dev";
 
-  if (isAdmin) {
+  if (isAdmin || isLogin || isDev) {
     return <>{children}</>;
   }
 
