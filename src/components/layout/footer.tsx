@@ -1,9 +1,10 @@
+import React from "react";
 import Facebook from "@/components/svgs/facebook";
-import Logo from "@/components/svgs/logo";
 import Zalo from "@/components/svgs/zalo";
 import MailSVG from "@/components/svgs/mail";
+import Logo from "@public/images/windify-logo.png";
 import { Mail, MapPin, PhoneCall } from "lucide-react";
-import React from "react";
+import Image from "next/image";
 
 const Footer = () => {
   return (
@@ -11,7 +12,9 @@ const Footer = () => {
       <div className="inner">
         <div className="flex flex-col md:flex-row gap-8 md:gap-10 xl:gap-12 justify-between">
           <div className=" w-full md:max-w-1/2">
-            <Logo />
+            <div className="my-6">
+              <Image src={Logo} alt="Windify Logo" className="h-8 lg:h-10 w-auto object-contain" />
+            </div>
             <span className="block w-full md:max-w-3/4 leading-relaxed text-sm text-foreground-variant">
               Windify - Đối tác tin cậy đồng hành cùng doanh nghiệp trong hành trình chuyển đổi số
               và phát triển bền vững. Chúng tôi mang đến giải pháp công nghệ tiên tiến và dịch vụ

@@ -99,8 +99,8 @@ export default function BlogDetailPage() {
   }
 
   return (
-    <section id="blog-detail" className="pt-14 md:pt-0 pb-16 md:pb-24">
-      <div className="relative aspect-video overflow-hidden">
+    <section id="blog-detail" className="pt-14 lg:pt-0 pb-16 md:pb-24">
+      <div className="relative aspect-video lg:aspect-auto lg:h-screen">
         <div className="absolute inset-0">
           <img
             src={postImageUrl(post.thumb)}
@@ -112,7 +112,7 @@ export default function BlogDetailPage() {
           />
           <div className="absolute inset-0 bg-linear-to-t from-gray-800 via-gray-800/50 to-transparent" />
         </div>
-        <div className="absolute bottom-0 left-0 right-0  py-8 md:py-60 text-center text-white">
+        <div className="absolute bottom-0 left-0 right-0 py-8 sm:py-24 md:py-32 lg:py-60 text-center text-white">
           <div className="inner">
             <div className="flex md:gap-3 gap-1 items-center bg-white/80 mx-auto backdrop-blur-md px-2 py-1 md:px-6 md:py-2 rounded-full w-fit">
               <span className="text-xs md:text-base text-blue-midnight">{categoryLabel}</span>
@@ -135,7 +135,7 @@ export default function BlogDetailPage() {
             </div>
           </div>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 py-8 flex-col items-center gap-1 text-white hidden md:flex">
+        <div className="absolute bottom-0 left-0 right-0 py-8 flex-col items-center gap-1 text-white hidden lg:flex">
           <button
             type="button"
             onClick={() =>

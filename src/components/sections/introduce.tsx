@@ -6,7 +6,7 @@ import { unbounded } from "@/lib/font";
 
 const Introduce = () => {
   return (
-    <div className="w-screen min-h-screen relative flex items-center py-24 md:py-0">
+    <div className="min-h-screen relative flex items-center py-24 md:py-0">
       <div className="absolute inset-0">
         <Image
           src={introduceBg}
