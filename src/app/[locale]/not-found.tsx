@@ -29,12 +29,12 @@ export default function NotFoundPage() {
               {t.common.backHome}
             </Link>
           </Button>
-          <Button variant="outline" asChild>
+          {/* <Button variant="outline" asChild>
             <Link href={buildLocalePath(locale, "/admin")}>
               <ArrowLeft className="size-4 mr-2" />
               {t.common.backAdmin}
             </Link>
-          </Button>
+          </Button> */}
         </div>
 
         <div className="border-t pt-6 space-y-2">

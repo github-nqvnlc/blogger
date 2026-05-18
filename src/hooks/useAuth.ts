@@ -3,7 +3,7 @@
 import { useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getApiClient } from "@/lib/apiClient";
-import { buildLocalePath, extractLocaleFromPathname, normalizeLocale } from "@/i18n";
+import { buildLocalePath, normalizeLocale } from "@/i18n";
 
 export interface FrappeUser {
   name: string;
@@ -27,7 +27,7 @@ export function useAuth() {
 
   const getCurrentLocale = useCallback(() => {
     if (typeof window === "undefined") return normalizeLocale(null);
-    return normalizeLocale(extractLocaleFromPathname(window.location.pathname));
+    return normalizeLocale(window.location.pathname.split("/")[1] || null);
   }, []);
 
   const {
@@ -44,16 +44,22 @@ export function useAuth() {
           "/api/method/frappe.auth.get_logged_user"
         );
         const user = res.data?.message;
-        return user && user !== "Guest" ? user : null;
+        // console.error("res: ", res);
+        // Guest is now a valid role — return as-is instead of null
+        return user ?? null;
       } catch (err: unknown) {
-        const status = (err as { response?: { status?: number } }).response?.status;
-        if ((status === 401 || status === 403) && typeof window !== "undefined") {
-          const locale = getCurrentLocale();
-          const loginPath = buildLocalePath(locale, "/login");
-          if (!window.location.pathname.startsWith(loginPath)) {
-            window.location.href = loginPath;
-          }
+        // 403 = guest/unauthenticated — expected, not an error worth logging
+        const status = (err as { response?: { status?: number } })?.response?.status;
+        const message = (err as Error)?.message ?? "";
+        const isGuestError =
+          status === 403 ||
+          message.includes("not whitelisted") ||
+          message.includes("not permitted");
+
+        if (!isGuestError) {
+          console.error("[useAuth] unexpected error:", err);
         }
+
         return null;
       }
     },
@@ -78,7 +84,7 @@ export function useAuth() {
       queryClient.clear();
       if (typeof window !== "undefined") {
         const locale = getCurrentLocale();
-        window.location.href = buildLocalePath(locale, "/login");
+        window.location.href = buildLocalePath(locale, "/");
       }
     }
   }, [apiClient, getCurrentLocale, queryClient]);

@@ -19,7 +19,7 @@ const url = process.env.NEXT_PUBLIC_FRAPPE_URL ?? "";
 
 const ApiContext = createContext<ApiContextValue | null>(null);
 
-const queryClient = new QueryClient({
+export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 1000 * 30,

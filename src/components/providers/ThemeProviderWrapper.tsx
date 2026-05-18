@@ -1,7 +1,8 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
-import { ThemeProvider as NextThemesProvider } from "next-themes";
+import { useEffect, useSyncExternalStore } from "react";
+import { ThemeProvider as NextThemesProvider, useTheme } from "next-themes";
+import { useAuth } from "@/hooks";
 
 interface ThemeProviderWrapperProps {
   children: React.ReactNode;
@@ -15,11 +16,24 @@ function useMounted() {
   );
 }
 
+export function AuthAwareTheme() {
+  const { currentUser, isLoading } = useAuth();
+  const { setTheme } = useTheme();
+
+  useEffect(() => {
+    if (isLoading) return;
+    if (currentUser) return;
+    setTheme("light");
+  }, [currentUser, isLoading, setTheme]);
+
+  return null;
+}
+
 export function ThemeProviderWrapper({ children }: ThemeProviderWrapperProps) {
   const mounted = useMounted();
 
   return (
-    <NextThemesProvider attribute="class" defaultTheme="system" enableSystem>
+    <NextThemesProvider attribute="class" defaultTheme="light" enableSystem>
       {mounted ? children : <div style={{ visibility: "hidden" }}>{children}</div>}
     </NextThemesProvider>
   );

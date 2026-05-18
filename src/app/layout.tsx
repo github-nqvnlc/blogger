@@ -10,6 +10,7 @@ const openSans = Open_Sans({
   style: ["normal", "italic"],
   variable: "--font-open-sans",
   display: "swap",
+  preload: false,
 });
 
 export const metadata: Metadata = {
@@ -26,7 +27,12 @@ export default async function RootLayout({
   const locale = normalizeLocale(headerStore.get("x-locale"));
 
   return (
-    <html lang={locale} suppressHydrationWarning className={openSans.variable}>
+    <html
+      lang={locale}
+      suppressHydrationWarning
+      className={openSans.variable}
+      data-scroll-behavior="smooth"
+    >
       <body className="antialiased">{children}</body>
     </html>
   );
