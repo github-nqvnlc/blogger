@@ -3,6 +3,7 @@ export const sidebar = {
   adminSystem: "Hệ thống quản trị",
   overview: "Tổng quan",
   dashboard: "Dashboard",
+  home: "Trang chủ",
   blogManagement: "Quản lý blog",
   contentDepartment: "Bộ phận nội dung",
   categories: "Danh mục",

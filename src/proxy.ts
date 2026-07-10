@@ -9,7 +9,7 @@ import {
   stripLocaleFromPathname,
 } from "@/i18n";
 
-const PUBLIC_PATHS = ["/login", "/register"];
+const PRIVATE_PATHS = ["/admin", "/dev"];
 const FRAPPE_URL = process.env.FRAPPE_URL ?? process.env.NEXT_PUBLIC_FRAPPE_URL ?? "";
 
 async function fetchUserLocale(request: NextRequest): Promise<string | null> {
@@ -70,16 +70,13 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL(buildLocalePath(locale, pathname), request.url));
   }
 
-  const isPublic = PUBLIC_PATHS.some(p => barePath.startsWith(p));
+  const isPrivate = PRIVATE_PATHS.some(p => barePath.startsWith(p));
   const sid = request.cookies.get("sid")?.value;
   const isLoggedIn = !!sid && sid !== "Guest";
 
-  if (!isLoggedIn && !isPublic) {
-    return NextResponse.redirect(new URL(buildLocalePath(urlLocale, "/login"), request.url));
-  }
-
-  if (isLoggedIn && isPublic) {
-    return NextResponse.redirect(new URL(buildLocalePath(urlLocale, "/"), request.url));
+  if (!isLoggedIn && isPrivate) {
+    // Rewrite to catch-all [...missing] which triggers notFound() → not-found.tsx
+    return NextResponse.rewrite(new URL(buildLocalePath(urlLocale, "/login"), request.url));
   }
 
   const requestHeaders = new Headers(request.headers);

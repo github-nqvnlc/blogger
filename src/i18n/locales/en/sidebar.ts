@@ -3,6 +3,7 @@ export const sidebar = {
   adminSystem: "Admin System",
   overview: "Overview",
   dashboard: "Dashboard",
+  home: "Home",
   blogManagement: "Blog Management",
   contentDepartment: "Content Departments",
   categories: "Categories",

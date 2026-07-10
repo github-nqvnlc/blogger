@@ -15,6 +15,15 @@ const nextConfig: NextConfig = {
    * LƯU Ý: Nếu bạn có Next.js API Routes trong /app/api/ hoặc /pages/api/,
    * chúng sẽ được ưu tiên trước rewrite này.
    */
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "agency.windify.com.vn",
+      },
+    ],
+  },
+
   async rewrites() {
     return [
       {

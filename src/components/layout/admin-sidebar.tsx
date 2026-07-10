@@ -40,6 +40,7 @@ import {
   ChevronDown,
   FilePlus,
   FolderOpen,
+  Home,
   LayoutDashboard,
   Lightbulb,
   Loader2,
@@ -226,7 +227,14 @@ export function AdminSidebar() {
   const navItems: NavGroup[] = [
     {
       title: t.sidebar.overview,
-      items: [{ title: t.sidebar.dashboard, url: "/admin", icon: LayoutDashboard }],
+      items: [
+        {
+          title: t.sidebar.home,
+          url: "/",
+          icon: Home,
+        },
+        { title: t.sidebar.dashboard, url: "/admin", icon: LayoutDashboard },
+      ],
     },
     {
       title: t.sidebar.blogManagement,
