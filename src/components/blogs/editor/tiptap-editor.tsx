@@ -122,6 +122,8 @@ declare module "@tiptap/core" {
   }
 }
 
+type ImageAlignValue = "left" | "center" | "right";
+
 const DEFAULT_EDITOR_STATE = {
   isBold: false,
   isItalic: false,
@@ -538,6 +540,110 @@ const EmbeddedMedia = Node.create({
   },
 });
 
+function getImageCaptionAlignClass(align: ImageAlignValue): string {
+  switch (align) {
+    case "left":
+      return "text-left";
+    case "right":
+      return "text-right";
+    case "center":
+    default:
+      return "text-center";
+  }
+}
+
+const ImageFigure = Node.create({
+  name: "imageFigure",
+  group: "block",
+  atom: true,
+  draggable: true,
+  selectable: true,
+
+  addAttributes() {
+    return {
+      src: {
+        default: "",
+      },
+      alt: {
+        default: "",
+      },
+      caption: {
+        default: "",
+      },
+      align: {
+        default: "center",
+        parseHTML: element => {
+          const figure = element as HTMLElement;
+          if (figure.classList.contains("ml-0")) return "left";
+          if (figure.classList.contains("mr-0")) return "right";
+          return figure.dataset.align || "center";
+        },
+      },
+    };
+  },
+
+  parseHTML() {
+    return [
+      {
+        tag: "figure",
+        getAttrs: element => {
+          const figure = element as HTMLElement;
+          if (figure.dataset.blogMedia === "true") {
+            return false;
+          }
+
+          const image = figure.querySelector("img");
+          if (!image) {
+            return false;
+          }
+
+          return {
+            src: image.getAttribute("src") || "",
+            alt: image.getAttribute("alt") || "",
+            caption: figure.querySelector("figcaption")?.textContent?.trim() || "",
+            align: figure.dataset.align || "center",
+          };
+        },
+      },
+    ];
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    const align = (HTMLAttributes.align as ImageAlignValue) || "center";
+    const alignClass =
+      align === "left" ? "ml-0 mr-auto" : align === "right" ? "ml-auto mr-0" : "mx-auto";
+    const captionAlignClass = getImageCaptionAlignClass(align);
+    const caption = String(HTMLAttributes.caption || "").trim();
+
+    return [
+      "figure",
+      {
+        "data-align": align,
+        class: `my-6 w-full ${alignClass}`,
+      },
+      [
+        "img",
+        {
+          src: HTMLAttributes.src,
+          alt: HTMLAttributes.alt || caption || "Image",
+          class: "w-full rounded-xl",
+        },
+      ],
+      ...(caption
+        ? [
+            [
+              "figcaption",
+              {
+                class: `mt-2 ${captionAlignClass} text-sm italic text-muted-foreground`,
+              },
+              caption,
+            ],
+          ]
+        : []),
+    ];
+  },
+});
+
 function normalizeEditorHtml(value?: string | null): string {
   const trimmed = value?.trim() ?? "";
 
@@ -627,6 +733,7 @@ export const TiptapEditor = forwardRef<BlogEditorHandle, BlogEditorProps>(
         TextAlign.configure({
           types: ["heading", "paragraph", "blockquote", "codeBlock", "image"],
         }),
+        ImageFigure,
         Image.configure({
           HTMLAttributes: {
             class: "rounded-xl w-full",
@@ -826,6 +933,34 @@ export const TiptapEditor = forwardRef<BlogEditorHandle, BlogEditorProps>(
       closeDialog();
     }
 
+    function insertImage(src: string, caption: string, alt = "") {
+      if (!editor) {
+        return;
+      }
+
+      if (caption) {
+        editor
+          .chain()
+          .focus()
+          .insertContent([
+            {
+              type: "imageFigure",
+              attrs: {
+                alt: alt || caption,
+                caption,
+                src,
+                align: imageAlign,
+              },
+            },
+            { type: "paragraph" },
+          ])
+          .run();
+        return;
+      }
+
+      editor.chain().focus().insertContent({ type: "image", attrs: { alt, src } }).run();
+    }
+
     function insertImageFromUrl() {
       if (!editor) {
         return;
@@ -838,32 +973,7 @@ export const TiptapEditor = forwardRef<BlogEditorHandle, BlogEditorProps>(
       }
 
       const caption = dialogCaption.trim();
-      if (caption) {
-        editor
-          .chain()
-          .focus()
-          .insertContent([
-            {
-              type: "image",
-              attrs: {
-                src: normalized,
-              },
-            },
-            {
-              type: "paragraph",
-              attrs: { textAlign: "center" },
-              content: [{ type: "text", text: caption, marks: [{ type: "italic" }] }],
-            },
-            { type: "paragraph" },
-          ])
-          .run();
-      } else {
-        editor
-          .chain()
-          .focus()
-          .insertContent({ type: "image", attrs: { src: normalized } })
-          .run();
-      }
+      insertImage(normalized, caption);
       closeDialog();
     }
 
@@ -898,42 +1008,11 @@ export const TiptapEditor = forwardRef<BlogEditorHandle, BlogEditorProps>(
         }
 
         const caption = dialogCaption.trim();
-        if (caption) {
-          editor
-            .chain()
-            .focus()
-            .insertContent([
-              {
-                type: "image",
-                attrs: {
-                  alt: "Image preview",
-                  src: pendingImageUrl.includes("https")
-                    ? pendingImageUrl
-                    : `${getBaseUrl()}${pendingImageUrl}`,
-                },
-              },
-              {
-                type: "paragraph",
-                attrs: { textAlign: "center" },
-                content: [{ type: "text", text: caption, marks: [{ type: "italic" }] }],
-              },
-              { type: "paragraph" },
-            ])
-            .run();
-        } else {
-          editor
-            .chain()
-            .focus()
-            .insertContent({
-              type: "image",
-              attrs: {
-                src: pendingImageUrl.includes("https")
-                  ? pendingImageUrl
-                  : `${getBaseUrl()}${pendingImageUrl}`,
-              },
-            })
-            .run();
-        }
+        insertImage(
+          pendingImageUrl.includes("https") ? pendingImageUrl : `${getBaseUrl()}${pendingImageUrl}`,
+          caption,
+          "Image preview"
+        );
         setPendingImageUrl(null);
         closeDialog();
         return;

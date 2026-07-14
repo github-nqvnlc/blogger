@@ -10,10 +10,14 @@ import {
 } from "@/i18n";
 
 const PRIVATE_PATHS = ["/admin", "/dev"];
+const ALLOWED_PRIVATE_ROLES = new Set(["Admin Blogs", "System Manager"]);
 const FRAPPE_URL = process.env.FRAPPE_URL ?? process.env.NEXT_PUBLIC_FRAPPE_URL ?? "";
 
-async function fetchUserLocale(request: NextRequest): Promise<string | null> {
-  const sid = request.cookies.get("sid")?.value;
+type FrappeUserDoc = {
+  roles?: Array<{ role?: string }>;
+};
+
+async function fetchLoggedUser(sid: string): Promise<string | null> {
   if (!sid || sid === "Guest" || !FRAPPE_URL) return null;
 
   try {
@@ -24,7 +28,18 @@ async function fetchUserLocale(request: NextRequest): Promise<string | null> {
     if (!userRes.ok) return null;
 
     const userData = (await userRes.json()) as { message?: string };
-    const user = userData.message;
+    return userData.message ?? null;
+  } catch {
+    return null;
+  }
+}
+
+async function fetchUserLocale(request: NextRequest): Promise<string | null> {
+  const sid = request.cookies.get("sid")?.value;
+  if (!sid || sid === "Guest" || !FRAPPE_URL) return null;
+
+  try {
+    const user = await fetchLoggedUser(sid);
     if (!user) return null;
 
     const profileRes = await fetch(
@@ -44,6 +59,26 @@ async function fetchUserLocale(request: NextRequest): Promise<string | null> {
     return profileData.data?.language ?? null;
   } catch {
     return null;
+  }
+}
+
+async function userHasPrivateAccess(sid: string): Promise<boolean> {
+  const user = await fetchLoggedUser(sid);
+  if (!user) return false;
+
+  try {
+    const profileRes = await fetch(`${FRAPPE_URL}/api/resource/User/${encodeURIComponent(user)}`, {
+      headers: { cookie: `sid=${sid}` },
+      cache: "no-store",
+    });
+    if (!profileRes.ok) return false;
+
+    const profileData = (await profileRes.json()) as { data?: FrappeUserDoc };
+    return (profileData.data?.roles ?? []).some(
+      item => !!item.role && ALLOWED_PRIVATE_ROLES.has(item.role)
+    );
+  } catch {
+    return false;
   }
 }
 
@@ -74,9 +109,11 @@ export async function proxy(request: NextRequest) {
   const sid = request.cookies.get("sid")?.value;
   const isLoggedIn = !!sid && sid !== "Guest";
 
-  if (!isLoggedIn && isPrivate) {
-    // Rewrite to catch-all [...missing] which triggers notFound() → not-found.tsx
-    return NextResponse.rewrite(new URL(buildLocalePath(urlLocale, "/login"), request.url));
+  if (isPrivate) {
+    const hasPrivateAccess = isLoggedIn ? await userHasPrivateAccess(sid) : false;
+    if (!hasPrivateAccess) {
+      return NextResponse.redirect(new URL(buildLocalePath(urlLocale, "/"), request.url));
+    }
   }
 
   const requestHeaders = new Headers(request.headers);
