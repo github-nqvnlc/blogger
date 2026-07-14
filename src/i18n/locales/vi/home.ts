@@ -8,6 +8,7 @@ export const home = {
   authenticatedPrefix: "Đã xác thực",
   unauthenticatedWarning: "Chưa đăng nhập. Hãy thử đăng nhập.",
   goToLogin: "Đến trang đăng nhập",
+  adminRequiredToast: "Vui lòng liên hệ quản trị viên để được cấp quyền quản trị sử dụng hệ thống.",
   devTools: "Công cụ dev",
   hooksTester: "Trình kiểm thử document hooks",
 } as const;

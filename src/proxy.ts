@@ -112,7 +112,13 @@ export async function proxy(request: NextRequest) {
   if (isPrivate) {
     const hasPrivateAccess = isLoggedIn ? await userHasPrivateAccess(sid) : false;
     if (!hasPrivateAccess) {
-      return NextResponse.redirect(new URL(buildLocalePath(urlLocale, "/"), request.url));
+      const response = NextResponse.redirect(new URL(buildLocalePath(urlLocale, "/"), request.url));
+      response.cookies.set("admin_access_notice", "admin_required", {
+        path: "/",
+        maxAge: 60,
+        sameSite: "lax",
+      });
+      return response;
     }
   }
 
