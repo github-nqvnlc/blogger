@@ -8,6 +8,7 @@ export const home = {
   authenticatedPrefix: "Authenticated",
   unauthenticatedWarning: "Not signed in yet. Try logging in.",
   goToLogin: "Go to Login",
+  adminRequiredToast: "Please contact an administrator to get admin access for this system.",
   devTools: "Dev Tools",
   hooksTester: "Document Hooks Tester",
 } as const;

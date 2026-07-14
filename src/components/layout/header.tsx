@@ -4,18 +4,22 @@ import React, { useEffect, useState } from "react";
 import { useAllBlogDepartments, useAllCategories } from "@/hooks/useGuestMetadata";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { BlogDepartment, Category } from "@/types/blogs";
-import { ChevronDown } from "lucide-react";
-import { useLanguage } from "@/hooks";
+import { ChevronDown, LogIn } from "lucide-react";
+import { useAuth, useLanguage } from "@/hooks";
 import Logo from "@public/images/windify-logo.png";
 import Image from "next/image";
+import Link from "next/link";
+import { buildLocalePath } from "@/i18n";
 
 const Header = () => {
   const isMobile = useIsMobile(1024);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const isMobileMenuOpen = isMobile && isMenuOpen;
   const { locale } = useLanguage();
+  const { currentUser, isLoading: isAuthLoading } = useAuth();
   const { data: departments } = useAllBlogDepartments();
   const { data: categories } = useAllCategories();
+  const shouldShowLoginButton = !isAuthLoading && (!currentUser || currentUser === "Guest");
 
   const [openDept, setOpenDept] = useState<string | null>(null);
 
@@ -72,7 +76,7 @@ const Header = () => {
             </>
           ) : (
             /* Desktop Nav */
-            <div className="flex gap-1 items-center">
+            <div className="flex gap-3 items-center">
               <ul className="flex items-center gap-1 text-blue-midnight">
                 {departments?.map((item: BlogDepartment) => {
                   const deptCategories =
@@ -135,6 +139,16 @@ const Header = () => {
                   );
                 })}
               </ul>
+
+              {shouldShowLoginButton && (
+                <Link
+                  href={buildLocalePath(locale, "/login")}
+                  className="flex items-center gap-1.5 rounded-lg bg-blue-midnight px-4 py-2 text-sm font-semibold text-white transition-all duration-200 hover:bg-[#fb421c]"
+                >
+                  <LogIn className="h-4 w-4" />
+                  <span>Đăng nhập</span>
+                </Link>
+              )}
             </div>
           )}
         </div>
@@ -204,6 +218,19 @@ const Header = () => {
             );
           })}
         </ul>
+
+        {shouldShowLoginButton && (
+          <div className="px-5 py-4 border-t border-gray-200">
+            <Link
+              href={buildLocalePath(locale, "/login")}
+              onClick={closeMenu}
+              className="flex items-center justify-center gap-2 w-full rounded-lg bg-blue-midnight px-4 py-3 text-sm font-semibold text-white transition-all duration-200 hover:bg-[#fb421c]"
+            >
+              <LogIn className="h-4 w-4" />
+              <span>Đăng nhập</span>
+            </Link>
+          </div>
+        )}
       </div>
     </header>
   );

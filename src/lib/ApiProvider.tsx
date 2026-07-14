@@ -1,15 +1,13 @@
 "use client";
 
 import React, { createContext, useContext, useEffect } from "react";
-import dynamic from "next/dynamic";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createApiClient } from "./apiClient";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { Dictionary, Locale } from "@/i18n";
-
-const Toaster = dynamic(() => import("@/components/ui/sonner").then(mod => mod.Toaster), {
-  ssr: false,
-});
+import { useLanguage } from "@/hooks/useLanguage";
+import { toast } from "sonner";
+import { Toaster } from "@/components/ui/sonner";
 
 interface ApiContextValue {
   url: string;
@@ -18,6 +16,9 @@ interface ApiContextValue {
 const url = process.env.NEXT_PUBLIC_FRAPPE_URL ?? "";
 
 const ApiContext = createContext<ApiContextValue | null>(null);
+const ADMIN_ACCESS_NOTICE_COOKIE = "admin_access_notice";
+const ADMIN_ACCESS_NOTICE_TOAST_ID = "admin-access-required";
+let adminAccessNoticeConsumed = false;
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -35,6 +36,36 @@ interface ApiProviderProps {
   dictionary: Dictionary;
 }
 
+function getCookieValue(key: string): string | null {
+  const match = document.cookie
+    .split("; ")
+    .find(row => row.startsWith(`${encodeURIComponent(key)}=`));
+  return match ? decodeURIComponent(match.split("=").slice(1).join("=")) : null;
+}
+
+function clearCookie(key: string) {
+  document.cookie = `${encodeURIComponent(key)}=; path=/; max-age=0; SameSite=Lax`;
+}
+
+function AdminAccessNoticeToast() {
+  const { t } = useLanguage();
+
+  useEffect(() => {
+    if (getCookieValue(ADMIN_ACCESS_NOTICE_COOKIE) !== "admin_required") return;
+    if (adminAccessNoticeConsumed) return;
+
+    adminAccessNoticeConsumed = true;
+    clearCookie(ADMIN_ACCESS_NOTICE_COOKIE);
+    window.requestAnimationFrame(() => {
+      toast.warning(t.home.adminRequiredToast, {
+        id: ADMIN_ACCESS_NOTICE_TOAST_ID,
+      });
+    });
+  }, [t.home.adminRequiredToast]);
+
+  return null;
+}
+
 export function ApiProvider({ children, locale, dictionary }: ApiProviderProps) {
   useEffect(() => {
     createApiClient();
@@ -46,6 +77,7 @@ export function ApiProvider({ children, locale, dictionary }: ApiProviderProps) 
         <LanguageProvider locale={locale} dictionary={dictionary}>
           {children}
           <Toaster position="top-center" />
+          <AdminAccessNoticeToast />
         </LanguageProvider>
       </QueryClientProvider>
     </ApiContext.Provider>
