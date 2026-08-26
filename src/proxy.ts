@@ -1,5 +1,3 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
 import {
   buildLocalePath,
   DEFAULT_LOCALE,
@@ -8,14 +6,11 @@ import {
   normalizeLocale,
   stripLocaleFromPathname,
 } from "@/i18n";
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 
 const PRIVATE_PATHS = ["/admin", "/dev"];
-const ALLOWED_PRIVATE_ROLES = new Set(["Admin Blogs"]);
 const FRAPPE_URL = process.env.FRAPPE_URL ?? process.env.NEXT_PUBLIC_FRAPPE_URL ?? "";
-
-type FrappeUserDoc = {
-  roles?: Array<{ role?: string }>;
-};
 
 async function fetchLoggedUser(sid: string): Promise<string | null> {
   if (!sid || sid === "Guest" || !FRAPPE_URL) return null;
@@ -67,16 +62,11 @@ async function userHasPrivateAccess(sid: string): Promise<boolean> {
   if (!user) return false;
 
   try {
-    const profileRes = await fetch(`${FRAPPE_URL}/api/resource/User/${encodeURIComponent(user)}`, {
+    const res = await fetch(`${FRAPPE_URL}/api/resource/blog_departments?limit_page_length=1`, {
       headers: { cookie: `sid=${sid}` },
       cache: "no-store",
     });
-    if (!profileRes.ok) return false;
-
-    const profileData = (await profileRes.json()) as { data?: FrappeUserDoc };
-    return (profileData.data?.roles ?? []).some(
-      item => !!item.role && ALLOWED_PRIVATE_ROLES.has(item.role)
-    );
+    return res.ok;
   } catch {
     return false;
   }
