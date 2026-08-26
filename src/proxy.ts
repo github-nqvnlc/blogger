@@ -10,7 +10,7 @@ import {
 } from "@/i18n";
 
 const PRIVATE_PATHS = ["/admin", "/dev"];
-const ALLOWED_PRIVATE_ROLES = new Set(["Admin Blogs", "System Manager"]);
+const ALLOWED_PRIVATE_ROLES = new Set(["Admin Blogs"]);
 const FRAPPE_URL = process.env.FRAPPE_URL ?? process.env.NEXT_PUBLIC_FRAPPE_URL ?? "";
 
 type FrappeUserDoc = {
